@@ -354,7 +354,10 @@ export default function Home() {
     const safeName = `${Date.now()}${ext ? '.' + ext : ''}`;
     const filePath = `uploads/${safeName}`;
     const { error } = await supabase.storage.from('files').upload(filePath, file);
-    if (error) { console.error('Storage upload error:', error); return null; }
+    if (error) {
+      setUploadError(`저장 오류: ${error.message} (${error.statusCode ?? ''})`);
+      return null;
+    }
     const { data } = supabase.storage.from('files').getPublicUrl(filePath);
     return { fileName: file.name, fileUrl: data.publicUrl };
   };
@@ -443,7 +446,6 @@ export default function Home() {
     } else if (uploadFile) {
       const uploaded = await uploadFileToStorage(uploadFile);
       if (!uploaded) {
-        setUploadError('파일 업로드에 실패했습니다. 다시 시도해주세요.');
         setUploadLoading(false);
         return;
       }
