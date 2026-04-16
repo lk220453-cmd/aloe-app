@@ -698,7 +698,6 @@ export default function Home() {
                     </label>
                     <div className="flex items-center justify-center w-full">
                       <label
-                        onClick={() => fileInputRef.current?.click()}
                         className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all ${uploadFile ? 'border-green-300 bg-green-50/30' : 'border-gray-300 hover:bg-green-50 hover:border-green-300 bg-gray-50'
                           }`}
                       >
