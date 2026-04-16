@@ -624,10 +624,10 @@ export default function Home() {
 
       {/* 🔴 내 컴퓨터 파일 업로드 모달창 */}
       {showUploadModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm transition-all">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-in fade-in zoom-in duration-200 border border-gray-100 flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-8 pb-8 px-4 bg-gray-900/50 backdrop-blur-sm transition-all">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-gray-100 flex flex-col" style={{maxHeight: 'calc(100vh - 64px)'}}>
             {/* 모달 헤더 */}
-            <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50/50">
+            <div className="flex-shrink-0 flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50/50">
               <h3 className="font-extrabold text-[17px] text-gray-800 flex items-center">
                 <span className="text-xl mr-2">📤</span>
                 {selectedCategory === '브랜드판촉'
@@ -789,8 +789,8 @@ export default function Home() {
             </div>
 
             {/* 모달 하단 액션 버튼 */}
-            {uploadError && <p className="px-5 pb-2 text-red-500 text-[13px] font-bold">{uploadError}</p>}
-            <div className="p-5 border-t border-gray-100 bg-gray-50/80 flex justify-end space-x-3">
+            {uploadError && <p className="flex-shrink-0 px-5 pb-2 text-red-500 text-[13px] font-bold">{uploadError}</p>}
+            <div className="flex-shrink-0 p-5 border-t border-gray-100 bg-gray-50/80 flex justify-end space-x-3">
               <button
                 onClick={() => setShowUploadModal(false)}
                 className="px-6 py-2.5 rounded-xl font-bold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors shadow-sm"
