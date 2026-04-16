@@ -17,7 +17,13 @@ interface Material {
   fileUrl?: string;
   productName?: string;
   content?: string;
+  youtubeUrl?: string;
 }
+
+const getYouTubeId = (url: string): string | null => {
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([a-zA-Z0-9_-]{11})/);
+  return match ? match[1] : null;
+};
 
 interface PromoFolder {
   id: string;
@@ -203,6 +209,8 @@ export default function Home() {
   const [uploadTypeState, setUploadTypeState] = useState<MaterialType>('DOCUMENT');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadProduct, setUploadProduct] = useState('스피그린');
+  const [uploadMode, setUploadMode] = useState<'file' | 'youtube'>('file');
+  const [uploadYoutubeUrl, setUploadYoutubeUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ============== 폴더 수정 로직 ==============
@@ -250,6 +258,8 @@ export default function Home() {
     setUploadTitle('');
     setUploadFile(null);
     setUploadTypeState('DOCUMENT');
+    setUploadMode('file');
+    setUploadYoutubeUrl('');
     if ((selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') && selectedProduct !== '전체') {
       setUploadProduct(selectedProduct);
     } else {
@@ -325,21 +335,29 @@ export default function Home() {
   };
 
   const executeUpload = () => {
-    if (!uploadTitle || !uploadFile) return;
+    if (!uploadTitle) return;
+    if (uploadMode === 'file' && !uploadFile) return;
+    if (uploadMode === 'youtube' && !uploadYoutubeUrl.trim()) return;
 
     let finalType: MaterialType = uploadTypeState;
 
-    // 강제 속성 매핑 (게시판인 경우 등)
     if (selectedCategory === '게시판') {
       finalType = selectedSubBoard === 'NOTICE' ? 'NOTICE' : selectedSubBoard === 'FREE' ? 'FREE' : 'DOCUMENT';
     } else if (selectedCategory === '브랜드판촉') {
       finalType = 'DOCUMENT';
     }
 
-    // 썸네일 생성 로직 (이미지면 실제 썸네일, 아니면 무작위 더미)
     let newThumbnail = 'https://picsum.photos/seed/' + Math.floor(Math.random() * 100) + '/400/225';
-    if (uploadFile.type.startsWith('image/')) {
-        newThumbnail = URL.createObjectURL(uploadFile);
+    let youtubeId: string | null = null;
+
+    if (uploadMode === 'youtube') {
+      youtubeId = getYouTubeId(uploadYoutubeUrl.trim());
+      if (youtubeId) {
+        newThumbnail = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
+        finalType = 'VIDEO';
+      }
+    } else if (uploadFile && uploadFile.type.startsWith('image/')) {
+      newThumbnail = URL.createObjectURL(uploadFile);
     }
 
     const newMaterial: Material = {
@@ -350,7 +368,9 @@ export default function Home() {
       category: selectedCategory,
       year: promoYear,
       month: promoMonth,
-      fileName: uploadFile.name,
+      fileName: uploadMode === 'file' ? uploadFile?.name : undefined,
+      fileUrl: uploadMode === 'file' && uploadFile ? URL.createObjectURL(uploadFile) : undefined,
+      youtubeUrl: uploadMode === 'youtube' && youtubeId ? `https://www.youtube.com/embed/${youtubeId}` : undefined,
       productName: (selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') ? uploadProduct : undefined
     };
 
@@ -454,12 +474,12 @@ export default function Home() {
 
             {/* 모달 메인 폼 */}
             <div className="p-6 space-y-6">
-              
+
               {/* 자료 제목 */}
               <div>
                 <label className="block text-[13px] font-bold text-gray-700 mb-2">자료 제목</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={uploadTitle}
                   onChange={e => setUploadTitle(e.target.value)}
                   className="w-full p-3.5 text-[15px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00b050]/50 focus:border-[#00b050] transition-all bg-gray-50/30"
@@ -467,53 +487,93 @@ export default function Home() {
                 />
               </div>
 
-              {/* 내 컴퓨터 파일 탐색기 연동 영역 */}
+              {/* 업로드 방식 탭 */}
               <div>
-                <label className="block text-[13px] font-bold text-gray-700 mb-2 flex items-center justify-between">
-                  <span>내 컴퓨터 파일 찾기</span>
-                  <span className="text-[11px] font-normal text-gray-400">영상, 텍스트, 문서, 기타 자료 모두 가능</span>
-                </label>
-                
-                <div className="flex items-center justify-center w-full">
-                  <label 
-                    onClick={() => fileInputRef.current?.click()}
-                    className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
-                      uploadFile ? 'border-green-300 bg-green-50/30' : 'border-gray-300 hover:bg-green-50 hover:border-green-300 bg-gray-50'
-                    }`}
+                <div className="flex rounded-xl border border-gray-200 overflow-hidden mb-4">
+                  <button
+                    onClick={() => setUploadMode('file')}
+                    className={`flex-1 py-2.5 text-[13px] font-bold transition-colors ${uploadMode === 'file' ? 'bg-[#00b050] text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
                   >
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <span className={`text-4xl mb-3 transition-transform ${uploadFile ? 'scale-110 opacity-100' : 'opacity-40 grayscale'}`}>
-                        {uploadFile ? (uploadFile.type.includes('video') ? '🎬' : uploadFile.type.includes('image') ? '🖼️' : '📄') : '📁'}
-                      </span>
-                      <p className="mb-2 text-sm text-gray-500 font-medium">
-                        <span className="font-extrabold text-[#00b050]">클릭해서 내 컴퓨터 파일 찾기</span>
-                      </p>
-                      <p className="text-[11px] text-gray-400">지원 확장자: PDF, MP4, JPEG, PPTX, TXT 등 (최대 100MB)</p>
-                    </div>
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      ref={fileInputRef}
-                      onChange={handleFileChange}
-                    />
-                  </label>
+                    📁 파일 업로드
+                  </button>
+                  <button
+                    onClick={() => setUploadMode('youtube')}
+                    className={`flex-1 py-2.5 text-[13px] font-bold transition-colors ${uploadMode === 'youtube' ? 'bg-red-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                  >
+                    ▶ YouTube 링크
+                  </button>
                 </div>
-                
-                {uploadFile && (
-                  <div className="mt-3 p-3.5 bg-white border border-green-200 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2">
-                    <div className="flex items-center text-[13px] font-bold text-gray-800 truncate pr-4">
-                      <span className="text-green-500 mr-2 text-lg">✓</span> 
-                      <span className="truncate">{uploadFile.name}</span>
-                      <span className="text-gray-400 ml-2 font-normal text-[11px]">
-                         ({(uploadFile.size / 1024 / 1024).toFixed(2)} MB)
-                      </span>
+
+                {uploadMode === 'youtube' ? (
+                  <div>
+                    <input
+                      type="text"
+                      value={uploadYoutubeUrl}
+                      onChange={e => setUploadYoutubeUrl(e.target.value)}
+                      placeholder="https://youtu.be/xxxxx 또는 youtube.com/watch?v=xxxxx"
+                      className="w-full p-3.5 text-[14px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-400/50 focus:border-red-400 transition-all"
+                    />
+                    {uploadYoutubeUrl && getYouTubeId(uploadYoutubeUrl) && (
+                      <div className="mt-3 rounded-xl overflow-hidden border border-red-200">
+                        <img
+                          src={`https://img.youtube.com/vi/${getYouTubeId(uploadYoutubeUrl)}/maxresdefault.jpg`}
+                          alt="YouTube 미리보기"
+                          className="w-full h-36 object-cover"
+                        />
+                        <p className="text-[11px] text-center text-red-500 font-bold py-1.5 bg-red-50">YouTube 썸네일 미리보기</p>
+                      </div>
+                    )}
+                    {uploadYoutubeUrl && !getYouTubeId(uploadYoutubeUrl) && (
+                      <p className="mt-2 text-[12px] text-red-500 font-bold">올바른 YouTube 주소가 아닙니다.</p>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-[13px] font-bold text-gray-700 mb-2 flex items-center justify-between">
+                      <span>내 컴퓨터 파일 찾기</span>
+                      <span className="text-[11px] font-normal text-gray-400">영상, 텍스트, 문서, 기타 자료 모두 가능</span>
+                    </label>
+                    <div className="flex items-center justify-center w-full">
+                      <label
+                        onClick={() => fileInputRef.current?.click()}
+                        className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                          uploadFile ? 'border-green-300 bg-green-50/30' : 'border-gray-300 hover:bg-green-50 hover:border-green-300 bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <span className={`text-4xl mb-3 transition-transform ${uploadFile ? 'scale-110 opacity-100' : 'opacity-40 grayscale'}`}>
+                            {uploadFile ? (uploadFile.type.includes('video') ? '🎬' : uploadFile.type.includes('image') ? '🖼️' : '📄') : '📁'}
+                          </span>
+                          <p className="mb-2 text-sm text-gray-500 font-medium">
+                            <span className="font-extrabold text-[#00b050]">클릭해서 내 컴퓨터 파일 찾기</span>
+                          </p>
+                          <p className="text-[11px] text-gray-400">지원 확장자: PDF, MP4, JPEG, PPTX, TXT 등 (최대 100MB)</p>
+                        </div>
+                        <input
+                          type="file"
+                          className="hidden"
+                          ref={fileInputRef}
+                          onChange={handleFileChange}
+                        />
+                      </label>
                     </div>
-                    <button 
-                      className="text-gray-400 hover:text-red-500 text-xs font-bold px-2 py-1 bg-gray-50 hover:bg-red-50 rounded transition-colors whitespace-nowrap" 
-                      onClick={() => setUploadFile(null)}
-                    >
-                      삭제
-                    </button>
+                    {uploadFile && (
+                      <div className="mt-3 p-3.5 bg-white border border-green-200 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2">
+                        <div className="flex items-center text-[13px] font-bold text-gray-800 truncate pr-4">
+                          <span className="text-green-500 mr-2 text-lg">✓</span>
+                          <span className="truncate">{uploadFile.name}</span>
+                          <span className="text-gray-400 ml-2 font-normal text-[11px]">
+                             ({(uploadFile.size / 1024 / 1024).toFixed(2)} MB)
+                          </span>
+                        </div>
+                        <button
+                          className="text-gray-400 hover:text-red-500 text-xs font-bold px-2 py-1 bg-gray-50 hover:bg-red-50 rounded transition-colors whitespace-nowrap"
+                          onClick={() => setUploadFile(null)}
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -568,12 +628,12 @@ export default function Home() {
               >
                 닫기
               </button>
-              <button 
-                onClick={executeUpload} 
-                disabled={!uploadTitle || !uploadFile}
+              <button
+                onClick={executeUpload}
+                disabled={!uploadTitle || (uploadMode === 'file' ? !uploadFile : !getYouTubeId(uploadYoutubeUrl))}
                 className="px-8 py-2.5 rounded-xl font-extrabold bg-[#00b050] text-white shadow-md shadow-green-500/20 hover:bg-[#009030] disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transition-all transform active:scale-95"
               >
-                로컬 파일 업로드 완료
+                {uploadMode === 'youtube' ? 'YouTube 링크 등록' : '파일 업로드 완료'}
               </button>
             </div>
           </div>
@@ -676,6 +736,20 @@ export default function Home() {
               ) : (
                 <div className="bg-gray-50 rounded-xl p-4 text-[13px] text-gray-400 text-center border border-dashed border-gray-200">
                   등록된 내용이 없습니다.
+                </div>
+              )}
+              {/* YouTube 영상 */}
+              {detailMat.youtubeUrl && (
+                <div>
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">YouTube 영상</p>
+                  <div className="rounded-xl overflow-hidden border border-gray-200" style={{aspectRatio: '16/9'}}>
+                    <iframe
+                      src={detailMat.youtubeUrl}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
                 </div>
               )}
               {/* 첨부파일 */}
@@ -1497,6 +1571,7 @@ export default function Home() {
                       <div className="flex-1 ml-3 min-w-0">
                         <p className="text-[13px] font-semibold text-gray-700 group-hover:text-[#00723a] truncate flex items-center gap-1.5">
                           {mat.title}
+                          {mat.youtubeUrl && <span className="text-[10px] bg-red-50 text-red-500 border border-red-100 px-1.5 py-0.5 rounded font-bold flex-shrink-0">YouTube</span>}
                           {mat.fileUrl && <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-200 px-1.5 py-0.5 rounded font-bold flex-shrink-0">첨부</span>}
                         </p>
                         {mat.content && <p className="text-[11px] text-gray-400 truncate mt-0.5">{mat.content}</p>}
@@ -1561,7 +1636,9 @@ export default function Home() {
                     <div
                       key={mat.id}
                       onClick={() => {
-                        if (mat.fileUrl) {
+                        if (mat.youtubeUrl || mat.content) {
+                          setDetailMat(mat); setShowDetailModal(true);
+                        } else if (mat.fileUrl) {
                           window.open(mat.fileUrl, '_blank');
                         } else {
                           alert(`[뷰어 오류] 이 자료는 예전에 등록된 껍데기(테스트) 자료라 실제 파일이 존재하지 않습니다. 방금 새로 업로드하신 파일을 클릭해 보세요!`);
@@ -1576,10 +1653,11 @@ export default function Home() {
 
                       {/* 아이콘 + 제목 */}
                       <div className="flex-1 flex items-center gap-3 ml-4 min-w-0">
-                        <span className="text-lg flex-shrink-0">{mat.type === 'VIDEO' ? '🎬' : '📄'}</span>
+                        <span className="text-lg flex-shrink-0">{mat.youtubeUrl ? '▶' : mat.type === 'VIDEO' ? '🎬' : '📄'}</span>
                         <span className="text-[14px] font-medium text-gray-800 group-hover:text-[#00723a] transition-colors truncate">
                           {mat.fileName ? `[${mat.fileName}] ` : ''}{mat.title}
                         </span>
+                        {mat.youtubeUrl && <span className="flex-shrink-0 text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded">YouTube</span>}
                         {mat.category === '게시판' && mat.type === 'NOTICE' && (
                           <span className="flex-shrink-0 text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded">공지</span>
                         )}
