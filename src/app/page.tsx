@@ -258,6 +258,8 @@ export default function Home() {
   const [uploadProduct, setUploadProduct] = useState('스피그린');
   const [uploadMode, setUploadMode] = useState<'file' | 'youtube'>('file');
   const [uploadYoutubeUrl, setUploadYoutubeUrl] = useState('');
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ============== 폴더 수정 로직 ==============
@@ -414,6 +416,8 @@ export default function Home() {
     if (!uploadTitle) return;
     if (uploadMode === 'file' && !uploadFile) return;
     if (uploadMode === 'youtube' && !uploadYoutubeUrl.trim()) return;
+    setUploadLoading(true);
+    setUploadError('');
 
     let finalType: MaterialType = uploadTypeState;
 
@@ -436,7 +440,13 @@ export default function Home() {
       }
     } else if (uploadFile) {
       const uploaded = await uploadFileToStorage(uploadFile);
-      if (uploaded) { fileName = uploaded.fileName; fileUrl = uploaded.fileUrl; }
+      if (!uploaded) {
+        setUploadError('파일 업로드에 실패했습니다. 다시 시도해주세요.');
+        setUploadLoading(false);
+        return;
+      }
+      fileName = uploaded.fileName;
+      fileUrl = uploaded.fileUrl;
       if (uploadFile.type.startsWith('image/')) newThumbnail = fileUrl || newThumbnail;
     }
 
@@ -464,6 +474,7 @@ export default function Home() {
     });
 
     setMaterials([newMaterial, ...materials]);
+    setUploadLoading(false);
     setShowUploadModal(false);
   };
   // ==========================================
@@ -781,6 +792,7 @@ export default function Home() {
             </div>
 
             {/* 모달 하단 액션 버튼 */}
+            {uploadError && <p className="px-5 pb-2 text-red-500 text-[13px] font-bold">{uploadError}</p>}
             <div className="p-5 border-t border-gray-100 bg-gray-50/80 flex justify-end space-x-3">
               <button
                 onClick={() => setShowUploadModal(false)}
@@ -790,10 +802,10 @@ export default function Home() {
               </button>
               <button
                 onClick={executeUpload}
-                disabled={!uploadTitle || (uploadMode === 'file' ? !uploadFile : !getYouTubeId(uploadYoutubeUrl))}
+                disabled={uploadLoading || !uploadTitle || (uploadMode === 'file' ? !uploadFile : !getYouTubeId(uploadYoutubeUrl))}
                 className="px-8 py-2.5 rounded-xl font-extrabold bg-[#00b050] text-white shadow-md shadow-green-500/20 hover:bg-[#009030] disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transition-all transform active:scale-95"
               >
-                {uploadMode === 'youtube' ? 'YouTube 링크 등록' : '파일 업로드 완료'}
+                {uploadLoading ? '업로드 중...' : uploadMode === 'youtube' ? 'YouTube 링크 등록' : '파일 업로드 완료'}
               </button>
             </div>
           </div>
