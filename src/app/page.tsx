@@ -1438,26 +1438,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* 건식/화장품/기기 전용 서브 카테고리 (제품군) 네비게이션 — 텍스트 밑줄 스타일 */}
-      {(selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') && (
-        <div className="flex items-center overflow-x-auto pb-3 mb-6 scrollbar-hide border-b border-gray-100">
-          {(selectedCategory === '건식' ? healthProducts : selectedCategory === '화장품' ? cosmeticsProducts : deviceProducts).map(prod => (
-            <button
-              key={prod}
-              onClick={() => setSelectedProduct(prod)}
-              className={`relative whitespace-nowrap px-4 py-2 text-[13px] transition-colors flex-shrink-0 ${selectedProduct === prod
-                  ? 'text-[#00723a] font-bold'
-                  : 'text-gray-500 font-medium hover:text-[#00723a]'
-                }`}
-            >
-              {prod}
-              {selectedProduct === prod && (
-                <span className="absolute bottom-0 left-2 right-2 h-[1.5px] bg-[#00b050] rounded-full block" />
-              )}
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* ============== 브랜드판촉 UI ============== */}
       {selectedCategory === '브랜드판촉' ? (
