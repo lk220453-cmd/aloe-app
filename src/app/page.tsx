@@ -99,29 +99,15 @@ const heroConfigs: Record<string, { bgUrl: string, bgUrl2?: string, title: strin
     colorClass: 'from-black/95 via-gray-900/60',
     accentClass: 'from-yellow-400 to-amber-200',
     bgClass: 'object-cover object-right md:object-center opacity-70 group-hover:scale-105 transition-transform duration-[20s]'
-  }, ls(
-    id text primary key,
-    title text not null,
-    type text not null,
-    thumbnail_url text,
-    category text not null,
-    year text,
-    month text,
-    file_name text,
-    file_url text,
-    product_name text,
-    content text,
-    youtube_url text,
-    created_at timestamptz default now()
-  );
-'기기': {
-  bgUrl: '/device.png',
+  },
+  '기기': {
+    bgUrl: '/device.png',
     title: '디바이스 튜토리얼',
-      subTitle: '최첨단 과학 기술,',
-        desc: '프리미엄 김정문알로에 건강기기의 활용 튜토리얼과 매뉴얼입니다.',
-          colorClass: 'from-violet-950/90 via-purple-900/40',
-            accentClass: 'from-violet-300 to-fuchsia-400'
-},
+    subTitle: '최첨단 과학 기술,',
+    desc: '프리미엄 김정문알로에 건강기기의 활용 튜토리얼과 매뉴얼입니다.',
+    colorClass: 'from-violet-950/90 via-purple-900/40',
+    accentClass: 'from-violet-300 to-fuchsia-400'
+  },
 '자료공유방': {
   bgUrl: '/bg.jpg',
     circleUrl: '/char_girl.png',
