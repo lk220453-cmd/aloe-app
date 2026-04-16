@@ -1048,13 +1048,13 @@ export default function Home() {
                     alert('전체 보기 탭에서는 업로드할 수 없습니다. 특정 카테고리를 선택해 주세요.');
                     return;
                   }
-                  document.getElementById('direct-main-upload')?.click();
+                  openUploadModal();
                 }}
                 className="w-full md:w-auto bg-[#00b050] text-white px-6 py-3.5 rounded-xl font-bold shadow-md shadow-green-500/20 hover:bg-[#009030] active:scale-95 transition-all whitespace-nowrap flex items-center justify-center gap-2"
               >
                 <span className="text-lg leading-none">+</span>
                 <span>
-                  {selectedCategory === '브랜드판촉' ? `새 폴더에 프로모션 자료 올리기` : '내 컴퓨터에서 파일 직접 올리기'}
+                  {selectedCategory === '브랜드판촉' ? `새 폴더에 프로모션 자료 올리기` : '자료 올리기'}
                 </span>
               </button>
               <input
