@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [signupUsername, setSignupUsername] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [signupName, setSignupName] = useState('');
+  const [signupCompany, setSignupCompany] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -77,6 +78,7 @@ export default function LoginPage() {
       username: signupUsername,
       password: signupPassword,
       name: signupName,
+      company: signupCompany,
       role: 'BUSINESS',
       status: 'pending',
     });
@@ -96,6 +98,7 @@ export default function LoginPage() {
     setSignupName('');
     setSignupUsername('');
     setSignupPassword('');
+    setSignupCompany('');
   };
 
   return (
@@ -157,6 +160,13 @@ export default function LoginPage() {
               placeholder="이름"
               value={signupName}
               onChange={e => setSignupName(e.target.value)}
+              className="w-full p-3.5 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#7a9a52]/50"
+            />
+            <input
+              type="text"
+              placeholder="거래처명"
+              value={signupCompany}
+              onChange={e => setSignupCompany(e.target.value)}
               className="w-full p-3.5 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#7a9a52]/50"
             />
             <input
