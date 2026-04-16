@@ -254,7 +254,7 @@ export default function Home() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadTypeState, setUploadTypeState] = useState<MaterialType>('DOCUMENT');
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [uploadProduct, setUploadProduct] = useState('스피그린');
   const [uploadMode, setUploadMode] = useState<'file' | 'youtube'>('file');
   const [uploadYoutubeUrl, setUploadYoutubeUrl] = useState('');
@@ -309,7 +309,7 @@ export default function Home() {
 
   const openUploadModal = () => {
     setUploadTitle('');
-    setUploadFile(null);
+    setUploadFiles([]);
     setUploadTypeState('DOCUMENT');
     setUploadMode('file');
     setUploadYoutubeUrl('');
@@ -323,19 +323,15 @@ export default function Home() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      setUploadFile(file);
-
-      // 파일명 자동 완성 (제목을 입력하지 않은 경우에만)
-      if (!uploadTitle) {
-        setUploadTitle(file.name.replace(/\.[^/.]+$/, ""));
-      }
-
-      // 확장자로 자동 속성(유형) 분류
-      if (file.type.startsWith('video/') || file.name.match(/\.(mp4|avi|mov)$/i)) {
-        setUploadTypeState('VIDEO');
-      } else {
-        setUploadTypeState('DOCUMENT');
+      const files = Array.from(e.target.files);
+      setUploadFiles(files);
+      if (files.length === 1) {
+        if (!uploadTitle) setUploadTitle(files[0].name.replace(/\.[^/.]+$/, ""));
+        if (files[0].type.startsWith('video/') || files[0].name.match(/\.(mp4|avi|mov)$/i)) {
+          setUploadTypeState('VIDEO');
+        } else {
+          setUploadTypeState('DOCUMENT');
+        }
       }
     }
   };
@@ -418,66 +414,63 @@ export default function Home() {
   };
 
   const executeUpload = async () => {
-    if (!uploadTitle) return;
-    if (uploadMode === 'file' && !uploadFile) return;
-    if (uploadMode === 'youtube' && !uploadYoutubeUrl.trim()) return;
+    if (uploadMode === 'youtube') {
+      if (!uploadTitle || !uploadYoutubeUrl.trim()) return;
+    } else {
+      if (uploadFiles.length === 0) return;
+      if (uploadFiles.length === 1 && !uploadTitle) return;
+    }
     setUploadLoading(true);
     setUploadError('');
 
     let finalType: MaterialType = uploadTypeState;
-
     if (selectedCategory === '게시판') {
       finalType = selectedSubBoard === 'NOTICE' ? 'NOTICE' : selectedSubBoard === 'FREE' ? 'FREE' : 'DOCUMENT';
     } else if (selectedCategory === '브랜드판촉') {
       finalType = 'DOCUMENT';
     }
 
-    let newThumbnail = 'https://picsum.photos/seed/' + Math.floor(Math.random() * 100) + '/400/225';
-    let youtubeId: string | null = null;
-    let fileName: string | undefined;
-    let fileUrl: string | undefined;
-
     if (uploadMode === 'youtube') {
-      youtubeId = getYouTubeId(uploadYoutubeUrl.trim());
-      if (youtubeId) {
-        newThumbnail = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
-        finalType = 'VIDEO';
+      const youtubeId = getYouTubeId(uploadYoutubeUrl.trim());
+      const newThumbnail = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : 'https://picsum.photos/seed/' + Math.floor(Math.random() * 100) + '/400/225';
+      const newMaterial: Material = {
+        id: 'm' + Date.now().toString(), title: uploadTitle, type: 'VIDEO',
+        thumbnailUrl: newThumbnail, category: selectedCategory, year: promoYear, month: promoMonth,
+        youtubeUrl: youtubeId ? `https://www.youtube.com/embed/${youtubeId}` : undefined,
+        productName: (selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') ? uploadProduct : undefined
+      };
+      await supabase.from('materials').insert({
+        id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
+        thumbnail_url: newThumbnail, category: newMaterial.category,
+        year: newMaterial.year, month: newMaterial.month,
+        youtube_url: newMaterial.youtubeUrl, product_name: newMaterial.productName,
+      });
+      setMaterials([newMaterial, ...materials]);
+    } else {
+      const inserted: Material[] = [];
+      for (const file of uploadFiles) {
+        const title = uploadFiles.length === 1 ? uploadTitle : file.name.replace(/\.[^/.]+$/, "");
+        const fileType: MaterialType = (file.type.startsWith('video/') || file.name.match(/\.(mp4|avi|mov)$/i)) ? 'VIDEO' : finalType;
+        const uploaded = await uploadFileToStorage(file);
+        if (!uploaded) { setUploadError('일부 파일 업로드에 실패했습니다.'); continue; }
+        const newThumbnail = file.type.startsWith('image/') ? uploaded.fileUrl : 'https://picsum.photos/seed/' + Math.floor(Math.random() * 100) + '/400/225';
+        const newMaterial: Material = {
+          id: 'm' + Date.now().toString() + Math.random(), title, type: fileType,
+          thumbnailUrl: newThumbnail, category: selectedCategory, year: promoYear, month: promoMonth,
+          fileName: uploaded.fileName, fileUrl: uploaded.fileUrl,
+          productName: (selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') ? uploadProduct : undefined
+        };
+        await supabase.from('materials').insert({
+          id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
+          thumbnail_url: newThumbnail, category: newMaterial.category,
+          year: newMaterial.year, month: newMaterial.month,
+          file_name: newMaterial.fileName, file_url: newMaterial.fileUrl,
+          product_name: newMaterial.productName,
+        });
+        inserted.push(newMaterial);
       }
-    } else if (uploadFile) {
-      const uploaded = await uploadFileToStorage(uploadFile);
-      if (!uploaded) {
-        setUploadLoading(false);
-        return;
-      }
-      fileName = uploaded.fileName;
-      fileUrl = uploaded.fileUrl;
-      if (uploadFile.type.startsWith('image/')) newThumbnail = fileUrl || newThumbnail;
+      setMaterials([...inserted.reverse(), ...materials]);
     }
-
-    const newMaterial: Material = {
-      id: 'm' + Date.now().toString(),
-      title: uploadTitle,
-      type: finalType,
-      thumbnailUrl: newThumbnail,
-      category: selectedCategory,
-      year: promoYear,
-      month: promoMonth,
-      fileName,
-      fileUrl,
-      youtubeUrl: uploadMode === 'youtube' && youtubeId ? `https://www.youtube.com/embed/${youtubeId}` : undefined,
-      productName: (selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') ? uploadProduct : undefined
-    };
-
-    await supabase.from('materials').insert({
-      id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
-      thumbnail_url: newThumbnail, category: newMaterial.category,
-      year: newMaterial.year, month: newMaterial.month,
-      file_name: fileName, file_url: fileUrl,
-      youtube_url: newMaterial.youtubeUrl,
-      product_name: newMaterial.productName,
-    });
-
-    setMaterials([newMaterial, ...materials]);
     setUploadLoading(false);
     setShowUploadModal(false);
   };
@@ -713,41 +706,41 @@ export default function Home() {
                     </label>
                     <div className="flex items-center justify-center w-full">
                       <label
-                        className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all ${uploadFile ? 'border-green-300 bg-green-50/30' : 'border-gray-300 hover:bg-green-50 hover:border-green-300 bg-gray-50'
-                          }`}
+                        className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all ${uploadFiles.length > 0 ? 'border-green-300 bg-green-50/30' : 'border-gray-300 hover:bg-green-50 hover:border-green-300 bg-gray-50'}`}
                       >
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <span className={`text-4xl mb-3 transition-transform ${uploadFile ? 'scale-110 opacity-100' : 'opacity-40 grayscale'}`}>
-                            {uploadFile ? (uploadFile.type.includes('video') ? '🎬' : uploadFile.type.includes('image') ? '🖼️' : '📄') : '📁'}
+                          <span className={`text-4xl mb-3 transition-transform ${uploadFiles.length > 0 ? 'scale-110 opacity-100' : 'opacity-40 grayscale'}`}>
+                            {uploadFiles.length > 1 ? '📦' : uploadFiles.length === 1 ? (uploadFiles[0].type.includes('video') ? '🎬' : uploadFiles[0].type.includes('image') ? '🖼️' : '📄') : '📁'}
                           </span>
                           <p className="mb-2 text-sm text-gray-500 font-medium">
-                            <span className="font-extrabold text-[#00b050]">클릭해서 내 컴퓨터 파일 찾기</span>
+                            <span className="font-extrabold text-[#00b050]">클릭해서 내 컴퓨터 파일 찾기 (다중 선택 가능)</span>
                           </p>
                           <p className="text-[11px] text-gray-400">지원 확장자: PDF, MP4, JPEG, PPTX, TXT 등 (최대 100MB)</p>
                         </div>
                         <input
                           type="file"
+                          multiple
                           className="hidden"
                           ref={fileInputRef}
                           onChange={handleFileChange}
                         />
                       </label>
                     </div>
-                    {uploadFile && (
-                      <div className="mt-3 p-3.5 bg-white border border-green-200 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2">
-                        <div className="flex items-center text-[13px] font-bold text-gray-800 truncate pr-4">
-                          <span className="text-green-500 mr-2 text-lg">✓</span>
-                          <span className="truncate">{uploadFile.name}</span>
-                          <span className="text-gray-400 ml-2 font-normal text-[11px]">
-                            ({(uploadFile.size / 1024 / 1024).toFixed(2)} MB)
-                          </span>
-                        </div>
-                        <button
-                          className="text-gray-400 hover:text-red-500 text-xs font-bold px-2 py-1 bg-gray-50 hover:bg-red-50 rounded transition-colors whitespace-nowrap"
-                          onClick={() => setUploadFile(null)}
-                        >
-                          삭제
-                        </button>
+                    {uploadFiles.length > 0 && (
+                      <div className="mt-3 flex flex-col gap-2">
+                        {uploadFiles.map((f, i) => (
+                          <div key={i} className="p-3 bg-white border border-green-200 rounded-xl flex items-center justify-between shadow-sm">
+                            <div className="flex items-center text-[13px] font-bold text-gray-800 truncate pr-4">
+                              <span className="text-green-500 mr-2 text-lg">✓</span>
+                              <span className="truncate">{f.name}</span>
+                              <span className="text-gray-400 ml-2 font-normal text-[11px]">({(f.size / 1024 / 1024).toFixed(2)} MB)</span>
+                            </div>
+                            <button
+                              className="text-gray-400 hover:text-red-500 text-xs font-bold px-2 py-1 bg-gray-50 hover:bg-red-50 rounded transition-colors whitespace-nowrap"
+                              onClick={() => setUploadFiles(uploadFiles.filter((_, idx) => idx !== i))}
+                            >삭제</button>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -806,7 +799,7 @@ export default function Home() {
               </button>
               <button
                 onClick={executeUpload}
-                disabled={uploadLoading || !uploadTitle || (uploadMode === 'file' ? !uploadFile : !getYouTubeId(uploadYoutubeUrl))}
+                disabled={uploadLoading || (uploadMode === 'youtube' ? (!uploadTitle || !getYouTubeId(uploadYoutubeUrl)) : (uploadFiles.length === 0 || (uploadFiles.length === 1 && !uploadTitle)))}
                 className="px-8 py-2.5 rounded-xl font-extrabold bg-[#00b050] text-white shadow-md shadow-green-500/20 hover:bg-[#009030] disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transition-all transform active:scale-95"
               >
                 {uploadLoading ? '업로드 중...' : uploadMode === 'youtube' ? 'YouTube 링크 등록' : '파일 업로드 완료'}
