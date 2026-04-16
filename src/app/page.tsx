@@ -350,9 +350,11 @@ export default function Home() {
   };
 
   const uploadFileToStorage = async (file: File): Promise<{ fileName: string; fileUrl: string } | null> => {
-    const filePath = `uploads/${Date.now()}_${file.name}`;
+    const ext = file.name.includes('.') ? file.name.split('.').pop() : '';
+    const safeName = `${Date.now()}${ext ? '.' + ext : ''}`;
+    const filePath = `uploads/${safeName}`;
     const { error } = await supabase.storage.from('files').upload(filePath, file);
-    if (error) return null;
+    if (error) { console.error('Storage upload error:', error); return null; }
     const { data } = supabase.storage.from('files').getPublicUrl(filePath);
     return { fileName: file.name, fileUrl: data.publicUrl };
   };
