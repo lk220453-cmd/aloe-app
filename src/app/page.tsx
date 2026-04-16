@@ -625,7 +625,7 @@ export default function Home() {
       {/* 🔴 내 컴퓨터 파일 업로드 모달창 */}
       {showUploadModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm transition-all">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-100">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-in fade-in zoom-in duration-200 border border-gray-100 flex flex-col max-h-[90vh]">
             {/* 모달 헤더 */}
             <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50/50">
               <h3 className="font-extrabold text-[17px] text-gray-800 flex items-center">
@@ -644,7 +644,7 @@ export default function Home() {
             </div>
 
             {/* 모달 메인 폼 */}
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 overflow-y-auto flex-1">
 
               {/* 자료 제목 */}
               <div>
