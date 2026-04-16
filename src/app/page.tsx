@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 type MaterialType = 'VIDEO' | 'DOCUMENT' | 'NOTICE' | 'FREE';
 type UserRole = 'ADMIN' | 'BUSINESS' | 'COUNSELOR';
@@ -72,7 +73,7 @@ const categories = ['ALL', '건식', '화장품', '기기', '자료공유방', '
 
 const heroConfigs: Record<string, { bgUrl: string, bgUrl2?: string, title: string, desc: string, colorClass: string, accentClass: string, subTitle: string, bgClass?: string, bgClass2?: string, circleUrl?: string, circlePos?: string }> = {
   'ALL': {
-    bgUrl: '/bg.jpg', 
+    bgUrl: '/bg.jpg',
     title: '전문 교육 자료실',
     subTitle: '자연의 생명력 그대로,',
     desc: '사업자 및 카운셀러님의 성공적인 영업을 돕기 위해 본사에서 제공하는 프리미엄 교육 자료 및 프로모션 안내입니다.',
@@ -80,7 +81,7 @@ const heroConfigs: Record<string, { bgUrl: string, bgUrl2?: string, title: strin
     accentClass: 'from-green-300 to-green-500'
   },
   '건식': {
-    bgUrl: '/supps1.png', 
+    bgUrl: '/supps1.png',
     bgUrl2: '/supps2.png',
     title: '건강기능식품 자료관',
     subTitle: '건강을 채우는 에너지,',
@@ -91,87 +92,100 @@ const heroConfigs: Record<string, { bgUrl: string, bgUrl2?: string, title: strin
     bgClass2: 'object-contain object-right opacity-60 scale-[1.25] translate-x-2 translate-y-6 md:translate-x-10 md:translate-y-10 group-hover:scale-[1.3] transition-transform duration-[10s] absolute inset-0 z-0'
   },
   '화장품': {
-    bgUrl: '/cosmetics.jpg', 
+    bgUrl: '/cosmetics.jpg',
     title: '코스메틱 자료관',
     subTitle: '아름다움의 본질, 피부과학',
     desc: '김정문알로에만의 특허 기술이 담긴 기초 및 색조 화장품 시리즈의 교육 코스입니다.',
     colorClass: 'from-black/95 via-gray-900/60',
     accentClass: 'from-yellow-400 to-amber-200',
     bgClass: 'object-cover object-right md:object-center opacity-70 group-hover:scale-105 transition-transform duration-[20s]'
-  },
-  '기기': {
-    bgUrl: '/device.png',
+  }, ls(
+    id text primary key,
+    title text not null,
+    type text not null,
+    thumbnail_url text,
+    category text not null,
+    year text,
+    month text,
+    file_name text,
+    file_url text,
+    product_name text,
+    content text,
+    youtube_url text,
+    created_at timestamptz default now()
+  );
+'기기': {
+  bgUrl: '/device.png',
     title: '디바이스 튜토리얼',
-    subTitle: '최첨단 과학 기술,',
-    desc: '프리미엄 김정문알로에 건강기기의 활용 튜토리얼과 매뉴얼입니다.',
-    colorClass: 'from-violet-950/90 via-purple-900/40',
-    accentClass: 'from-violet-300 to-fuchsia-400'
-  },
-  '자료공유방': {
-    bgUrl: '/bg.jpg',
+      subTitle: '최첨단 과학 기술,',
+        desc: '프리미엄 김정문알로에 건강기기의 활용 튜토리얼과 매뉴얼입니다.',
+          colorClass: 'from-violet-950/90 via-purple-900/40',
+            accentClass: 'from-violet-300 to-fuchsia-400'
+},
+'자료공유방': {
+  bgUrl: '/bg.jpg',
     circleUrl: '/char_girl.png',
-    circlePos: '50% center',
-    title: '자료공유 아카이브',
-    subTitle: '현장 노하우의 집약,',
-    desc: '사업자 및 지사에서 직접 제작하고 공유하는 다채로운 영업 노하우와 맞춤 교안들입니다.',
-    colorClass: 'from-slate-950/90 via-cyan-900/40',
-    accentClass: 'from-cyan-300 to-blue-400'
-  },
-  '게시판': {
-    bgUrl: '/bg.jpg',
+      circlePos: '50% center',
+        title: '자료공유 아카이브',
+          subTitle: '현장 노하우의 집약,',
+            desc: '사업자 및 지사에서 직접 제작하고 공유하는 다채로운 영업 노하우와 맞춤 교안들입니다.',
+              colorClass: 'from-slate-950/90 via-cyan-900/40',
+                accentClass: 'from-cyan-300 to-blue-400'
+},
+'게시판': {
+  bgUrl: '/bg.jpg',
     circleUrl: '/char_girl.png',
-    circlePos: '0% center',
-    title: '소통 커뮤니티',
-    subTitle: '오픈 커뮤니케이션 라운지,',
-    desc: '본사 긴급 공지사항과 대리점간의 자유로운 의견을 실시간으로 교환할 수 있는 플랫폼입니다.',
-    colorClass: 'from-indigo-950/90 via-blue-900/40',
-    accentClass: 'from-indigo-300 to-blue-400'
-  },
-  '브랜드판촉': {
-    bgUrl: '/bg.jpg',
+      circlePos: '0% center',
+        title: '소통 커뮤니티',
+          subTitle: '오픈 커뮤니케이션 라운지,',
+            desc: '본사 긴급 공지사항과 대리점간의 자유로운 의견을 실시간으로 교환할 수 있는 플랫폼입니다.',
+              colorClass: 'from-indigo-950/90 via-blue-900/40',
+                accentClass: 'from-indigo-300 to-blue-400'
+},
+'브랜드판촉': {
+  bgUrl: '/bg.jpg',
     circleUrl: '/char_green.png',
-    circlePos: '0% center',
-    title: '브랜드 판촉',
-    subTitle: '고객 경험의 극대화, 파워 세일즈',
-    desc: '이달의 핵심 브랜드 판촉 행사와 사은품, 특가 기획전 관련 마케팅 자료입니다.',
-    colorClass: 'from-rose-950/90 via-red-900/40',
-    accentClass: 'from-red-300 to-pink-400'
-  }
+      circlePos: '0% center',
+        title: '브랜드 판촉',
+          subTitle: '고객 경험의 극대화, 파워 세일즈',
+            desc: '이달의 핵심 브랜드 판촉 행사와 사은품, 특가 기획전 관련 마케팅 자료입니다.',
+              colorClass: 'from-rose-950/90 via-red-900/40',
+                accentClass: 'from-red-300 to-pink-400'
+}
 };
 
 export default function Home() {
-  const [userRole, setUserRole] = useState<UserRole>('ADMIN'); 
-  
+  const [userRole, setUserRole] = useState<UserRole>('ADMIN');
+
   const [materials, setMaterials] = useState<Material[]>(initialMockMaterials);
   const [promoFolders, setPromoFolders] = useState<PromoFolder[]>(initialPromoFolders);
-  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem('aloeData');
-    if (stored) {
-      const parsed = JSON.parse(stored);
+    const loadData = async () => {
+      const { data: matsData } = await supabase.from('materials').select('*').order('created_at', { ascending: false });
+      const { data: foldersData } = await supabase.from('promo_folders').select('*');
 
-      // 구버전 로컬 스토리지 명칭 마이그레이션 ('월간프로모션' -> '브랜드판촉')
-      const loadedMaterials = parsed.materials || initialMockMaterials;
-      const migratedMaterials = loadedMaterials.map((m: any) => 
-        m.category === '월간프로모션' ? { ...m, category: '브랜드판촉' } : m
-      );
-
-      setMaterials(migratedMaterials);
-      setPromoFolders(parsed.promoFolders || initialPromoFolders);
-    }
-    setIsLoaded(true);
+      if (matsData && matsData.length > 0) {
+        const mapped = matsData.map((m: any) => ({
+          id: m.id, title: m.title, type: m.type, thumbnailUrl: m.thumbnail_url || '',
+          category: m.category, year: m.year, month: m.month,
+          fileName: m.file_name, fileUrl: m.file_url, productName: m.product_name,
+          content: m.content, youtubeUrl: m.youtube_url,
+        }));
+        setMaterials(mapped);
+      }
+      if (foldersData && foldersData.length > 0) {
+        setPromoFolders(foldersData);
+      }
+    };
+    loadData();
   }, []);
-
-  useEffect(() => {
-    if (isLoaded) localStorage.setItem('aloeData', JSON.stringify({ materials, promoFolders }));
-  }, [materials, promoFolders, isLoaded]);
 
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
-  
+
   const [selectedType, setSelectedType] = useState('ALL');
-  const [selectedSubBoard, setSelectedSubBoard] = useState('ALL'); 
+  const [selectedSubBoard, setSelectedSubBoard] = useState('ALL');
   const [selectedProduct, setSelectedProduct] = useState('전체');
 
   const [promoYear, setPromoYear] = useState('2026');
@@ -214,7 +228,7 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ============== 폴더 수정 로직 ==============
-  const handleAddFolder = () => {
+  const handleAddFolder = async () => {
     const yearInput = window.prompt('프로모션 자료를 등록할 연도를 입력하세요 (예: 2026)');
     if (!yearInput) return;
     const monthInput = window.prompt('자료를 등록할 월을 입력하세요 (예: 5)');
@@ -228,28 +242,32 @@ export default function Home() {
       month: monthInput.trim(),
       title: titleInput
     };
-    
+
+    await supabase.from('promo_folders').insert(newFolder);
     setPromoFolders([...promoFolders, newFolder]);
     setPromoYear(newFolder.year);
     setPromoMonth(newFolder.month);
   };
 
-  const handleEditFolderTitle = (folderId: string, oldTitle: string) => {
+  const handleEditFolderTitle = async (folderId: string, oldTitle: string) => {
     const titleInput = window.prompt('변경할 폴더 제목을 입력하세요:', oldTitle);
     if (!titleInput) return;
 
+    await supabase.from('promo_folders').update({ title: titleInput }).eq('id', folderId);
     setPromoFolders(promoFolders.map(f => f.id === folderId ? { ...f, title: titleInput } : f));
   };
 
   // ============== 항목 수정 및 삭제 로직 ==============
-  const handleEditMaterialTitle = (mId: string, oldTitle: string) => {
+  const handleEditMaterialTitle = async (mId: string, oldTitle: string) => {
     const titleInput = window.prompt('변경할 자료 제목을 입력하세요:', oldTitle);
     if (!titleInput) return;
+    await supabase.from('materials').update({ title: titleInput }).eq('id', mId);
     setMaterials(materials.map(m => m.id === mId ? { ...m, title: titleInput } : m));
   };
 
-  const handleDeleteMaterial = (mId: string) => {
+  const handleDeleteMaterial = async (mId: string) => {
     if (window.confirm('정말로 이 자료를 완전히 삭제/숨김 처리하시겠습니까?')) {
+      await supabase.from('materials').delete().eq('id', mId);
       setMaterials(materials.filter(m => m.id !== mId));
     }
   };
@@ -272,7 +290,7 @@ export default function Home() {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       setUploadFile(file);
-      
+
       // 파일명 자동 완성 (제목을 입력하지 않은 경우에만)
       if (!uploadTitle) {
         setUploadTitle(file.name.replace(/\.[^/.]+$/, ""));
@@ -296,14 +314,29 @@ export default function Home() {
     setShowEditModal(true);
   };
 
-  const executeEdit = () => {
+  const uploadFileToStorage = async (file: File): Promise<{ fileName: string; fileUrl: string } | null> => {
+    const filePath = `uploads/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage.from('files').upload(filePath, file);
+    if (error) return null;
+    const { data } = supabase.storage.from('files').getPublicUrl(filePath);
+    return { fileName: file.name, fileUrl: data.publicUrl };
+  };
+
+  const executeEdit = async () => {
     if (!editMat || !editTitle.trim()) return;
     let fileUpdates: Partial<Material> = {};
     if (editFile) {
-      fileUpdates = { fileName: editFile.name, fileUrl: URL.createObjectURL(editFile) };
+      const uploaded = await uploadFileToStorage(editFile);
+      if (uploaded) fileUpdates = uploaded;
     } else if (editFileDeleted) {
       fileUpdates = { fileName: undefined, fileUrl: undefined };
     }
+    await supabase.from('materials').update({
+      title: editTitle.trim(),
+      content: editContent,
+      file_name: fileUpdates.fileName ?? (editFileDeleted ? null : editMat.fileName),
+      file_url: fileUpdates.fileUrl ?? (editFileDeleted ? null : editMat.fileUrl),
+    }).eq('id', editMat.id);
     setMaterials(prev => prev.map(m => m.id === editMat.id ? { ...m, title: editTitle.trim(), content: editContent, ...fileUpdates } : m));
     setShowEditModal(false);
     setEditMat(null);
@@ -311,9 +344,15 @@ export default function Home() {
     setEditFileDeleted(false);
   };
 
-  const executeWrite = () => {
+  const executeWrite = async () => {
     if (!writeTitle.trim()) return;
     const now = new Date();
+    let fileName: string | undefined;
+    let fileUrl: string | undefined;
+    if (writeFile) {
+      const uploaded = await uploadFileToStorage(writeFile);
+      if (uploaded) { fileName = uploaded.fileName; fileUrl = uploaded.fileUrl; }
+    }
     const newPost: Material = {
       id: 'm' + Date.now(),
       title: writeTitle.trim(),
@@ -323,9 +362,13 @@ export default function Home() {
       year: promoYear || String(now.getFullYear()),
       month: promoMonth || String(now.getMonth() + 1),
       content: writeContent,
-      fileName: writeFile?.name,
-      fileUrl: writeFile ? URL.createObjectURL(writeFile) : undefined,
+      fileName, fileUrl,
     };
+    await supabase.from('materials').insert({
+      id: newPost.id, title: newPost.title, type: newPost.type, thumbnail_url: '',
+      category: newPost.category, year: newPost.year, month: newPost.month,
+      content: newPost.content, file_name: fileName, file_url: fileUrl,
+    });
     setMaterials(prev => [newPost, ...prev]);
     setShowWriteModal(false);
     setWriteTitle('');
@@ -334,7 +377,7 @@ export default function Home() {
     setWriteType('FREE');
   };
 
-  const executeUpload = () => {
+  const executeUpload = async () => {
     if (!uploadTitle) return;
     if (uploadMode === 'file' && !uploadFile) return;
     if (uploadMode === 'youtube' && !uploadYoutubeUrl.trim()) return;
@@ -349,6 +392,8 @@ export default function Home() {
 
     let newThumbnail = 'https://picsum.photos/seed/' + Math.floor(Math.random() * 100) + '/400/225';
     let youtubeId: string | null = null;
+    let fileName: string | undefined;
+    let fileUrl: string | undefined;
 
     if (uploadMode === 'youtube') {
       youtubeId = getYouTubeId(uploadYoutubeUrl.trim());
@@ -356,8 +401,10 @@ export default function Home() {
         newThumbnail = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
         finalType = 'VIDEO';
       }
-    } else if (uploadFile && uploadFile.type.startsWith('image/')) {
-      newThumbnail = URL.createObjectURL(uploadFile);
+    } else if (uploadFile) {
+      const uploaded = await uploadFileToStorage(uploadFile);
+      if (uploaded) { fileName = uploaded.fileName; fileUrl = uploaded.fileUrl; }
+      if (uploadFile.type.startsWith('image/')) newThumbnail = fileUrl || newThumbnail;
     }
 
     const newMaterial: Material = {
@@ -368,11 +415,20 @@ export default function Home() {
       category: selectedCategory,
       year: promoYear,
       month: promoMonth,
-      fileName: uploadMode === 'file' ? uploadFile?.name : undefined,
-      fileUrl: uploadMode === 'file' && uploadFile ? URL.createObjectURL(uploadFile) : undefined,
+      fileName,
+      fileUrl,
       youtubeUrl: uploadMode === 'youtube' && youtubeId ? `https://www.youtube.com/embed/${youtubeId}` : undefined,
       productName: (selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') ? uploadProduct : undefined
     };
+
+    await supabase.from('materials').insert({
+      id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
+      thumbnail_url: newThumbnail, category: newMaterial.category,
+      year: newMaterial.year, month: newMaterial.month,
+      file_name: fileName, file_url: fileUrl,
+      youtube_url: newMaterial.youtubeUrl,
+      product_name: newMaterial.productName,
+    });
 
     setMaterials([newMaterial, ...materials]);
     setShowUploadModal(false);
@@ -389,9 +445,9 @@ export default function Home() {
 
   const filteredMaterials = materials.filter(mat => {
     const matchSearch = mat.title.toLowerCase().includes(search.toLowerCase());
-    
+
     const matchCategory = selectedCategory === 'ALL' || mat.category === selectedCategory;
-    
+
     let matchType = true;
     if (selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') {
       matchType = selectedType === 'ALL' || mat.type === selectedType;
@@ -405,7 +461,7 @@ export default function Home() {
     }
 
     if (selectedCategory === 'ALL' && mat.category === '브랜드판촉') {
-      const latestFolder = [...promoFolders].sort((a,b) => {
+      const latestFolder = [...promoFolders].sort((a, b) => {
         if (a.year !== b.year) return Number(b.year) - Number(a.year);
         return Number(b.month) - Number(a.month);
       })[0];
@@ -459,12 +515,12 @@ export default function Home() {
             <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50/50">
               <h3 className="font-extrabold text-[17px] text-gray-800 flex items-center">
                 <span className="text-xl mr-2">📤</span>
-                {selectedCategory === '브랜드판촉' 
+                {selectedCategory === '브랜드판촉'
                   ? `${promoYear}년 ${promoMonth}월 브랜드 판촉 올리기`
                   : `[${selectedCategory}] 새 자료 등록`}
               </h3>
-              <button 
-                onClick={() => setShowUploadModal(false)} 
+              <button
+                onClick={() => setShowUploadModal(false)}
                 className="text-gray-400 hover:bg-gray-200 hover:text-gray-800 w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors"
                 title="닫기"
               >
@@ -536,9 +592,8 @@ export default function Home() {
                     <div className="flex items-center justify-center w-full">
                       <label
                         onClick={() => fileInputRef.current?.click()}
-                        className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
-                          uploadFile ? 'border-green-300 bg-green-50/30' : 'border-gray-300 hover:bg-green-50 hover:border-green-300 bg-gray-50'
-                        }`}
+                        className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all ${uploadFile ? 'border-green-300 bg-green-50/30' : 'border-gray-300 hover:bg-green-50 hover:border-green-300 bg-gray-50'
+                          }`}
                       >
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <span className={`text-4xl mb-3 transition-transform ${uploadFile ? 'scale-110 opacity-100' : 'opacity-40 grayscale'}`}>
@@ -563,7 +618,7 @@ export default function Home() {
                           <span className="text-green-500 mr-2 text-lg">✓</span>
                           <span className="truncate">{uploadFile.name}</span>
                           <span className="text-gray-400 ml-2 font-normal text-[11px]">
-                             ({(uploadFile.size / 1024 / 1024).toFixed(2)} MB)
+                            ({(uploadFile.size / 1024 / 1024).toFixed(2)} MB)
                           </span>
                         </div>
                         <button
@@ -582,7 +637,7 @@ export default function Home() {
               {(selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') && (
                 <div>
                   <label className="block text-[13px] font-bold text-gray-700 mb-2">{selectedCategory} 세부 제품군 선택</label>
-                  <select 
+                  <select
                     value={uploadProduct}
                     onChange={(e) => setUploadProduct(e.target.value)}
                     className="w-full p-3.5 text-[14px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00b050]/50 transition-all bg-white"
@@ -600,12 +655,11 @@ export default function Home() {
                   <label className="block text-[13px] font-bold text-gray-700 mb-2">자료 종류 속성 명시</label>
                   <div className="flex space-x-3">
                     {(['DOCUMENT', 'VIDEO'] as const).map(type => (
-                      <label key={type} className={`flex items-center space-x-2 cursor-pointer px-4 py-2.5 flex-1 justify-center rounded-xl border transition-colors ${
-                        uploadTypeState === type ? 'bg-green-50 border-[#00b050] shadow-sm' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                      }`}>
-                        <input 
-                          type="radio" 
-                          name="uploadTypeState" 
+                      <label key={type} className={`flex items-center space-x-2 cursor-pointer px-4 py-2.5 flex-1 justify-center rounded-xl border transition-colors ${uploadTypeState === type ? 'bg-green-50 border-[#00b050] shadow-sm' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                        }`}>
+                        <input
+                          type="radio"
+                          name="uploadTypeState"
                           checked={uploadTypeState === type}
                           onChange={() => setUploadTypeState(type)}
                           className="w-4 h-4 text-[#00b050] border-gray-300 focus:ring-[#00b050]"
@@ -622,8 +676,8 @@ export default function Home() {
 
             {/* 모달 하단 액션 버튼 */}
             <div className="p-5 border-t border-gray-100 bg-gray-50/80 flex justify-end space-x-3">
-              <button 
-                onClick={() => setShowUploadModal(false)} 
+              <button
+                onClick={() => setShowUploadModal(false)}
                 className="px-6 py-2.5 rounded-xl font-bold bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors shadow-sm"
               >
                 닫기
@@ -722,7 +776,7 @@ export default function Home() {
               </div>
               {/* 등록 정보 */}
               <div className="flex gap-4 text-[12px] text-gray-400 font-medium">
-                <span>📅 {detailMat.year}.{(detailMat.month||'').padStart(2,'0')}.01</span>
+                <span>📅 {detailMat.year}.{(detailMat.month || '').padStart(2, '0')}.01</span>
                 <span>📂 {detailMat.type === 'VIDEO' ? '영상' : '문서'}</span>
               </div>
               {/* 내용 */}
@@ -742,7 +796,7 @@ export default function Home() {
               {detailMat.youtubeUrl && (
                 <div>
                   <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">YouTube 영상</p>
-                  <div className="rounded-xl overflow-hidden border border-gray-200" style={{aspectRatio: '16/9'}}>
+                  <div className="rounded-xl overflow-hidden border border-gray-200" style={{ aspectRatio: '16/9' }}>
                     <iframe
                       src={detailMat.youtubeUrl}
                       className="w-full h-full"
@@ -856,14 +910,13 @@ export default function Home() {
         <div className="flex items-center bg-gray-100 p-1.5 rounded-xl border border-gray-200 shadow-inner">
           <span className="text-[13px] font-bold mr-3 ml-3 text-gray-500">현재 접속 권한:</span>
           {(['ADMIN', 'BUSINESS', 'COUNSELOR'] as const).map(role => (
-            <button 
+            <button
               key={role}
               onClick={() => setUserRole(role)}
-              className={`px-5 py-2 text-[13px] font-bold rounded-lg transition-all ${
-                userRole === role 
-                ? 'bg-white text-[#00b050] shadow-sm ring-1 ring-gray-200/60' 
-                : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'
-              }`}
+              className={`px-5 py-2 text-[13px] font-bold rounded-lg transition-all ${userRole === role
+                  ? 'bg-white text-[#00b050] shadow-sm ring-1 ring-gray-200/60'
+                  : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'
+                }`}
             >
               {role === 'ADMIN' ? '🔑 본사 관리자' : role === 'BUSINESS' ? '🏬 대리점/사업자' : '👤 일반 카운셀러'}
             </button>
@@ -884,7 +937,7 @@ export default function Home() {
             <p className={`font-bold tracking-[0.2em] uppercase mb-5 transition-all duration-300 ${hoveredBadge ? 'text-[#1a3010] text-[14px]' : 'text-[#2d4a1a]/55 text-[10px] tracking-[0.3em]'}`}>
               {hoveredBadge ? '김정문알로에 경영이념' : 'Kim Jung Moon Aloe · Premium Platform'}
             </p>
-            <div className="relative mb-5" style={{minHeight:'120px'}}>
+            <div className="relative mb-5" style={{ minHeight: '120px' }}>
               {/* 기본 제목 */}
               <h1 className={`text-[#1a3010] text-[44px] md:text-[54px] font-black leading-[1.1] tracking-tight break-keep transition-opacity duration-300 ${hoveredBadge ? 'opacity-0' : 'opacity-100'}`}>
                 {selectedCategory === 'ALL'
@@ -983,122 +1036,122 @@ export default function Home() {
       <div className="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8 gap-4">
         <div className="relative w-full md:w-[500px]">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-          <input 
-            type="text" 
-            placeholder="찾으시는 자료의 키워드를 직접 검색해 보세요..." 
+          <input
+            type="text"
+            placeholder="찾으시는 자료의 키워드를 직접 검색해 보세요..."
             className="w-full pl-11 pr-4 py-3.5 text-[15px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00b050]/50 focus:border-[#00b050] transition-all bg-gray-50/30"
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        
+
         <div className="w-full md:w-auto mt-2 md:mt-0 flex gap-2">
           {uploadVisible ? (
-             <>
-               {/* 게시판 전용 글쓰기 버튼 */}
-               {selectedCategory === '게시판' && (
-                 <button
-                   onClick={() => { setWriteTitle(''); setWriteContent(''); setWriteFile(null); setWriteType('FREE'); setShowWriteModal(true); }}
-                   className="bg-white border-2 border-[#00b050] text-[#00b050] px-5 py-3.5 rounded-xl font-bold hover:bg-green-50 active:scale-95 transition-all whitespace-nowrap flex items-center gap-2"
-                 >
-                   <span>✏️</span><span>글쓰기</span>
-                 </button>
-               )}
-               <button
-                 onClick={() => {
-                   if (selectedCategory === 'ALL') {
-                     alert('전체 보기 탭에서는 업로드할 수 없습니다. 특정 카테고리를 선택해 주세요.');
-                     return;
-                   }
-                   document.getElementById('direct-main-upload')?.click();
-                 }}
-                 className="w-full md:w-auto bg-[#00b050] text-white px-6 py-3.5 rounded-xl font-bold shadow-md shadow-green-500/20 hover:bg-[#009030] active:scale-95 transition-all whitespace-nowrap flex items-center justify-center gap-2"
-               >
-                  <span className="text-lg leading-none">+</span>
-                  <span>
-                    {selectedCategory === '브랜드판촉' ? `새 폴더에 프로모션 자료 올리기` : '내 컴퓨터에서 파일 직접 올리기'}
-                  </span>
-               </button>
-               <input 
-                 id="direct-main-upload" 
-                 type="file" 
-                 className="hidden" 
-                 onChange={(e) => {
-                   if (e.target.files && e.target.files.length > 0) {
-                     const file = e.target.files[0];
-                     const autoTitle = file.name.replace(/\.[^/.]+$/, "");
-                     const userTitle = window.prompt("등록하실 자료의 제목을 입력하거나 수정해 주세요:", autoTitle);
-                     
-                     if (!userTitle || !userTitle.trim()) {
-                       e.target.value = '';
-                       return;
-                     }
-                     
-                     let autoType = 'DOCUMENT';
-                     if (selectedCategory === '게시판') {
-                       autoType = selectedSubBoard === 'ALL' ? 'DOCUMENT' : selectedSubBoard;
-                     } else if (selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기' || selectedCategory === '자료공유방') {
-                       if (selectedType !== 'ALL') {
-                         autoType = selectedType;
-                       } else {
-                         if (file.type.startsWith('video/') || file.name.match(/\.(mp4|avi|mov|wmv)$/i)) {
-                           autoType = 'VIDEO';
-                         } else {
-                           autoType = 'DOCUMENT';
-                         }
-                       }
-                     }
-                     
-                     let directUploadProduct = undefined;
-                     if (selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') {
-                       if (selectedProduct && selectedProduct !== '전체') {
-                         directUploadProduct = selectedProduct;
-                       } else {
-                         const catName = selectedCategory;
-                         const exampleText = catName === '건식' ? '스피그린, 칼슘 딥밸런스 K 등' : catName === '화장품' ? '뉴)세레브퓨어알로에 등' : '닥터셀이온 등';
-                         const productAns = window.prompt(`어느 ${catName} 세부 제품군에 등록하시겠습니까?\n(예: ${exampleText})\n\n취소하거나 모르면 '기타'로 배정됩니다.`);
-                         directUploadProduct = productAns && productAns.trim() ? productAns.trim() : '기타';
-                       }
-                     }
+            <>
+              {/* 게시판 전용 글쓰기 버튼 */}
+              {selectedCategory === '게시판' && (
+                <button
+                  onClick={() => { setWriteTitle(''); setWriteContent(''); setWriteFile(null); setWriteType('FREE'); setShowWriteModal(true); }}
+                  className="bg-white border-2 border-[#00b050] text-[#00b050] px-5 py-3.5 rounded-xl font-bold hover:bg-green-50 active:scale-95 transition-all whitespace-nowrap flex items-center gap-2"
+                >
+                  <span>✏️</span><span>글쓰기</span>
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  if (selectedCategory === 'ALL') {
+                    alert('전체 보기 탭에서는 업로드할 수 없습니다. 특정 카테고리를 선택해 주세요.');
+                    return;
+                  }
+                  document.getElementById('direct-main-upload')?.click();
+                }}
+                className="w-full md:w-auto bg-[#00b050] text-white px-6 py-3.5 rounded-xl font-bold shadow-md shadow-green-500/20 hover:bg-[#009030] active:scale-95 transition-all whitespace-nowrap flex items-center justify-center gap-2"
+              >
+                <span className="text-lg leading-none">+</span>
+                <span>
+                  {selectedCategory === '브랜드판촉' ? `새 폴더에 프로모션 자료 올리기` : '내 컴퓨터에서 파일 직접 올리기'}
+                </span>
+              </button>
+              <input
+                id="direct-main-upload"
+                type="file"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const autoTitle = file.name.replace(/\.[^/.]+$/, "");
+                    const userTitle = window.prompt("등록하실 자료의 제목을 입력하거나 수정해 주세요:", autoTitle);
 
-                     const formData = new FormData();
-                     formData.append('file', file);
-                     
-                     fetch('/api/upload', {
-                       method: 'POST',
-                       body: formData
-                     })
-                     .then(res => res.json())
-                     .then(data => {
-                       if (data.success) {
-                         const newMaterial: Material = {
-                           id: Date.now().toString(),
-                           title: userTitle.trim(),
-                           type: autoType as any,
-                           category: selectedCategory,
-                           thumbnailUrl: '',
-                           year: selectedCategory === '브랜드판촉' ? promoYear : undefined,
-                           month: selectedCategory === '브랜드판촉' ? promoMonth : undefined,
-                           fileUrl: data.url,
-                           productName: directUploadProduct
-                         };
-                         setMaterials(prev => [newMaterial, ...prev]);
-                         alert(`['${userTitle.trim()}'] 자료가 성공적으로 서버에 업로드되었습니다!`);
-                       } else {
-                         alert('업로드 중 에러: ' + data.error);
-                       }
-                     })
-                     .catch(err => {
-                       alert('서버 응답 오류로 파일 업로드에 실패했습니다. 코딩 환경을 확인하세요.');
-                     })
-                     .finally(() => {
-                       // 같은 파일 연속 선택 가능하도록 초기화
-                       const inputEl = document.getElementById('direct-main-upload') as HTMLInputElement;
-                       if (inputEl) inputEl.value = '';
-                     });
-                   }
-                 }}
-               />
-             </>
+                    if (!userTitle || !userTitle.trim()) {
+                      e.target.value = '';
+                      return;
+                    }
+
+                    let autoType = 'DOCUMENT';
+                    if (selectedCategory === '게시판') {
+                      autoType = selectedSubBoard === 'ALL' ? 'DOCUMENT' : selectedSubBoard;
+                    } else if (selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기' || selectedCategory === '자료공유방') {
+                      if (selectedType !== 'ALL') {
+                        autoType = selectedType;
+                      } else {
+                        if (file.type.startsWith('video/') || file.name.match(/\.(mp4|avi|mov|wmv)$/i)) {
+                          autoType = 'VIDEO';
+                        } else {
+                          autoType = 'DOCUMENT';
+                        }
+                      }
+                    }
+
+                    let directUploadProduct = undefined;
+                    if (selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') {
+                      if (selectedProduct && selectedProduct !== '전체') {
+                        directUploadProduct = selectedProduct;
+                      } else {
+                        const catName = selectedCategory;
+                        const exampleText = catName === '건식' ? '스피그린, 칼슘 딥밸런스 K 등' : catName === '화장품' ? '뉴)세레브퓨어알로에 등' : '닥터셀이온 등';
+                        const productAns = window.prompt(`어느 ${catName} 세부 제품군에 등록하시겠습니까?\n(예: ${exampleText})\n\n취소하거나 모르면 '기타'로 배정됩니다.`);
+                        directUploadProduct = productAns && productAns.trim() ? productAns.trim() : '기타';
+                      }
+                    }
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    fetch('/api/upload', {
+                      method: 'POST',
+                      body: formData
+                    })
+                      .then(res => res.json())
+                      .then(data => {
+                        if (data.success) {
+                          const newMaterial: Material = {
+                            id: Date.now().toString(),
+                            title: userTitle.trim(),
+                            type: autoType as any,
+                            category: selectedCategory,
+                            thumbnailUrl: '',
+                            year: selectedCategory === '브랜드판촉' ? promoYear : undefined,
+                            month: selectedCategory === '브랜드판촉' ? promoMonth : undefined,
+                            fileUrl: data.url,
+                            productName: directUploadProduct
+                          };
+                          setMaterials(prev => [newMaterial, ...prev]);
+                          alert(`['${userTitle.trim()}'] 자료가 성공적으로 서버에 업로드되었습니다!`);
+                        } else {
+                          alert('업로드 중 에러: ' + data.error);
+                        }
+                      })
+                      .catch(err => {
+                        alert('서버 응답 오류로 파일 업로드에 실패했습니다. 코딩 환경을 확인하세요.');
+                      })
+                      .finally(() => {
+                        // 같은 파일 연속 선택 가능하도록 초기화
+                        const inputEl = document.getElementById('direct-main-upload') as HTMLInputElement;
+                        if (inputEl) inputEl.value = '';
+                      });
+                  }
+                }}
+              />
+            </>
           ) : (
             selectedCategory !== 'ALL' && (
               <span className="text-sm text-gray-400 font-medium px-2 pt-2 flex items-center">
@@ -1128,15 +1181,14 @@ export default function Home() {
                   <div onMouseEnter={() => cat !== 'ALL' ? setMegaMenuOpen(cat) : setMegaMenuOpen(null)}>
                     <button
                       onClick={() => { handleCategoryChange(cat); setMegaMenuOpen(null); }}
-                      className={`relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 ${
-                        isAll
+                      className={`relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
                           ? isActive
                             ? 'text-[#1a3010] font-bold'
                             : 'text-[#3a5a20] font-bold hover:text-[#1a3010]'
                           : isActive
                             ? 'text-[#1a3010] font-semibold'
                             : 'text-[#4a6a30] font-normal hover:text-[#1a3010]'
-                      }`}
+                        }`}
                     >
                       {isAll ? '전체보기(최신순)' : cat}
                       {isActive && (
@@ -1253,7 +1305,7 @@ export default function Home() {
                 </div>
                 <div className="w-52 relative overflow-hidden flex-shrink-0">
                   <img src="/device.png" alt="닥터셀이온" className="w-full h-full object-cover opacity-80"
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display='none'; }} />
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                   <div className="absolute inset-0 bg-gradient-to-r from-white/70 to-transparent" />
                   <div className="absolute bottom-6 left-6">
                     <p className="text-[10px] font-bold text-violet-800/50 tracking-wider uppercase">Device</p>
@@ -1369,11 +1421,10 @@ export default function Home() {
             <button
               key={prod}
               onClick={() => setSelectedProduct(prod)}
-              className={`relative whitespace-nowrap px-4 py-2 text-[13px] transition-colors flex-shrink-0 ${
-                selectedProduct === prod
+              className={`relative whitespace-nowrap px-4 py-2 text-[13px] transition-colors flex-shrink-0 ${selectedProduct === prod
                   ? 'text-[#00723a] font-bold'
                   : 'text-gray-500 font-medium hover:text-[#00723a]'
-              }`}
+                }`}
             >
               {prod}
               {selectedProduct === prod && (
@@ -1387,7 +1438,7 @@ export default function Home() {
       {/* ============== 브랜드판촉 UI ============== */}
       {selectedCategory === '브랜드판촉' ? (
         <div className="flex flex-col md:flex-row gap-6 mt-4">
-          
+
           {/* 좌측 사이드바: 연도/월 관리 및 네비게이션 트리 */}
           <div className="w-full md:w-72 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm border-l-4 border-l-[#00b050] h-fit">
             <div className="flex items-center justify-between mb-4 pb-3 border-b">
@@ -1395,7 +1446,7 @@ export default function Home() {
                 🗓️ 프로모션 내비게이터
               </h3>
             </div>
-            
+
             {sortedYears.map(year => (
               <div key={year} className="mb-4">
                 <button
@@ -1463,71 +1514,71 @@ export default function Home() {
                 )}
               </div>
             ))}
-            
+
           </div>
 
           {/* 우측 리스트 뷰 */}
           <div className="flex-1 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm min-h-[400px]">
             <>
-                <div className="flex flex-col mb-6 pb-5 border-b border-gray-100">
-                  <h3 className="font-extrabold text-[22px] text-gray-800 flex items-center mb-2">
-                    <span className="text-2xl mr-2">📋</span> {promoYear}년 {promoMonth}월 판촉 자료
-                  </h3>
-                  <p className="text-sm text-gray-500 font-medium">
-                    등록 자료 총 <span className="text-[#00b050] font-extrabold mx-1">{promoMaterials.length}</span>건
-                  </p>
-                </div>
+              <div className="flex flex-col mb-6 pb-5 border-b border-gray-100">
+                <h3 className="font-extrabold text-[22px] text-gray-800 flex items-center mb-2">
+                  <span className="text-2xl mr-2">📋</span> {promoYear}년 {promoMonth}월 판촉 자료
+                </h3>
+                <p className="text-sm text-gray-500 font-medium">
+                  등록 자료 총 <span className="text-[#00b050] font-extrabold mx-1">{promoMaterials.length}</span>건
+                </p>
+              </div>
 
-                <div className="space-y-3">
-                  {promoMaterials.map((mat, idx) => (
-                    <div key={mat.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-[#00b050] hover:shadow-md transition-all cursor-pointer group bg-gray-50/30"
-                      onClick={() => { setDetailMat(mat); setShowDetailModal(true); }}>
-                      <div className="flex items-center space-x-4 w-full">
-                        {/* 번호 */}
-                        <div className="w-8 h-8 rounded-lg bg-[#00b050]/10 flex items-center justify-center text-[13px] font-extrabold text-[#00b050] flex-shrink-0">
-                          {idx + 1}
-                        </div>
-                        <div className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 transition-transform flex-shrink-0">
-                          {mat.type === 'VIDEO' ? '🎬' : mat.fileUrl ? '📎' : '📝'}
-                        </div>
-                        <div className="flex-1 min-w-0 pr-4">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-[15px] text-gray-800 group-hover:text-[#00b050] transition-colors truncate">{mat.title}</h4>
-                            {mat.fileUrl && <span className="text-[10px] bg-green-50 text-[#00b050] border border-green-200 px-1.5 py-0.5 rounded font-bold flex-shrink-0">첨부</span>}
-                            {userRole === 'ADMIN' && (
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1 flex-shrink-0">
-                                <button onClick={(e) => { e.stopPropagation(); openEditModal(mat); }} className="text-[11px] font-bold bg-white hover:bg-green-50 text-gray-500 hover:text-[#00b050] border border-gray-200 hover:border-green-200 px-2 py-0.5 rounded shadow-sm transition-colors">수정</button>
-                                <button onClick={(e) => { e.stopPropagation(); handleDeleteMaterial(mat.id); }} className="text-[11px] font-bold bg-white hover:bg-red-50 text-gray-500 hover:text-red-500 border border-gray-200 hover:border-red-200 px-2 py-0.5 rounded shadow-sm transition-colors">삭제</button>
-                              </div>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-400 mt-0.5 truncate">
-                            {mat.content ? mat.content.substring(0, 40) + (mat.content.length > 40 ? '…' : '') : '등록일: ' + mat.year + '.' + (mat.month||'').padStart(2,'0') + '.01'}
-                          </p>
-                        </div>
+              <div className="space-y-3">
+                {promoMaterials.map((mat, idx) => (
+                  <div key={mat.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-[#00b050] hover:shadow-md transition-all cursor-pointer group bg-gray-50/30"
+                    onClick={() => { setDetailMat(mat); setShowDetailModal(true); }}>
+                    <div className="flex items-center space-x-4 w-full">
+                      {/* 번호 */}
+                      <div className="w-8 h-8 rounded-lg bg-[#00b050]/10 flex items-center justify-center text-[13px] font-extrabold text-[#00b050] flex-shrink-0">
+                        {idx + 1}
                       </div>
-                      <button onClick={(e) => { e.stopPropagation(); setDetailMat(mat); setShowDetailModal(true); }}
-                        className="text-[13px] font-bold bg-white text-gray-500 border border-gray-200 px-4 py-2 rounded-lg group-hover:bg-[#00b050] group-hover:text-white group-hover:border-[#00b050] active:scale-95 transition-all shadow-sm whitespace-nowrap">
-                        열람
-                      </button>
-                    </div>
-                  ))}
-
-                  {promoMaterials.length === 0 && (
-                    <div className="py-16 text-center flex flex-col items-center justify-center">
-                      <div className="relative w-32 h-32 mb-4 animate-bounce" style={{animationDuration: '3s'}}>
-                        {/* NOTE: 요정 캐릭터 이미지 연동 */}
-                        <img src="/fairy.png" alt="알로에 요정" className="w-full h-full object-contain drop-shadow-xl" onError={(e) => { e.currentTarget.outerHTML = '<span class="text-5xl opacity-30 grayscale filter">😥</span>'; }} />
+                      <div className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 transition-transform flex-shrink-0">
+                        {mat.type === 'VIDEO' ? '🎬' : mat.fileUrl ? '📎' : '📝'}
                       </div>
-                      <p className="text-[16px] font-extrabold text-gray-700">아직 이 섹션에 등록된 맞춤 프로모션 자료가 없네요!</p>
-                      {userRole === 'ADMIN' && (
-                        <p className="text-[13px] mt-2 text-[#00b050] font-medium bg-green-50 px-4 py-2 rounded-full">
-                          상단의 <strong className="font-bold">+업로드 기능</strong>을 사용해 내 컴퓨터의 문서를 바로 업로드해 보세요!
+                      <div className="flex-1 min-w-0 pr-4">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bold text-[15px] text-gray-800 group-hover:text-[#00b050] transition-colors truncate">{mat.title}</h4>
+                          {mat.fileUrl && <span className="text-[10px] bg-green-50 text-[#00b050] border border-green-200 px-1.5 py-0.5 rounded font-bold flex-shrink-0">첨부</span>}
+                          {userRole === 'ADMIN' && (
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1 flex-shrink-0">
+                              <button onClick={(e) => { e.stopPropagation(); openEditModal(mat); }} className="text-[11px] font-bold bg-white hover:bg-green-50 text-gray-500 hover:text-[#00b050] border border-gray-200 hover:border-green-200 px-2 py-0.5 rounded shadow-sm transition-colors">수정</button>
+                              <button onClick={(e) => { e.stopPropagation(); handleDeleteMaterial(mat.id); }} className="text-[11px] font-bold bg-white hover:bg-red-50 text-gray-500 hover:text-red-500 border border-gray-200 hover:border-red-200 px-2 py-0.5 rounded shadow-sm transition-colors">삭제</button>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-0.5 truncate">
+                          {mat.content ? mat.content.substring(0, 40) + (mat.content.length > 40 ? '…' : '') : '등록일: ' + mat.year + '.' + (mat.month || '').padStart(2, '0') + '.01'}
                         </p>
-                      )}
+                      </div>
                     </div>
-                  )}
-                </div>
+                    <button onClick={(e) => { e.stopPropagation(); setDetailMat(mat); setShowDetailModal(true); }}
+                      className="text-[13px] font-bold bg-white text-gray-500 border border-gray-200 px-4 py-2 rounded-lg group-hover:bg-[#00b050] group-hover:text-white group-hover:border-[#00b050] active:scale-95 transition-all shadow-sm whitespace-nowrap">
+                      열람
+                    </button>
+                  </div>
+                ))}
+
+                {promoMaterials.length === 0 && (
+                  <div className="py-16 text-center flex flex-col items-center justify-center">
+                    <div className="relative w-32 h-32 mb-4 animate-bounce" style={{ animationDuration: '3s' }}>
+                      {/* NOTE: 요정 캐릭터 이미지 연동 */}
+                      <img src="/fairy.png" alt="알로에 요정" className="w-full h-full object-contain drop-shadow-xl" onError={(e) => { e.currentTarget.outerHTML = '<span class="text-5xl opacity-30 grayscale filter">😥</span>'; }} />
+                    </div>
+                    <p className="text-[16px] font-extrabold text-gray-700">아직 이 섹션에 등록된 맞춤 프로모션 자료가 없네요!</p>
+                    {userRole === 'ADMIN' && (
+                      <p className="text-[13px] mt-2 text-[#00b050] font-medium bg-green-50 px-4 py-2 rounded-full">
+                        상단의 <strong className="font-bold">+업로드 기능</strong>을 사용해 내 컴퓨터의 문서를 바로 업로드해 보세요!
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             </>
           </div>
         </div>
@@ -1535,10 +1586,10 @@ export default function Home() {
         /* ============== 게시판 UI (공지 + 자유 분리) ============== */
         (() => {
           const noticePosts = materials.filter(m => m.category === '게시판' && m.type === 'NOTICE' && (search === '' || m.title.includes(search)));
-          const freePosts   = materials.filter(m => m.category === '게시판' && m.type === 'FREE'   && (search === '' || m.title.includes(search)));
+          const freePosts = materials.filter(m => m.category === '게시판' && m.type === 'FREE' && (search === '' || m.title.includes(search)));
 
           const BoardSection = ({ title, icon, posts, boardType, accentColor, bgColor }: {
-            title: string; icon: string; posts: typeof materials; boardType: 'NOTICE'|'FREE'; accentColor: string; bgColor: string;
+            title: string; icon: string; posts: typeof materials; boardType: 'NOTICE' | 'FREE'; accentColor: string; bgColor: string;
           }) => (
             <div className={`flex-1 bg-white rounded-2xl border shadow-sm overflow-hidden ${accentColor}`}>
               {/* 섹션 헤더 */}
@@ -1577,7 +1628,7 @@ export default function Home() {
                         {mat.content && <p className="text-[11px] text-gray-400 truncate mt-0.5">{mat.content}</p>}
                       </div>
                       <span className="w-20 text-center text-[11px] text-gray-400 hidden sm:block flex-shrink-0">
-                        {mat.year}.{(mat.month||'1').padStart(2,'0')}.01
+                        {mat.year}.{(mat.month || '1').padStart(2, '0')}.01
                       </span>
                       <div className="w-14 flex justify-center flex-shrink-0">
                         {userRole === 'ADMIN' && (
@@ -1689,7 +1740,7 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="py-24 flex flex-col items-center justify-center bg-white rounded-3xl border border-dashed border-gray-200 mt-4">
-                  <img src="/fairy.png" alt="알로에 요정" className="w-28 h-28 object-contain drop-shadow-xl mb-4 animate-bounce" style={{animationDuration: '4s'}} onError={(e) => { e.currentTarget.outerHTML = '<span class="text-5xl text-gray-300 mb-4">🍃</span>'; }} />
+                  <img src="/fairy.png" alt="알로에 요정" className="w-28 h-28 object-contain drop-shadow-xl mb-4 animate-bounce" style={{ animationDuration: '4s' }} onError={(e) => { e.currentTarget.outerHTML = '<span class="text-5xl text-gray-300 mb-4">🍃</span>'; }} />
                   <p className="text-[17px] font-extrabold text-gray-700">찾으시는 탭에 아직 등록된 자료가 없습니다.</p>
                   <p className="text-[13px] text-gray-500 mt-2 font-medium">관리자 또는 사업자 권한이라면 상단 로컬 업로드 버튼을 통해 즉시 추가해 보세요!</p>
                 </div>
@@ -1709,11 +1760,10 @@ export default function Home() {
                     <button
                       key={p}
                       onClick={() => setCurrentPage(p)}
-                      className={`w-8 h-8 text-[13px] rounded transition-colors ${
-                        p === safePage
+                      className={`w-8 h-8 text-[13px] rounded transition-colors ${p === safePage
                           ? 'text-[#00723a] font-bold border-b-2 border-[#00b050]'
                           : 'text-gray-400 hover:text-[#00723a]'
-                      }`}
+                        }`}
                     >
                       {p}
                     </button>
