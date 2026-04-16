@@ -4,7 +4,13 @@ import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
 type MaterialType = 'VIDEO' | 'DOCUMENT' | 'NOTICE' | 'FREE';
-type UserRole = 'ADMIN' | 'BUSINESS' | 'COUNSELOR';
+type UserRole = 'ADMIN' | 'BUSINESS';
+
+interface AppUser {
+  username: string;
+  name: string;
+  role: UserRole;
+}
 
 interface Material {
   id: string;
@@ -141,7 +147,48 @@ const heroConfigs: Record<string, { bgUrl: string, bgUrl2?: string, title: strin
 };
 
 export default function Home() {
-  const [userRole, setUserRole] = useState<UserRole>('ADMIN');
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
+  const [userRole, setUserRole] = useState<UserRole>('BUSINESS');
+  const [showUserMgmt, setShowUserMgmt] = useState(false);
+  const [pendingUsers, setPendingUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    const session = localStorage.getItem('aloeSession');
+    if (!session) {
+      window.location.href = '/login';
+      return;
+    }
+    const user: AppUser = JSON.parse(session);
+    setCurrentUser(user);
+    setUserRole(user.role);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('aloeSession');
+    window.location.href = '/login';
+  };
+
+  const loadPendingUsers = async () => {
+    const { data } = await supabase.from('users').select('*').order('id', { ascending: false });
+    setPendingUsers(data || []);
+    setShowUserMgmt(true);
+  };
+
+  const approveUser = async (userId: string) => {
+    await supabase.from('users').update({ status: 'approved' }).eq('id', userId);
+    loadPendingUsers();
+  };
+
+  const rejectUser = async (userId: string) => {
+    await supabase.from('users').update({ status: 'rejected' }).eq('id', userId);
+    loadPendingUsers();
+  };
+
+  const deleteUser = async (userId: string) => {
+    if (!confirm('삭제하시겠습니까?')) return;
+    await supabase.from('users').delete().eq('id', userId);
+    loadPendingUsers();
+  };
 
   const [materials, setMaterials] = useState<Material[]>(initialMockMaterials);
   const [promoFolders, setPromoFolders] = useState<PromoFolder[]>(initialPromoFolders);
@@ -491,8 +538,82 @@ export default function Home() {
   }
 
 
+  if (!currentUser) return null;
+
   return (
     <div className="max-w-6xl mx-auto p-4 py-8">
+
+      {/* 상단 사용자 정보 바 */}
+      <div className="flex justify-end items-center gap-3 mb-4">
+        <span className="text-[13px] text-gray-500">
+          {currentUser.role === 'ADMIN' ? '🔑 관리자' : '🏬 사업자'} <strong>{currentUser.name}</strong>님
+        </span>
+        {currentUser.role === 'ADMIN' && (
+          <button
+            onClick={loadPendingUsers}
+            className="text-[12px] bg-[#7a9a52] text-white px-3 py-1.5 rounded-lg font-bold hover:bg-[#5f7d3a] transition-colors"
+          >
+            👥 사용자 관리
+          </button>
+        )}
+        <button
+          onClick={handleLogout}
+          className="text-[12px] bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg font-bold hover:bg-gray-300 transition-colors"
+        >
+          로그아웃
+        </button>
+      </div>
+
+      {/* 사용자 관리 모달 */}
+      {showUserMgmt && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+            <div className="flex justify-between items-center p-5 border-b bg-gray-50">
+              <h3 className="font-extrabold text-[17px]">👥 사용자 관리</h3>
+              <button onClick={() => setShowUserMgmt(false)} className="text-gray-400 hover:text-gray-800 w-8 h-8 rounded-full flex items-center justify-center font-bold">✕</button>
+            </div>
+            <div className="overflow-y-auto max-h-[60vh] p-4">
+              {pendingUsers.length === 0 ? (
+                <p className="text-center text-gray-400 py-8">등록된 사용자가 없습니다.</p>
+              ) : (
+                <table className="w-full text-[13px]">
+                  <thead>
+                    <tr className="border-b text-gray-500 text-left">
+                      <th className="pb-2 font-bold">이름</th>
+                      <th className="pb-2 font-bold">아이디</th>
+                      <th className="pb-2 font-bold">상태</th>
+                      <th className="pb-2 font-bold">관리</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingUsers.map(u => (
+                      <tr key={u.id} className="border-b py-2">
+                        <td className="py-2">{u.name}</td>
+                        <td className="py-2">{u.username}</td>
+                        <td className="py-2">
+                          <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${u.status === 'approved' ? 'bg-green-100 text-green-700' : u.status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-700'}`}>
+                            {u.status === 'approved' ? '승인' : u.status === 'rejected' ? '거절' : '대기'}
+                          </span>
+                        </td>
+                        <td className="py-2 flex gap-1">
+                          {u.status !== 'approved' && (
+                            <button onClick={() => approveUser(u.id)} className="text-[11px] bg-green-500 text-white px-2 py-1 rounded font-bold">승인</button>
+                          )}
+                          {u.status !== 'rejected' && (
+                            <button onClick={() => rejectUser(u.id)} className="text-[11px] bg-orange-400 text-white px-2 py-1 rounded font-bold">거절</button>
+                          )}
+                          <button onClick={() => deleteUser(u.id)} className="text-[11px] bg-red-500 text-white px-2 py-1 rounded font-bold">삭제</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 🔴 내 컴퓨터 파일 업로드 모달창 */}
       {showUploadModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm transition-all">
@@ -891,24 +1012,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* 3단계 권한 테스트용 UI */}
-      <div className="mb-8 flex justify-end">
-        <div className="flex items-center bg-gray-100 p-1.5 rounded-xl border border-gray-200 shadow-inner">
-          <span className="text-[13px] font-bold mr-3 ml-3 text-gray-500">현재 접속 권한:</span>
-          {(['ADMIN', 'BUSINESS', 'COUNSELOR'] as const).map(role => (
-            <button
-              key={role}
-              onClick={() => setUserRole(role)}
-              className={`px-5 py-2 text-[13px] font-bold rounded-lg transition-all ${userRole === role
-                  ? 'bg-white text-[#00b050] shadow-sm ring-1 ring-gray-200/60'
-                  : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'
-                }`}
-            >
-              {role === 'ADMIN' ? '🔑 본사 관리자' : role === 'BUSINESS' ? '🏬 대리점/사업자' : '👤 일반 카운셀러'}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* 🌿 스킨케어 스타일 히어로 */}
       <div key={selectedCategory} className="relative overflow-hidden rounded-3xl mb-10 bg-[#9eb87a] animate-in fade-in duration-500">
@@ -1376,7 +1479,7 @@ export default function Home() {
                             {hasContent && <span className={`ml-1.5 text-[9px] ${isSelected ? 'text-green-200' : 'text-[#00b050]'}`}>●</span>}
                           </button>
                           {/* 글쓰기 버튼 */}
-                          {userRole !== 'COUNSELOR' && (
+                          {userRole === 'ADMIN' || userRole === 'BUSINESS' && (
                             <button
                               title="글쓰기"
                               onClick={() => { setPromoMonth(folder.month); setPromoYear(year); setWriteTitle(''); setWriteContent(''); setWriteFile(null); setShowWriteModal(true); }}
@@ -1384,7 +1487,7 @@ export default function Home() {
                             >✏️</button>
                           )}
                           {/* 업로드 버튼 */}
-                          {userRole !== 'COUNSELOR' && (
+                          {userRole === 'ADMIN' || userRole === 'BUSINESS' && (
                             <label
                               title="파일 업로드"
                               className={`px-2 py-2 text-[11px] rounded-r-lg border-y border-r cursor-pointer transition-colors ${isSelected ? 'bg-[#009030] border-[#009030] text-white' : 'bg-gray-50 border-gray-100 text-gray-400 hover:text-[#00b050]'}`}
