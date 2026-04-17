@@ -1372,7 +1372,7 @@ export default function Home() {
                   )}
                   <div onMouseEnter={() => { setHoveredCat(cat); if (cat !== 'ALL') setMegaMenuOpen(cat); else setMegaMenuOpen(null); setMegaMenuPinned(false); }} onMouseLeave={() => setHoveredCat(null)}>
                     <button
-                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(false); } else { setMegaMenuOpen(cat); setMegaMenuPinned(true); } }}
+                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(false); } else { setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(cat); setMegaMenuPinned(true); } }}
                       className={`relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
                           ? isActive
                             ? 'text-[#1a3010] font-bold'
