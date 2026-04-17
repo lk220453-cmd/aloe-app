@@ -243,6 +243,8 @@ export default function Home() {
 
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
+  const [showLanding, setShowLanding] = useState(true);
+  const [slideIndex, setSlideIndex] = useState(0);
 
   const [selectedType, setSelectedType] = useState('ALL');
   const [selectedSubBoard, setSelectedSubBoard] = useState('ALL');
@@ -530,7 +532,17 @@ export default function Home() {
   };
   // ==========================================
 
+  // 슬라이드쇼 자동 전환
+  useEffect(() => {
+    if (!showLanding) return;
+    const timer = setInterval(() => {
+      setSlideIndex(prev => (prev + 1) % 3);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [showLanding]);
+
   const handleCategoryChange = (cat: string) => {
+    setShowLanding(false);
     setSelectedCategory(cat);
     setSelectedType('ALL');
     setSelectedSubBoard('ALL');
@@ -1617,12 +1629,38 @@ export default function Home() {
       </div>
 
 
-      {/* ============== 카테고리 미선택 안내 ============== */}
-      {selectedCategory === 'NONE' && search.trim() === '' && (
-        <div className="flex flex-col items-center justify-center py-24 text-center">
-          <div className="text-6xl mb-6">☝️</div>
-          <h2 className="text-[20px] font-bold text-gray-700 mb-2">메뉴를 선택해 주세요</h2>
-          <p className="text-[14px] text-gray-400">위 메뉴에서 보고 싶은 카테고리를 선택하면<br/>해당 자료를 확인하실 수 있습니다.</p>
+      {/* ============== 랜딩 슬라이드쇼 ============== */}
+      {showLanding && search.trim() === '' && (
+        <div className="relative w-full overflow-hidden rounded-2xl shadow-xl mt-2" style={{ height: '480px' }}>
+          {['/slide1.jpg', '/slide2.jpg', '/slide3.jpg'].map((src, i) => (
+            <div
+              key={i}
+              className="absolute inset-0 transition-opacity duration-1000"
+              style={{ opacity: slideIndex === i ? 1 : 0 }}
+            >
+              <img src={src} alt={`slide${i + 1}`} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+            </div>
+          ))}
+          {/* 하단 텍스트 */}
+          <div className="absolute bottom-10 left-10 text-white">
+            <p className="text-[12px] font-bold tracking-widest uppercase opacity-70 mb-2">Kim Jung Moon Aloe · Premium Platform</p>
+            <h2 className="text-[32px] font-black leading-tight drop-shadow-lg">
+              {slideIndex === 0 && <>자연에서 온<br/>건강한 아름다움</>}
+              {slideIndex === 1 && <>알로에의 순수한<br/>자연 에너지</>}
+              {slideIndex === 2 && <>대자연이 키운<br/>김정문알로에</>}
+            </h2>
+          </div>
+          {/* 슬라이드 인디케이터 */}
+          <div className="absolute bottom-10 right-10 flex gap-2">
+            {[0, 1, 2].map(i => (
+              <button
+                key={i}
+                onClick={() => setSlideIndex(i)}
+                className={`w-2.5 h-2.5 rounded-full transition-all ${slideIndex === i ? 'bg-white scale-125' : 'bg-white/40'}`}
+              />
+            ))}
+          </div>
         </div>
       )}
 
