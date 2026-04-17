@@ -1166,7 +1166,9 @@ export default function Home() {
 
 
       {/* 🌿 스킨케어 스타일 히어로 */}
-      {(selectedCategory !== 'NONE' && selectedCategory !== 'ALL') && (() => {
+      {(() => {
+        const bannerCat = (megaMenuOpen && megaMenuOpen !== 'ALL') ? megaMenuOpen : selectedCategory;
+        if (bannerCat === 'NONE' || bannerCat === 'ALL') return null;
         const catMeta: Record<string, { icon: string; bg: string; text: string; sub: string }> = {
           '건식':        { icon: '💊', bg: 'from-amber-700 to-amber-500',    text: 'text-amber-50',  sub: 'text-amber-200' },
           '화장품':      { icon: '🌸', bg: 'from-pink-700 to-rose-500',      text: 'text-pink-50',   sub: 'text-pink-200' },
@@ -1176,20 +1178,20 @@ export default function Home() {
           '브랜드판촉':  { icon: '🎯', bg: 'from-rose-800 to-red-600',       text: 'text-rose-50',   sub: 'text-rose-200' },
           '게시판':      { icon: '💬', bg: 'from-indigo-800 to-blue-600',    text: 'text-indigo-50', sub: 'text-indigo-200' },
         };
-        const m = catMeta[selectedCategory] || { icon: '📂', bg: 'from-gray-700 to-gray-500', text: 'text-white', sub: 'text-gray-200' };
-        const cfg = heroConfigs[selectedCategory];
+        const m = catMeta[bannerCat] || { icon: '📂', bg: 'from-gray-700 to-gray-500', text: 'text-white', sub: 'text-gray-200' };
+        const cfg = heroConfigs[bannerCat];
         return (
-          <div key={selectedCategory} className={`bg-gradient-to-r ${m.bg} rounded-2xl mb-8 px-8 py-6 flex items-center gap-5 animate-in fade-in duration-300`}>
+          <div className={`bg-gradient-to-r ${m.bg} rounded-2xl mb-8 px-8 py-6 flex items-center gap-5`}>
             <span className="text-[48px] leading-none">{m.icon}</span>
             <div className="flex-1">
               <p className={`text-[11px] font-bold tracking-widest uppercase mb-1 ${m.sub}`}>{cfg?.subTitle || ''}</p>
-              <h2 className={`text-[26px] font-black leading-tight ${m.text}`}>{cfg?.title || selectedCategory}</h2>
+              <h2 className={`text-[26px] font-black leading-tight ${m.text}`}>{cfg?.title || bannerCat}</h2>
               <p className={`text-[13px] mt-1 ${m.sub} line-clamp-1`}>{cfg?.desc || ''}</p>
             </div>
           </div>
         );
       })()}
-      <div key={selectedCategory + '_hero'} className={`relative overflow-hidden rounded-3xl mb-10 bg-[#9eb87a] animate-in fade-in duration-500 ${(selectedCategory !== 'NONE' && selectedCategory !== 'ALL') ? 'hidden' : ''}`}>
+      <div className={`relative overflow-hidden rounded-3xl mb-10 bg-[#9eb87a] ${(selectedCategory !== 'NONE' && selectedCategory !== 'ALL') ? 'hidden' : ''}`}>
         {/* 우측 어두운 패널 장식 */}
         <div className="absolute right-0 top-0 bottom-0 w-[18%] bg-[#6a8840]/40 rounded-r-3xl" />
         <div className="absolute left-0 top-0 bottom-0 w-[4%] bg-[#6a8840]/20 rounded-l-3xl" />
@@ -1370,7 +1372,7 @@ export default function Home() {
                   )}
                   <div onMouseEnter={() => { setHoveredCat(cat); if (cat !== 'ALL') setMegaMenuOpen(cat); else setMegaMenuOpen(null); setMegaMenuPinned(false); }} onMouseLeave={() => setHoveredCat(null)}>
                     <button
-                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(false); } else { setSelectedCategory(cat); setMegaMenuOpen(cat); setMegaMenuPinned(true); } }}
+                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(false); } else { setMegaMenuOpen(cat); setMegaMenuPinned(true); } }}
                       className={`relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
                           ? isActive
                             ? 'text-[#1a3010] font-bold'
