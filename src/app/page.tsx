@@ -1636,9 +1636,13 @@ export default function Home() {
             <div
               key={i}
               className="absolute inset-0 transition-opacity duration-1000"
-              style={{ opacity: slideIndex === i ? 1 : 0 }}
+              style={{
+                opacity: slideIndex === i ? 1 : 0,
+                backgroundImage: `url('${src}')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
             >
-              <img src={src} alt={`slide${i + 1}`} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
             </div>
           ))}
