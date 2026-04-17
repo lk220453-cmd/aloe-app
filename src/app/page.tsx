@@ -261,6 +261,7 @@ export default function Home() {
   const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
   const [megaMenuPinned, setMegaMenuPinned] = useState(false);
   const [hoveredCat, setHoveredCat] = useState<string | null>(null);
+  const [selectedMenuCat, setSelectedMenuCat] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 10;
 
@@ -543,6 +544,7 @@ export default function Home() {
   const handleCategoryChange = (cat: string) => {
     setShowLanding(false);
     setSelectedCategory(cat);
+    setSelectedMenuCat(cat);
     setSelectedType('ALL');
     setSelectedSubBoard('ALL');
     setSelectedProduct('전체');
@@ -1359,9 +1361,7 @@ export default function Home() {
         <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-center overflow-x-auto scrollbar-hide">
             {categories.map((cat, idx) => {
-              const isActive = hoveredCat ? hoveredCat === cat
-                : megaMenuOpen ? megaMenuOpen === cat
-                : !showLanding && selectedCategory === cat && selectedCategory !== 'ALL';
+              const isActive = hoveredCat ? hoveredCat === cat : selectedMenuCat === cat;
               const isAll = cat === 'ALL';
               return (
                 <div key={cat} className="relative flex items-center flex-shrink-0">
@@ -1370,7 +1370,7 @@ export default function Home() {
                   )}
                   <div onMouseEnter={() => { setHoveredCat(cat); if (cat !== 'ALL') setMegaMenuOpen(cat); else setMegaMenuOpen(null); setMegaMenuPinned(false); }} onMouseLeave={() => setHoveredCat(null)}>
                     <button
-                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(false); } else { setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(cat); setMegaMenuPinned(true); } }}
+                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(false); setSelectedMenuCat('ALL'); } else { setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(cat); setMegaMenuPinned(true); setSelectedMenuCat(cat); } }}
                       className={`relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
                           ? isActive
                             ? 'text-[#1a3010] font-bold'
