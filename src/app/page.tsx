@@ -61,7 +61,7 @@ const initialPromoFolders: PromoFolder[] = [
   { id: 'f3', year: '2025', month: '12', title: '12월 겨울 마감세일' },
 ];
 
-const categories = ['ALL', '건식', '화장품', '기기', '자료공유방', '브랜드판촉', '게시판'];
+const categories = ['ALL', '건식', '화장품', '기기', '자료공유방', '영업자료집', '브랜드판촉', '게시판'];
 
 const heroConfigs: Record<string, { bgUrl: string, bgUrl2?: string, title: string, desc: string, colorClass: string, accentClass: string, subTitle: string, bgClass?: string, bgClass2?: string, circleUrl?: string, circlePos?: string }> = {
   'ALL': {
@@ -119,6 +119,16 @@ const heroConfigs: Record<string, { bgUrl: string, bgUrl2?: string, title: strin
             desc: '본사 긴급 공지사항과 대리점간의 자유로운 의견을 실시간으로 교환할 수 있는 플랫폼입니다.',
               colorClass: 'from-indigo-950/90 via-blue-900/40',
                 accentClass: 'from-indigo-300 to-blue-400'
+},
+'영업자료집': {
+  bgUrl: '/bg.jpg',
+  circleUrl: '/char_girl.png',
+  circlePos: '100% center',
+  title: '영업자료집',
+  subTitle: '현장 영업의 핵심 무기,',
+  desc: '제품별 세일즈 포인트, 상담 스크립트, 영업 전략 자료 등 현장에서 바로 활용할 수 있는 영업 전문 자료 모음입니다.',
+  colorClass: 'from-teal-950/90 via-teal-900/40',
+  accentClass: 'from-teal-300 to-emerald-400'
 },
 '브랜드판촉': {
   bgUrl: '/bg.jpg',
@@ -560,7 +570,7 @@ export default function Home() {
     if (userRole === 'ADMIN') {
       uploadVisible = true;
     } else if (userRole === 'BUSINESS') {
-      if (selectedCategory === '자료공유방' || (selectedCategory === '게시판' && selectedSubBoard === 'FREE')) {
+      if (selectedCategory === '자료공유방' || selectedCategory === '영업자료집' || (selectedCategory === '게시판' && selectedSubBoard === 'FREE')) {
         uploadVisible = true;
       }
     } else if (userRole === 'COUNSELOR') {
@@ -841,7 +851,7 @@ export default function Home() {
               )}
 
               {/* 종류 속성 선택 (건식, 화장품, 기기, 자료공유방 등의 카테고리일 경우에만) */}
-              {(selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기' || selectedCategory === '자료공유방') && (
+              {(selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기' || selectedCategory === '자료공유방' || selectedCategory === '영업자료집') && (
                 <div>
                   <label className="block text-[13px] font-bold text-gray-700 mb-2">자료 종류 속성 명시</label>
                   <div className="flex space-x-3">
@@ -1429,6 +1439,31 @@ export default function Home() {
                   <div className="absolute bottom-6 left-6">
                     <p className="text-[10px] font-bold text-slate-500/50 tracking-wider uppercase">Archive</p>
                     <p className="text-[15px] font-bold text-slate-700/60 mt-0.5">자료공유방</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 영업자료집 */}
+            {megaMenuOpen === '영업자료집' && (
+              <div className="flex">
+                <div className="flex-1 p-8">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">자료 형식</p>
+                  <div className="flex flex-col gap-1">
+                    {[{ id: 'ALL', label: '모두 보기' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '▶ 영상' }].map(t => (
+                      <button key={t.id} onClick={() => { handleCategoryChange('영업자료집'); setSelectedType(t.id); setMegaMenuOpen(null); }}
+                        className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '영업자료집' && selectedType === t.id ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
+                        {selectedCategory === '영업자료집' && selectedType === t.id && <span className="text-[11px]">➔</span>}
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="w-52 relative overflow-hidden flex-shrink-0 bg-teal-50 flex items-center justify-center">
+                  <div className="text-7xl opacity-15">📋</div>
+                  <div className="absolute bottom-6 left-6">
+                    <p className="text-[10px] font-bold text-teal-500/50 tracking-wider uppercase">Sales</p>
+                    <p className="text-[15px] font-bold text-teal-700/60 mt-0.5">영업자료집</p>
                   </div>
                 </div>
               </div>
