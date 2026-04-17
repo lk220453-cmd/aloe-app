@@ -1315,8 +1315,8 @@ export default function Home() {
       <div
         id="category-nav"
         className="relative mb-6"
-        onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 200); }}
-        onMouseEnter={() => { if (megaMenuCloseTimer.current) clearTimeout(megaMenuCloseTimer.current); }}
+        onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 150); }}
+        onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
       >
         <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-center overflow-x-auto scrollbar-hide">
@@ -1354,7 +1354,11 @@ export default function Home() {
 
         {/* 메가 메뉴 패널 */}
         {megaMenuOpen && megaMenuOpen !== 'ALL' && (
-          <div className="absolute left-0 right-0 top-full z-50 bg-white shadow-2xl border border-gray-100 border-t-0 rounded-b-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+          <div
+            className="absolute left-0 right-0 top-full z-50 bg-white shadow-2xl border border-gray-100 border-t-0 rounded-b-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150"
+            onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
+            onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 150); }}
+          >
 
             {/* 건식 */}
             {megaMenuOpen === '건식' && (
