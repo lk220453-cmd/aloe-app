@@ -1708,12 +1708,16 @@ export default function Home() {
                       <span className="w-20 text-center text-[11px] text-gray-400 hidden sm:block flex-shrink-0">
                         {mat.year}.{(mat.month || '1').padStart(2, '0')}.01
                       </span>
-                      <div className="w-24 flex justify-center gap-1 flex-shrink-0">
+                      <div className="w-32 flex justify-center gap-1 flex-shrink-0">
                         {userRole === 'ADMIN' && boardType === 'NOTICE' && (
                           <button onClick={(e) => { e.stopPropagation(); togglePin(mat); }}
                             className={`text-[11px] px-2 py-0.5 rounded-full border font-bold transition-all ${mat.isPinned ? 'bg-amber-100 border-amber-300 text-amber-600 hover:bg-amber-200' : 'bg-gray-50 border-gray-200 text-gray-400 hover:border-amber-300 hover:text-amber-500'}`}>
                             {mat.isPinned ? '📌 고정됨' : '고정'}
                           </button>
+                        )}
+                        {userRole === 'ADMIN' && (
+                          <button onClick={(e) => { e.stopPropagation(); setEditMat(mat); setEditTitle(mat.title); setEditContent(mat.content || ''); setEditFile(null); setEditFileDeleted(false); setShowEditModal(true); }}
+                            className="text-[11px] text-gray-300 hover:text-blue-400 transition-colors px-1">수정</button>
                         )}
                         {userRole === 'ADMIN' && (
                           <button onClick={(e) => { e.stopPropagation(); handleDeleteMaterial(mat.id); }}

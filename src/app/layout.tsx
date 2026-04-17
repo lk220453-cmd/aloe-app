@@ -21,13 +21,13 @@ export default function RootLayout({
           <div className="max-w-6xl mx-auto flex items-center h-[58px]">
 
             {/* 로고 영역 */}
-            <div className="flex items-center px-6 flex-shrink-0 h-full">
+            <a href="/" className="flex items-center px-6 flex-shrink-0 h-full cursor-pointer">
               <img
                 src="/logo.png"
                 alt="Kim Jung Moon Aloe TheHB"
                 className="h-8 object-contain"
               />
-            </div>
+            </a>
 
             {/* 로고 우측 세로선 */}
             <div className="w-px h-full bg-[#a8b890]" />
