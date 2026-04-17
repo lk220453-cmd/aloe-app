@@ -43,8 +43,8 @@ interface PromoFolder {
 const initialMockMaterials: Material[] = [
   { id: '1', title: '큐어 알로에 수딩젤 활용법 및 피부 기초 교육', type: 'VIDEO', thumbnailUrl: 'https://picsum.photos/seed/1/400/225', category: '화장품' },
   { id: '2', title: '신제품 홍삼 알로에 젤리 상세 안내서', type: 'DOCUMENT', thumbnailUrl: 'https://picsum.photos/seed/2/400/225', category: '건식' },
-  { id: '3', title: '이달의 우수 카운셀러 영업 노하우 인터뷰', type: 'VIDEO', thumbnailUrl: 'https://picsum.photos/seed/3/400/225', category: '자료공유방' },
-  { id: '4', title: '현장 판매 꿀팁 및 대화 스크립트 모음', type: 'DOCUMENT', thumbnailUrl: 'https://picsum.photos/seed/4/400/225', category: '자료공유방' },
+  { id: '3', title: '이달의 우수 카운셀러 영업 노하우 인터뷰', type: 'VIDEO', thumbnailUrl: 'https://picsum.photos/seed/3/400/225', category: '회사소식/홍보' },
+  { id: '4', title: '현장 판매 꿀팁 및 대화 스크립트 모음', type: 'DOCUMENT', thumbnailUrl: 'https://picsum.photos/seed/4/400/225', category: '회사소식/홍보' },
   { id: '7', title: '4월 사업자 정기 교육 일정 공지', type: 'NOTICE', thumbnailUrl: 'https://picsum.photos/seed/7/400/225', category: '게시판' },
   { id: '8', title: '면역력 증진 세일즈 가이드 영상', type: 'VIDEO', thumbnailUrl: 'https://picsum.photos/seed/8/400/225', category: '건식' },
   { id: '9', title: '알로에 마스크팩 성분 분석 결과서', type: 'DOCUMENT', thumbnailUrl: 'https://picsum.photos/seed/9/400/225', category: '화장품' },
@@ -61,7 +61,7 @@ const initialPromoFolders: PromoFolder[] = [
   { id: 'f3', year: '2025', month: '12', title: '12월 겨울 마감세일' },
 ];
 
-const categories = ['ALL', '건식', '화장품', '기기', '자료공유방', '영업자료집', '브랜드판촉', '게시판'];
+const categories = ['ALL', '건식', '화장품', '기기', '회사소식/홍보', '영업자료집', '브랜드판촉', '게시판'];
 
 const heroConfigs: Record<string, { bgUrl: string, bgUrl2?: string, title: string, desc: string, colorClass: string, accentClass: string, subTitle: string, bgClass?: string, bgClass2?: string, circleUrl?: string, circlePos?: string }> = {
   'ALL': {
@@ -100,7 +100,7 @@ const heroConfigs: Record<string, { bgUrl: string, bgUrl2?: string, title: strin
     colorClass: 'from-violet-950/90 via-purple-900/40',
     accentClass: 'from-violet-300 to-fuchsia-400'
   },
-'자료공유방': {
+'회사소식/홍보': {
   bgUrl: '/bg.jpg',
     circleUrl: '/char_girl.png',
       circlePos: '50% center',
@@ -573,7 +573,7 @@ export default function Home() {
     if (userRole === 'ADMIN') {
       uploadVisible = true;
     } else if (userRole === 'BUSINESS') {
-      if (selectedCategory === '자료공유방' || selectedCategory === '영업자료집' || (selectedCategory === '게시판' && selectedSubBoard === 'FREE')) {
+      if (selectedCategory === '회사소식/홍보' || selectedCategory === '영업자료집' || (selectedCategory === '게시판' && selectedSubBoard === 'FREE')) {
         uploadVisible = true;
       }
     } else if (userRole === 'COUNSELOR') {
@@ -853,8 +853,8 @@ export default function Home() {
                 </div>
               )}
 
-              {/* 종류 속성 선택 (건식, 화장품, 기기, 자료공유방 등의 카테고리일 경우에만) */}
-              {(selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기' || selectedCategory === '자료공유방' || selectedCategory === '영업자료집') && (
+              {/* 종류 속성 선택 (건식, 화장품, 기기, 회사소식/홍보 등의 카테고리일 경우에만) */}
+              {(selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기' || selectedCategory === '회사소식/홍보' || selectedCategory === '영업자료집') && (
                 <div>
                   <label className="block text-[13px] font-bold text-gray-700 mb-2">자료 종류 속성 명시</label>
                   <div className="flex space-x-3">
@@ -1422,16 +1422,16 @@ export default function Home() {
               </div>
             )}
 
-            {/* 자료공유방 */}
-            {megaMenuOpen === '자료공유방' && (
+            {/* 회사소식/홍보 */}
+            {megaMenuOpen === '회사소식/홍보' && (
               <div className="flex">
                 <div className="flex-1 p-8">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">자료 형식</p>
                   <div className="flex flex-col gap-1">
                     {[{ id: 'ALL', label: '모두 보기' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '▶ 영상' }].map(t => (
-                      <button key={t.id} onClick={() => { handleCategoryChange('자료공유방'); setSelectedType(t.id); setMegaMenuOpen(null); }}
-                        className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '자료공유방' && selectedType === t.id ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
-                        {selectedCategory === '자료공유방' && selectedType === t.id && <span className="text-[11px]">➔</span>}
+                      <button key={t.id} onClick={() => { handleCategoryChange('회사소식/홍보'); setSelectedType(t.id); setMegaMenuOpen(null); }}
+                        className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '회사소식/홍보' && selectedType === t.id ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
+                        {selectedCategory === '회사소식/홍보' && selectedType === t.id && <span className="text-[11px]">➔</span>}
                         {t.label}
                       </button>
                     ))}
@@ -1441,7 +1441,7 @@ export default function Home() {
                   <div className="text-7xl opacity-15">📂</div>
                   <div className="absolute bottom-6 left-6">
                     <p className="text-[10px] font-bold text-slate-500/50 tracking-wider uppercase">Archive</p>
-                    <p className="text-[15px] font-bold text-slate-700/60 mt-0.5">자료공유방</p>
+                    <p className="text-[15px] font-bold text-slate-700/60 mt-0.5">회사소식/홍보</p>
                   </div>
                 </div>
               </div>
@@ -1854,7 +1854,7 @@ export default function Home() {
 
                       {/* 열람 버튼 + 수정/삭제 */}
                       <div className="w-16 flex items-center justify-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
-                        {(userRole === 'ADMIN' || (userRole === 'BUSINESS' && (mat.category === '자료공유방' || (mat.category === '게시판' && mat.type === 'FREE')))) && selectedCategory !== 'ALL' && (
+                        {(userRole === 'ADMIN' || (userRole === 'BUSINESS' && (mat.category === '회사소식/홍보' || (mat.category === '게시판' && mat.type === 'FREE')))) && selectedCategory !== 'ALL' && (
                           <>
                             <button onClick={(e) => { e.stopPropagation(); handleEditMaterialTitle(mat.id, mat.title); }} className="text-[11px] text-gray-400 hover:text-[#00b050] transition-colors opacity-0 group-hover:opacity-100">수정</button>
                             <button onClick={(e) => { e.stopPropagation(); handleDeleteMaterial(mat.id); }} className="text-[11px] text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">삭제</button>
