@@ -1357,9 +1357,11 @@ export default function Home() {
         <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-center overflow-x-auto scrollbar-hide">
             {categories.map((cat, idx) => {
-              const isActive = (megaMenuOpen || hoveredCat)
-                ? (megaMenuOpen === cat || hoveredCat === cat)
-                : selectedCategory === cat;
+              const isActive = !showLanding && (
+                hoveredCat ? hoveredCat === cat
+                : megaMenuOpen ? megaMenuOpen === cat
+                : selectedCategory === cat && selectedCategory !== 'ALL'
+              );
               const isAll = cat === 'ALL';
               return (
                 <div key={cat} className="relative flex items-center flex-shrink-0">
