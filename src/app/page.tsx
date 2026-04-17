@@ -1349,6 +1349,7 @@ export default function Home() {
       <div
         id="category-nav"
         className="relative mb-6"
+        style={{zIndex: 40}}
         onMouseLeave={() => { if (!megaMenuPinned) megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 150); }}
         onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
       >
@@ -1389,7 +1390,7 @@ export default function Home() {
         {/* 메가 메뉴 패널 */}
         {megaMenuOpen && megaMenuOpen !== 'ALL' && (
           <div
-            className="absolute left-0 right-0 top-full z-50 bg-white shadow-2xl border border-gray-100 border-t-0 rounded-b-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150"
+            className="absolute left-0 right-0 top-full z-50 bg-white shadow-2xl border border-gray-100 border-t-0 rounded-b-2xl overflow-hidden"
             onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
             onMouseLeave={() => { if (!megaMenuPinned) megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 150); }}
           >
