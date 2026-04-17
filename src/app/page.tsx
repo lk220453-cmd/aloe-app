@@ -102,13 +102,13 @@ const heroConfigs: Record<string, { bgUrl: string, bgUrl2?: string, title: strin
   },
 '회사소식/홍보': {
   bgUrl: '/bg.jpg',
-    circleUrl: '/char_girl.png',
-      circlePos: '50% center',
-        title: '자료공유 아카이브',
-          subTitle: '현장 노하우의 집약,',
-            desc: '사업자 및 지사에서 직접 제작하고 공유하는 다채로운 영업 노하우와 맞춤 교안들입니다.',
-              colorClass: 'from-slate-950/90 via-cyan-900/40',
-                accentClass: 'from-cyan-300 to-blue-400'
+  circleUrl: '/char_girl.png',
+  circlePos: '50% center',
+  title: '회사소식 · 홍보센터',
+  subTitle: '김정문알로에 공식 소식,',
+  desc: '본사의 최신 회사 소식, 신제품 출시, 이벤트, 홍보 캠페인 등 공식 콘텐츠를 확인하세요.',
+  colorClass: 'from-slate-950/90 via-cyan-900/40',
+  accentClass: 'from-cyan-300 to-blue-400'
 },
 '게시판': {
   bgUrl: '/bg.jpg',
