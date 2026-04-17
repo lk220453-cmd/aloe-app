@@ -1370,7 +1370,7 @@ export default function Home() {
                   )}
                   <div onMouseEnter={() => { setHoveredCat(cat); if (cat !== 'ALL') setMegaMenuOpen(cat); else { setMegaMenuOpen(null); handleCategoryChange('ALL'); } setMegaMenuPinned(false); }} onMouseLeave={() => setHoveredCat(null)}>
                     <button
-                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(false); setSelectedMenuCat('ALL'); } else { setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(cat); setMegaMenuPinned(true); setSelectedMenuCat(cat); } }}
+                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(false); setSelectedMenuCat('ALL'); } else { window.scrollTo(0, 0); setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(cat); setMegaMenuPinned(true); setSelectedMenuCat(cat); } }}
                       className={`relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
                           ? isActive
                             ? 'text-[#1a3010] font-bold'
@@ -1634,6 +1634,9 @@ export default function Home() {
         )}
       </div>
 
+
+      {/* ============== 랜딩 슬라이드쇼 + 콘텐츠 래퍼 (min-height 로 높이 급변 방지) ============== */}
+      <div style={{minHeight: 'calc(100vh - 160px)'}}>
 
       {/* ============== 랜딩 슬라이드쇼 ============== */}
       {showLanding && search.trim() === '' && (
@@ -2034,6 +2037,8 @@ export default function Home() {
       )}
 
       </>}
+
+      </div>{/* min-height wrapper */}
     </div>
   );
 }
