@@ -617,7 +617,7 @@ export default function Home() {
   if (!currentUser) return null;
 
   return (
-    <div className="max-w-6xl mx-auto p-4 py-8">
+    <div className="max-w-6xl mx-auto p-4 py-8 overflow-x-hidden">
 
       {/* 상단 사용자 정보 바 */}
       <div className="flex justify-end items-center gap-3 mb-4">
@@ -1348,7 +1348,7 @@ export default function Home() {
       {/* 메가 메뉴 네비게이션 */}
       <div
         id="category-nav"
-        className="relative mb-6"
+        className="sticky top-0 mb-6"
         style={{zIndex: 40}}
         onMouseLeave={() => { if (!megaMenuPinned) megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 150); }}
         onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
