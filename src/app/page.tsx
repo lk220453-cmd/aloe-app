@@ -1330,7 +1330,7 @@ export default function Home() {
                   )}
                   <div onMouseEnter={() => cat !== 'ALL' ? setMegaMenuOpen(cat) : setMegaMenuOpen(null)}>
                     <button
-                      onClick={() => { handleCategoryChange(cat); setMegaMenuOpen(null); }}
+                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); } else { setMegaMenuOpen(megaMenuOpen === cat ? null : cat); } }}
                       className={`relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
                           ? isActive
                             ? 'text-[#1a3010] font-bold'
@@ -1359,6 +1359,16 @@ export default function Home() {
             onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
             onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 150); }}
           >
+            {/* 전체 보기 버튼 */}
+            <div className="flex items-center justify-between px-8 pt-5 pb-2 border-b border-gray-100">
+              <span className="text-[13px] font-bold text-gray-700">{megaMenuOpen}</span>
+              <button
+                onClick={() => { handleCategoryChange(megaMenuOpen!); setMegaMenuOpen(null); }}
+                className="text-[12px] font-bold text-[#00b050] hover:text-[#00723a] border border-[#00b050] hover:border-[#00723a] px-3 py-1 rounded-full transition-colors"
+              >
+                전체 보기 →
+              </button>
+            </div>
 
             {/* 건식 */}
             {megaMenuOpen === '건식' && (
