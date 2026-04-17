@@ -520,6 +520,9 @@ export default function Home() {
   const filteredMaterials = materials.filter(mat => {
     const matchSearch = mat.title.toLowerCase().includes(search.toLowerCase());
 
+    // 검색어 있으면 전체 카테고리에서 키워드만으로 검색
+    if (search.trim() !== '') return matchSearch;
+
     const matchCategory = selectedCategory === 'ALL' || mat.category === selectedCategory;
 
     let matchType = true;
