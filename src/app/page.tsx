@@ -242,7 +242,7 @@ export default function Home() {
   }, []);
 
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('NONE');
+  const [selectedCategory, setSelectedCategory] = useState('ALL');
 
   const [selectedType, setSelectedType] = useState('ALL');
   const [selectedSubBoard, setSelectedSubBoard] = useState('ALL');
