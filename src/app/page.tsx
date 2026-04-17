@@ -289,6 +289,7 @@ export default function Home() {
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const megaMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ============== 폴더 수정 로직 ==============
   const handleAddFolder = async () => {
@@ -1314,7 +1315,8 @@ export default function Home() {
       <div
         id="category-nav"
         className="relative mb-6"
-        onMouseLeave={() => setMegaMenuOpen(null)}
+        onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 200); }}
+        onMouseEnter={() => { if (megaMenuCloseTimer.current) clearTimeout(megaMenuCloseTimer.current); }}
       >
         <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-center overflow-x-auto scrollbar-hide">
