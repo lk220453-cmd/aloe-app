@@ -1548,7 +1548,7 @@ export default function Home() {
 
 
       {/* ============== 브랜드판촉 UI ============== */}
-      {selectedCategory === '브랜드판촉' ? (
+      {selectedCategory === '브랜드판촉' && search.trim() === '' ? (
         <div className="flex flex-col md:flex-row gap-6 mt-4">
 
           {/* 좌측 사이드바: 연도/월 관리 및 네비게이션 트리 */}
@@ -1694,7 +1694,7 @@ export default function Home() {
             </>
           </div>
         </div>
-      ) : selectedCategory === '게시판' ? (
+      ) : selectedCategory === '게시판' && search.trim() === '' ? (
         /* ============== 게시판 UI (공지 + 자유 분리) ============== */
         (() => {
           const noticePosts = materials
