@@ -56,9 +56,28 @@ export default function RootLayout({
           </div>
         </header>
 
-        <main className="flex-1 w-full">
+        <main className="flex-1 w-full pb-[88px]">
           {children}
         </main>
+
+        {/* 하단 고정 푸터 */}
+        <footer className="fixed bottom-0 left-0 right-0 z-40 bg-[#ebebeb] border-t border-[#d0d0d0]">
+          <div className="max-w-6xl mx-auto px-6 py-2.5 text-[11px] text-[#888] leading-[1.8] tracking-tight">
+            <div className="flex flex-wrap gap-x-7">
+              <span><span className="font-semibold text-[#666]">COMPANY</span> : 김정문알로에</span>
+              <span><span className="font-semibold text-[#666]">CEO</span> : 최연매</span>
+              <span><span className="font-semibold text-[#666]">ADDRESS</span> : 서울특별시 서초구 사임당로 15 (백재빌딩)</span>
+              <span><span className="font-semibold text-[#666]">TEL</span> : 080-022-9191 &gt;</span>
+              <span><span className="font-semibold text-[#666]">FAX</span> : 02-400-9754</span>
+              <span><span className="font-semibold text-[#666]">BUSINESS LICENCE</span> : 220-81-08624</span>
+            </div>
+            <div className="flex flex-wrap gap-x-7">
+              <span><span className="font-semibold text-[#666]">ONLINE LICENCE</span> : 2008-서울서초-0094</span>
+              <span><span className="font-semibold text-[#666]">PRIVACY OFFICER</span> : 이윤섭 (yslee@aloe.co.kr)</span>
+            </div>
+            <div>COPYRIGHT (c) 김정문알로에&nbsp; ALL RIGHTS RESERVED.</div>
+          </div>
+        </footer>
       </body>
     </html>
   );

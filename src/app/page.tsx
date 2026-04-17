@@ -620,7 +620,7 @@ export default function Home() {
   if (!currentUser) return null;
 
   return (
-    <div className="max-w-6xl mx-auto p-4 py-8 overflow-x-hidden">
+    <div className="max-w-6xl mx-auto p-4 py-8">
 
       {/* 상단 사용자 정보 바 */}
       <div className="flex justify-end items-center gap-3 mb-4">
@@ -1354,8 +1354,8 @@ export default function Home() {
       <div
         id="category-nav"
         className="sticky top-0 mb-6"
-        style={{zIndex: 40}}
-        onMouseLeave={() => { if (!megaMenuPinned) megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 150); }}
+        style={{zIndex: 40, width: '100vw', marginLeft: 'calc(50% - 50vw)'}}
+        onMouseLeave={() => { const isAll = selectedMenuCat === 'ALL'; if (!megaMenuPinned) megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(null); if (isAll) { setShowLanding(true); setSelectedMenuCat(null); } }, 150); }}
         onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
       >
         <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
@@ -1368,7 +1368,7 @@ export default function Home() {
                   {idx > 0 && (
                     <span className="text-[#a8b890] text-[12px] select-none">|</span>
                   )}
-                  <div onMouseEnter={() => { setHoveredCat(cat); if (cat !== 'ALL') setMegaMenuOpen(cat); else setMegaMenuOpen(null); setMegaMenuPinned(false); }} onMouseLeave={() => setHoveredCat(null)}>
+                  <div onMouseEnter={() => { setHoveredCat(cat); if (cat !== 'ALL') setMegaMenuOpen(cat); else { setMegaMenuOpen(null); handleCategoryChange('ALL'); } setMegaMenuPinned(false); }} onMouseLeave={() => setHoveredCat(null)}>
                     <button
                       onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(false); setSelectedMenuCat('ALL'); } else { setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(cat); setMegaMenuPinned(true); setSelectedMenuCat(cat); } }}
                       className={`relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
@@ -1399,6 +1399,7 @@ export default function Home() {
             onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
             onMouseLeave={() => { if (!megaMenuPinned) megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 150); }}
           >
+            <div className="max-w-6xl mx-auto">
             {/* 건식 */}
             {megaMenuOpen === '건식' && (
               <div className="flex">
@@ -1628,6 +1629,7 @@ export default function Home() {
               );
             })()}
 
+            </div>{/* max-w-6xl mx-auto */}
           </div>
         )}
       </div>
