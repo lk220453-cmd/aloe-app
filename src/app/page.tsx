@@ -259,6 +259,7 @@ export default function Home() {
   const [promoYear, setPromoYear] = useState('2026');
   const [promoMonth, setPromoMonth] = useState('4');
   const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
+  const [megaMenuPinned, setMegaMenuPinned] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 10;
 
@@ -1348,7 +1349,7 @@ export default function Home() {
       <div
         id="category-nav"
         className="relative mb-6"
-        onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 150); }}
+        onMouseLeave={() => { if (!megaMenuPinned) megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 150); }}
         onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
       >
         <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
@@ -1361,9 +1362,9 @@ export default function Home() {
                   {idx > 0 && (
                     <span className="text-[#a8b890] text-[12px] select-none">|</span>
                   )}
-                  <div onMouseEnter={() => { if (cat !== 'ALL') setMegaMenuOpen(cat); else setMegaMenuOpen(null); }}>
+                  <div onMouseEnter={() => { if (cat !== 'ALL') setMegaMenuOpen(cat); else setMegaMenuOpen(null); setMegaMenuPinned(false); }}>
                     <button
-                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); } else { setMegaMenuOpen(cat); } }}
+                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(false); } else { setMegaMenuOpen(cat); setMegaMenuPinned(true); } }}
                       className={`relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
                           ? isActive
                             ? 'text-[#1a3010] font-bold'
@@ -1390,7 +1391,7 @@ export default function Home() {
           <div
             className="absolute left-0 right-0 top-full z-50 bg-white shadow-2xl border border-gray-100 border-t-0 rounded-b-2xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150"
             onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
-            onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 150); }}
+            onMouseLeave={() => { if (!megaMenuPinned) megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 150); }}
           >
             {/* 건식 */}
             {megaMenuOpen === '건식' && (
@@ -1399,7 +1400,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">자료 형식</p>
                   <div className="flex gap-4 mb-5 pb-4 border-b border-gray-100">
                     {[{ id: 'ALL', label: '모두' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '▶ 영상' }].map(t => (
-                      <button key={t.id} onClick={() => { handleCategoryChange('건식'); setSelectedType(t.id); setMegaMenuOpen(null); }}
+                      <button key={t.id} onClick={() => { handleCategoryChange('건식'); setSelectedType(t.id); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
                         className={`text-[13px] transition-colors relative pb-1 ${selectedCategory === '건식' && selectedType === t.id ? 'text-[#00b050] font-bold' : 'text-gray-500 hover:text-[#00723a]'}`}>
                         {t.label}
                         {selectedCategory === '건식' && selectedType === t.id && <span className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#00b050] rounded-full block" />}
@@ -1409,7 +1410,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">건강기능식품 제품군</p>
                   <div className="grid grid-cols-3 gap-x-2 gap-y-0.5">
                     {healthProducts.map(prod => (
-                      <button key={prod} onClick={() => { handleCategoryChange('건식'); setSelectedProduct(prod); setMegaMenuOpen(null); }}
+                      <button key={prod} onClick={() => { handleCategoryChange('건식'); setSelectedProduct(prod); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
                         className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-1.5 ${selectedCategory === '건식' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '건식' && selectedProduct === prod && <span className="text-[11px]">➔</span>}
                         {prod}
@@ -1435,7 +1436,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">자료 형식</p>
                   <div className="flex gap-4 mb-5 pb-4 border-b border-gray-100">
                     {[{ id: 'ALL', label: '모두' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '▶ 영상' }].map(t => (
-                      <button key={t.id} onClick={() => { handleCategoryChange('화장품'); setSelectedType(t.id); setMegaMenuOpen(null); }}
+                      <button key={t.id} onClick={() => { handleCategoryChange('화장품'); setSelectedType(t.id); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
                         className={`text-[13px] transition-colors relative pb-1 ${selectedCategory === '화장품' && selectedType === t.id ? 'text-[#00b050] font-bold' : 'text-gray-500 hover:text-[#00723a]'}`}>
                         {t.label}
                         {selectedCategory === '화장품' && selectedType === t.id && <span className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#00b050] rounded-full block" />}
@@ -1445,7 +1446,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">코스메틱 제품군</p>
                   <div className="flex flex-col gap-0.5">
                     {cosmeticsProducts.map(prod => (
-                      <button key={prod} onClick={() => { handleCategoryChange('화장품'); setSelectedProduct(prod); setMegaMenuOpen(null); }}
+                      <button key={prod} onClick={() => { handleCategoryChange('화장품'); setSelectedProduct(prod); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
                         className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '화장품' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '화장품' && selectedProduct === prod && <span className="text-[11px]">➔</span>}
                         {prod}
@@ -1471,7 +1472,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">자료 형식</p>
                   <div className="flex gap-4 mb-5 pb-4 border-b border-gray-100">
                     {[{ id: 'ALL', label: '모두' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '▶ 영상' }].map(t => (
-                      <button key={t.id} onClick={() => { handleCategoryChange('기기'); setSelectedType(t.id); setMegaMenuOpen(null); }}
+                      <button key={t.id} onClick={() => { handleCategoryChange('기기'); setSelectedType(t.id); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
                         className={`text-[13px] transition-colors relative pb-1 ${selectedCategory === '기기' && selectedType === t.id ? 'text-[#00b050] font-bold' : 'text-gray-500 hover:text-[#00723a]'}`}>
                         {t.label}
                         {selectedCategory === '기기' && selectedType === t.id && <span className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#00b050] rounded-full block" />}
@@ -1481,7 +1482,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">디바이스 제품군</p>
                   <div className="flex flex-col gap-0.5">
                     {deviceProducts.map(prod => (
-                      <button key={prod} onClick={() => { handleCategoryChange('기기'); setSelectedProduct(prod); setMegaMenuOpen(null); }}
+                      <button key={prod} onClick={() => { handleCategoryChange('기기'); setSelectedProduct(prod); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
                         className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '기기' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '기기' && selectedProduct === prod && <span className="text-[11px]">➔</span>}
                         {prod}
@@ -1508,7 +1509,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">자료 형식</p>
                   <div className="flex flex-col gap-1">
                     {[{ id: 'ALL', label: '모두 보기' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '▶ 영상' }].map(t => (
-                      <button key={t.id} onClick={() => { handleCategoryChange('회사소식/홍보'); setSelectedType(t.id); setMegaMenuOpen(null); }}
+                      <button key={t.id} onClick={() => { handleCategoryChange('회사소식/홍보'); setSelectedType(t.id); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
                         className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '회사소식/홍보' && selectedType === t.id ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '회사소식/홍보' && selectedType === t.id && <span className="text-[11px]">➔</span>}
                         {t.label}
@@ -1533,7 +1534,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">자료 형식</p>
                   <div className="flex flex-col gap-1">
                     {[{ id: 'ALL', label: '모두 보기' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '▶ 영상' }].map(t => (
-                      <button key={t.id} onClick={() => { handleCategoryChange('영업자료집'); setSelectedType(t.id); setMegaMenuOpen(null); }}
+                      <button key={t.id} onClick={() => { handleCategoryChange('영업자료집'); setSelectedType(t.id); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
                         className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '영업자료집' && selectedType === t.id ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '영업자료집' && selectedType === t.id && <span className="text-[11px]">➔</span>}
                         {t.label}
@@ -1558,7 +1559,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">게시판 종류</p>
                   <div className="flex flex-col gap-1">
                     {[{ id: 'ALL', label: '전체 게시글' }, { id: 'NOTICE', label: '📢 공지사항' }, { id: 'FREE', label: '💬 자유게시판' }].map(t => (
-                      <button key={t.id} onClick={() => { handleCategoryChange('게시판'); setSelectedSubBoard(t.id); setMegaMenuOpen(null); }}
+                      <button key={t.id} onClick={() => { handleCategoryChange('게시판'); setSelectedSubBoard(t.id); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
                         className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '게시판' && selectedSubBoard === t.id ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '게시판' && selectedSubBoard === t.id && <span className="text-[11px]">➔</span>}
                         {t.label}
@@ -1596,7 +1597,7 @@ export default function Home() {
                     <div className="flex flex-col gap-2">
                       {nearMonths.map(({ year, month, isCurrent }) => (
                         <button key={`${year}-${month}`}
-                          onClick={() => { handleCategoryChange('브랜드판촉'); setPromoYear(year); setPromoMonth(month); setMegaMenuOpen(null); }}
+                          onClick={() => { handleCategoryChange('브랜드판촉'); setPromoYear(year); setPromoMonth(month); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
                           className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-3 ${isCurrent ? 'bg-[#00b050]/10 text-[#00723a] font-extrabold' : 'text-gray-500 hover:text-[#00723a] hover:bg-gray-50'}`}>
                           <span className={`text-[11px] font-bold w-14 flex-shrink-0 ${isCurrent ? 'text-[#00b050]' : 'text-gray-400'}`}>
                             {year}년 {month}월
