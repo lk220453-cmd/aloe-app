@@ -25,6 +25,7 @@ interface Material {
   productName?: string;
   content?: string;
   youtubeUrl?: string;
+  isPinned?: boolean;
 }
 
 const getYouTubeId = (url: string): string | null => {
@@ -218,7 +219,7 @@ export default function Home() {
           id: m.id, title: m.title, type: m.type, thumbnailUrl: m.thumbnail_url || '',
           category: m.category, year: m.year, month: m.month,
           fileName: m.file_name, fileUrl: m.file_url, productName: m.product_name,
-          content: m.content, youtubeUrl: m.youtube_url,
+          content: m.content, youtubeUrl: m.youtube_url, isPinned: m.is_pinned || false,
         }));
         setMaterials(mapped);
       }
@@ -306,6 +307,12 @@ export default function Home() {
 
     await supabase.from('promo_folders').update({ title: titleInput }).eq('id', folderId);
     setPromoFolders(promoFolders.map(f => f.id === folderId ? { ...f, title: titleInput } : f));
+  };
+
+  const togglePin = async (mat: Material) => {
+    const newVal = !mat.isPinned;
+    await supabase.from('materials').update({ is_pinned: newVal }).eq('id', mat.id);
+    setMaterials(prev => prev.map(m => m.id === mat.id ? { ...m, isPinned: newVal } : m));
   };
 
   // ============== 항목 수정 및 삭제 로직 ==============
@@ -1652,7 +1659,9 @@ export default function Home() {
       ) : selectedCategory === '게시판' ? (
         /* ============== 게시판 UI (공지 + 자유 분리) ============== */
         (() => {
-          const noticePosts = materials.filter(m => m.category === '게시판' && m.type === 'NOTICE' && (search === '' || m.title.includes(search)));
+          const noticePosts = materials
+            .filter(m => m.category === '게시판' && m.type === 'NOTICE' && (search === '' || m.title.includes(search)))
+            .sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
           const freePosts = materials.filter(m => m.category === '게시판' && m.type === 'FREE' && (search === '' || m.title.includes(search)));
 
           const BoardSection = ({ title, icon, posts, boardType, accentColor, bgColor }: {
@@ -1683,11 +1692,13 @@ export default function Home() {
               {posts.length > 0 ? (
                 <div className="divide-y divide-gray-50">
                   {posts.map((mat, idx) => (
-                    <div key={mat.id} className="group flex items-center px-4 py-3 hover:bg-green-50/30 transition-colors cursor-pointer"
+                    <div key={mat.id} className={`group flex items-center px-4 py-3 hover:bg-green-50/30 transition-colors cursor-pointer ${mat.isPinned ? 'bg-amber-50/60' : ''}`}
                       onClick={() => { setDetailMat(mat); setShowDetailModal(true); }}>
-                      <span className="w-8 text-center text-[12px] font-bold text-gray-300 group-hover:text-[#00b050] flex-shrink-0">{idx + 1}</span>
+                      <span className="w-8 text-center text-[12px] font-bold flex-shrink-0">
+                        {mat.isPinned ? <span className="text-amber-500">📌</span> : <span className="text-gray-300 group-hover:text-[#00b050]">{idx + 1}</span>}
+                      </span>
                       <div className="flex-1 ml-3 min-w-0">
-                        <p className="text-[13px] font-semibold text-gray-700 group-hover:text-[#00723a] truncate flex items-center gap-1.5">
+                        <p className={`text-[13px] font-semibold truncate flex items-center gap-1.5 ${mat.isPinned ? 'text-amber-700' : 'text-gray-700 group-hover:text-[#00723a]'}`}>
                           {mat.title}
                           {mat.youtubeUrl && <span className="text-[10px] bg-red-50 text-red-500 border border-red-100 px-1.5 py-0.5 rounded font-bold flex-shrink-0">YouTube</span>}
                           {mat.fileUrl && <span className="text-[10px] bg-amber-50 text-amber-600 border border-amber-200 px-1.5 py-0.5 rounded font-bold flex-shrink-0">첨부</span>}
@@ -1697,7 +1708,13 @@ export default function Home() {
                       <span className="w-20 text-center text-[11px] text-gray-400 hidden sm:block flex-shrink-0">
                         {mat.year}.{(mat.month || '1').padStart(2, '0')}.01
                       </span>
-                      <div className="w-14 flex justify-center flex-shrink-0">
+                      <div className="w-20 flex justify-center gap-1 flex-shrink-0">
+                        {userRole === 'ADMIN' && boardType === 'NOTICE' && (
+                          <button onClick={(e) => { e.stopPropagation(); togglePin(mat); }}
+                            className={`text-[11px] px-1.5 py-0.5 rounded transition-colors ${mat.isPinned ? 'text-amber-500 hover:text-amber-700' : 'text-gray-300 hover:text-amber-400'}`}>
+                            {mat.isPinned ? '📌고정' : '📌'}
+                          </button>
+                        )}
                         {userRole === 'ADMIN' && (
                           <button onClick={(e) => { e.stopPropagation(); handleDeleteMaterial(mat.id); }}
                             className="text-[11px] text-gray-300 hover:text-red-400 transition-colors px-1">삭제</button>
