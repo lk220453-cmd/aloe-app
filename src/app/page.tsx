@@ -1331,7 +1331,7 @@ export default function Home() {
                   )}
                   <div onMouseEnter={() => cat !== 'ALL' ? setMegaMenuOpen(cat) : setMegaMenuOpen(null)}>
                     <button
-                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); } else { setMegaMenuOpen(megaMenuOpen === cat ? null : cat); } }}
+                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); } else { setMegaMenuOpen(cat); } }}
                       className={`relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
                           ? isActive
                             ? 'text-[#1a3010] font-bold'
