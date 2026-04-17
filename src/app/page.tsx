@@ -242,7 +242,7 @@ export default function Home() {
   }, []);
 
   const [search, setSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('ALL');
+  const [selectedCategory, setSelectedCategory] = useState('NONE');
 
   const [selectedType, setSelectedType] = useState('ALL');
   const [selectedSubBoard, setSelectedSubBoard] = useState('ALL');
@@ -539,6 +539,7 @@ export default function Home() {
   };
 
   const filteredMaterials = materials.filter(mat => {
+    if (selectedCategory === 'NONE') return false;
     const matchSearch = mat.title.toLowerCase().includes(search.toLowerCase());
 
     // 검색어 있으면 전체 카테고리에서 키워드만으로 검색
@@ -590,7 +591,7 @@ export default function Home() {
   const currentFolderTitle = currentFolder ? currentFolder.title : `${promoMonth}월 판촉 행사`;
 
   let uploadVisible = false;
-  if (selectedCategory !== 'ALL') {
+  if (selectedCategory !== 'ALL' && selectedCategory !== 'NONE') {
     if (userRole === 'ADMIN') {
       uploadVisible = true;
     } else if (userRole === 'BUSINESS') {
@@ -1287,8 +1288,8 @@ export default function Home() {
               )}
               <button
                 onClick={() => {
-                  if (selectedCategory === 'ALL') {
-                    alert('전체 보기 탭에서는 업로드할 수 없습니다. 특정 카테고리를 선택해 주세요.');
+                  if (selectedCategory === 'ALL' || selectedCategory === 'NONE') {
+                    alert('카테고리를 먼저 선택해 주세요.');
                     return;
                   }
                   openUploadModal();
@@ -1359,17 +1360,6 @@ export default function Home() {
             onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
             onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 150); }}
           >
-            {/* 전체 보기 버튼 */}
-            <div className="flex items-center justify-between px-8 pt-5 pb-2 border-b border-gray-100">
-              <span className="text-[13px] font-bold text-gray-700">{megaMenuOpen}</span>
-              <button
-                onClick={() => { handleCategoryChange(megaMenuOpen!); setMegaMenuOpen(null); }}
-                className="text-[12px] font-bold text-[#00b050] hover:text-[#00723a] border border-[#00b050] hover:border-[#00723a] px-3 py-1 rounded-full transition-colors"
-              >
-                전체 보기 →
-              </button>
-            </div>
-
             {/* 건식 */}
             {megaMenuOpen === '건식' && (
               <div className="flex">
@@ -1603,6 +1593,15 @@ export default function Home() {
         )}
       </div>
 
+
+      {/* ============== 카테고리 미선택 안내 ============== */}
+      {selectedCategory === 'NONE' && search.trim() === '' && (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="text-6xl mb-6">☝️</div>
+          <h2 className="text-[20px] font-bold text-gray-700 mb-2">메뉴를 선택해 주세요</h2>
+          <p className="text-[14px] text-gray-400">위 메뉴에서 보고 싶은 카테고리를 선택하면<br/>해당 자료를 확인하실 수 있습니다.</p>
+        </div>
+      )}
 
       {/* ============== 브랜드판촉 UI ============== */}
       {selectedCategory === '브랜드판촉' && search.trim() === '' ? (
