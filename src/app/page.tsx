@@ -283,8 +283,9 @@ export default function Home() {
   const [uploadTypeState, setUploadTypeState] = useState<MaterialType>('DOCUMENT');
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [uploadProduct, setUploadProduct] = useState('스피그린');
-  const [uploadMode, setUploadMode] = useState<'file' | 'youtube'>('file');
+  const [uploadMode, setUploadMode] = useState<'file' | 'youtube' | 'weblink'>('file');
   const [uploadYoutubeUrl, setUploadYoutubeUrl] = useState('');
+  const [uploadWebUrl, setUploadWebUrl] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -346,6 +347,7 @@ export default function Home() {
     setUploadTypeState('DOCUMENT');
     setUploadMode('file');
     setUploadYoutubeUrl('');
+    setUploadWebUrl('');
     if ((selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') && selectedProduct !== '전체') {
       setUploadProduct(selectedProduct);
     } else {
@@ -449,6 +451,8 @@ export default function Home() {
   const executeUpload = async () => {
     if (uploadMode === 'youtube') {
       if (!uploadTitle || !uploadYoutubeUrl.trim()) return;
+    } else if (uploadMode === 'weblink') {
+      if (!uploadTitle || !uploadWebUrl.trim()) return;
     } else {
       if (uploadFiles.length === 0) return;
       if (uploadFiles.length === 1 && !uploadTitle) return;
@@ -463,7 +467,23 @@ export default function Home() {
       finalType = 'DOCUMENT';
     }
 
-    if (uploadMode === 'youtube') {
+    if (uploadMode === 'weblink') {
+      const url = uploadWebUrl.trim();
+      const newMaterial: Material = {
+        id: 'm' + Date.now().toString(), title: uploadTitle, type: uploadTypeState,
+        thumbnailUrl: 'https://picsum.photos/seed/' + Math.floor(Math.random() * 100) + '/400/225',
+        category: selectedCategory, year: promoYear, month: promoMonth, fileUrl: url, fileName: url,
+      };
+      await supabase.from('materials').insert({
+        id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
+        thumbnail_url: newMaterial.thumbnailUrl, category: newMaterial.category,
+        year: newMaterial.year, month: newMaterial.month, file_url: url, file_name: url,
+      });
+      setMaterials([newMaterial, ...materials]);
+      setUploadLoading(false);
+      setShowUploadModal(false);
+      return;
+    } else if (uploadMode === 'youtube') {
       const youtubeId = getYouTubeId(uploadYoutubeUrl.trim());
       const newThumbnail = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : 'https://picsum.photos/seed/' + Math.floor(Math.random() * 100) + '/400/225';
       const newMaterial: Material = {
@@ -761,11 +781,32 @@ export default function Home() {
                     onClick={() => setUploadMode('youtube')}
                     className={`flex-1 py-2.5 text-[13px] font-bold transition-colors ${uploadMode === 'youtube' ? 'bg-red-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
                   >
-                    ▶ YouTube 링크
+                    ▶ YouTube
                   </button>
+                  {(selectedCategory === '회사소식/홍보' || selectedCategory === '영업자료집') && (
+                    <button
+                      onClick={() => setUploadMode('weblink')}
+                      className={`flex-1 py-2.5 text-[13px] font-bold transition-colors ${uploadMode === 'weblink' ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                    >
+                      🔗 웹 링크
+                    </button>
+                  )}
                 </div>
 
-                {uploadMode === 'youtube' ? (
+                {uploadMode === 'weblink' ? (
+                  <div>
+                    <input
+                      type="url"
+                      value={uploadWebUrl}
+                      onChange={e => setUploadWebUrl(e.target.value)}
+                      placeholder="https://example.com/영상링크 또는 웹페이지 주소"
+                      className="w-full p-3.5 text-[14px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition-all"
+                    />
+                    {uploadWebUrl && (
+                      <p className="mt-2 text-[12px] text-blue-500 font-bold">🔗 {uploadWebUrl}</p>
+                    )}
+                  </div>
+                ) : uploadMode === 'youtube' ? (
                   <div>
                     <input
                       type="text"
@@ -889,10 +930,10 @@ export default function Home() {
               </button>
               <button
                 onClick={executeUpload}
-                disabled={uploadLoading || (uploadMode === 'youtube' ? (!uploadTitle || !getYouTubeId(uploadYoutubeUrl)) : (uploadFiles.length === 0 || (uploadFiles.length === 1 && !uploadTitle)))}
+                disabled={uploadLoading || (uploadMode === 'youtube' ? (!uploadTitle || !getYouTubeId(uploadYoutubeUrl)) : uploadMode === 'weblink' ? (!uploadTitle || !uploadWebUrl.trim()) : (uploadFiles.length === 0 || (uploadFiles.length === 1 && !uploadTitle)))}
                 className="px-8 py-2.5 rounded-xl font-extrabold bg-[#00b050] text-white shadow-md shadow-green-500/20 hover:bg-[#009030] disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transition-all transform active:scale-95"
               >
-                {uploadLoading ? '업로드 중...' : uploadMode === 'youtube' ? 'YouTube 링크 등록' : '파일 업로드 완료'}
+                {uploadLoading ? '업로드 중...' : uploadMode === 'youtube' ? 'YouTube 링크 등록' : uploadMode === 'weblink' ? '웹 링크 등록' : '파일 업로드 완료'}
               </button>
             </div>
           </div>
