@@ -1632,7 +1632,7 @@ export default function Home() {
       {/* ============== 랜딩 슬라이드쇼 ============== */}
       {showLanding && search.trim() === '' && (
         <div className="relative w-full overflow-hidden rounded-2xl shadow-xl mt-2" style={{ height: '480px' }}>
-          {['/slide1.jpg', '/slide2.jpg', '/slide3.jpg'].map((src, i) => (
+          {['/slide1.jpeg', '/slide2.jpeg', '/slide3.jpeg'].map((src, i) => (
             <div
               key={i}
               className="absolute inset-0 transition-opacity duration-1000"
