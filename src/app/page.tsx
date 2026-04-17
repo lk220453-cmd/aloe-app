@@ -1357,7 +1357,9 @@ export default function Home() {
         <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-center overflow-x-auto scrollbar-hide">
             {categories.map((cat, idx) => {
-              const isActive = selectedCategory === cat || megaMenuOpen === cat || (cat !== 'ALL' && hoveredCat === cat);
+              const isActive = (megaMenuOpen || hoveredCat)
+                ? (megaMenuOpen === cat || hoveredCat === cat)
+                : selectedCategory === cat;
               const isAll = cat === 'ALL';
               return (
                 <div key={cat} className="relative flex items-center flex-shrink-0">
@@ -1366,7 +1368,7 @@ export default function Home() {
                   )}
                   <div onMouseEnter={() => { setHoveredCat(cat); if (cat !== 'ALL') setMegaMenuOpen(cat); else setMegaMenuOpen(null); setMegaMenuPinned(false); }} onMouseLeave={() => setHoveredCat(null)}>
                     <button
-                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(false); } else { setMegaMenuOpen(cat); setMegaMenuPinned(true); } }}
+                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(false); } else { setSelectedCategory(cat); setMegaMenuOpen(cat); setMegaMenuPinned(true); } }}
                       className={`relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
                           ? isActive
                             ? 'text-[#1a3010] font-bold'
