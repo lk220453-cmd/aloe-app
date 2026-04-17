@@ -260,6 +260,7 @@ export default function Home() {
   const [promoMonth, setPromoMonth] = useState('4');
   const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
   const [megaMenuPinned, setMegaMenuPinned] = useState(false);
+  const [hoveredCat, setHoveredCat] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 10;
 
@@ -1356,14 +1357,14 @@ export default function Home() {
         <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-center overflow-x-auto scrollbar-hide">
             {categories.map((cat, idx) => {
-              const isActive = selectedCategory === cat || megaMenuOpen === cat;
+              const isActive = selectedCategory === cat || megaMenuOpen === cat || (cat !== 'ALL' && hoveredCat === cat);
               const isAll = cat === 'ALL';
               return (
                 <div key={cat} className="relative flex items-center flex-shrink-0">
                   {idx > 0 && (
                     <span className="text-[#a8b890] text-[12px] select-none">|</span>
                   )}
-                  <div onMouseEnter={() => { if (cat !== 'ALL') setMegaMenuOpen(cat); else setMegaMenuOpen(null); setMegaMenuPinned(false); }}>
+                  <div onMouseEnter={() => { setHoveredCat(cat); if (cat !== 'ALL') setMegaMenuOpen(cat); else setMegaMenuOpen(null); setMegaMenuPinned(false); }} onMouseLeave={() => setHoveredCat(null)}>
                     <button
                       onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(false); } else { setMegaMenuOpen(cat); setMegaMenuPinned(true); } }}
                       className={`relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll

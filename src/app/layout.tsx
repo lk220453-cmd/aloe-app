@@ -13,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className="antialiased flex flex-col min-h-screen bg-[url('/watercolor.png')] bg-auto bg-repeat bg-fixed" style={{overflowY: 'scroll'}}>
+      <body className="antialiased flex flex-col min-h-screen bg-[url('/watercolor.png')] bg-auto bg-repeat bg-fixed">
         <div className="fixed inset-0 bg-white/20 backdrop-blur-[2px] z-[-1] pointer-events-none" />
 
         {/* 네비게이션 헤더 — 스킨케어 스타일 */}
