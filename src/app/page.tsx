@@ -1356,7 +1356,7 @@ export default function Home() {
         <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-center overflow-x-auto scrollbar-hide">
             {categories.map((cat, idx) => {
-              const isActive = selectedCategory === cat;
+              const isActive = selectedCategory === cat || megaMenuOpen === cat;
               const isAll = cat === 'ALL';
               return (
                 <div key={cat} className="relative flex items-center flex-shrink-0">
