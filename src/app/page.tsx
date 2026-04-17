@@ -54,21 +54,6 @@ const initialMockMaterials: Material[] = [
   { id: 'p4', title: '12월 겨울 보습 특별 기획 (종료)', type: 'DOCUMENT', thumbnailUrl: '', category: '브랜드판촉', year: '2025', month: '12' },
 ];
 
-const healthProducts = [
-  '전체', '스피그린', 'THE알로에프라임 알로에겔', '슈퍼그린베라', '옥타코사놀 별자원',
-  '프로폴리스 플러스S', '쏘팔메토 블랙', '아이엔율 플러스', '김정문 홍맥', '황제관절',
-  '칼슘 딥밸런스 K', '우먼스 더블업', '슈퍼콜라겐 알파', '가화인 프리미엄', '사슴녹용환',
-  '에브리데이 멀티비타민 프리미엄', '김정문알로에 면역젤리_4주', '루테인 아스타잔틴에이',
-  '알티지오메가3', '알랩 인터플러스17', '김정문 수신당', '산삼 알부민', '알로:숨 365', '홍삼', '기타'
-];
-
-const cosmeticsProducts = [
-  '전체', '뉴)세레브퓨어알로에', '베루시에 타임리스 리바이탈라이징', '기타'
-];
-
-const deviceProducts = [
-  '전체', '닥터셀이온', '닥터셀큐어 헬스벨트', '기타'
-];
 
 const initialPromoFolders: PromoFolder[] = [
   { id: 'f1', year: '2026', month: '4', title: '4월 행사 기획전' },
@@ -152,6 +137,14 @@ export default function Home() {
   const [showUserMgmt, setShowUserMgmt] = useState(false);
   const [pendingUsers, setPendingUsers] = useState<any[]>([]);
 
+  const [healthProducts, setHealthProducts] = useState<string[]>(['전체', '기타']);
+  const [cosmeticsProducts, setCosmeticsProducts] = useState<string[]>(['전체', '기타']);
+  const [deviceProducts, setDeviceProducts] = useState<string[]>(['전체', '기타']);
+
+  const [showProductMgmt, setShowProductMgmt] = useState(false);
+  const [productMgmtCategory, setProductMgmtCategory] = useState<'건식'|'화장품'|'기기'>('건식');
+  const [newProductName, setNewProductName] = useState('');
+
   useEffect(() => {
     const session = localStorage.getItem('aloeSession');
     if (!session) {
@@ -190,6 +183,28 @@ export default function Home() {
     loadPendingUsers();
   };
 
+  const loadProducts = async () => {
+    const { data } = await supabase.from('products').select('*').order('sort_order', { ascending: true });
+    if (data) {
+      setHealthProducts(['전체', ...data.filter((p: any) => p.category === '건식').map((p: any) => p.name), '기타']);
+      setCosmeticsProducts(['전체', ...data.filter((p: any) => p.category === '화장품').map((p: any) => p.name), '기타']);
+      setDeviceProducts(['전체', ...data.filter((p: any) => p.category === '기기').map((p: any) => p.name), '기타']);
+    }
+  };
+
+  const addProduct = async () => {
+    if (!newProductName.trim()) return;
+    await supabase.from('products').insert({ category: productMgmtCategory, name: newProductName.trim(), sort_order: 99 });
+    setNewProductName('');
+    loadProducts();
+  };
+
+  const deleteProduct = async (category: string, name: string) => {
+    if (!confirm(`"${name}" 제품을 삭제하시겠습니까?`)) return;
+    await supabase.from('products').delete().eq('category', category).eq('name', name);
+    loadProducts();
+  };
+
   const [materials, setMaterials] = useState<Material[]>(initialMockMaterials);
   const [promoFolders, setPromoFolders] = useState<PromoFolder[]>(initialPromoFolders);
 
@@ -210,6 +225,7 @@ export default function Home() {
       if (foldersData && foldersData.length > 0) {
         setPromoFolders(foldersData);
       }
+      await loadProducts();
     };
     loadData();
   }, []);
@@ -557,12 +573,20 @@ export default function Home() {
           {currentUser.role === 'ADMIN' ? '🔑 관리자' : '🏬 사업자'} <strong>{currentUser.name}</strong>님
         </span>
         {currentUser.role === 'ADMIN' && (
-          <button
-            onClick={loadPendingUsers}
-            className="text-[12px] bg-[#7a9a52] text-white px-3 py-1.5 rounded-lg font-bold hover:bg-[#5f7d3a] transition-colors"
-          >
-            👥 사용자 관리
-          </button>
+          <>
+            <button
+              onClick={loadPendingUsers}
+              className="text-[12px] bg-[#7a9a52] text-white px-3 py-1.5 rounded-lg font-bold hover:bg-[#5f7d3a] transition-colors"
+            >
+              👥 사용자 관리
+            </button>
+            <button
+              onClick={() => { setShowProductMgmt(true); loadProducts(); }}
+              className="text-[12px] bg-[#7a9a52] text-white px-3 py-1.5 rounded-lg font-bold hover:bg-[#5f7d3a] transition-colors"
+            >
+              📋 제품 관리
+            </button>
+          </>
         )}
         <button
           onClick={handleLogout}
@@ -571,6 +595,52 @@ export default function Home() {
           로그아웃
         </button>
       </div>
+
+      {/* 제품 관리 모달 */}
+      {showProductMgmt && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style={{maxHeight: 'calc(100vh - 64px)'}}>
+            <div className="flex-shrink-0 flex justify-between items-center p-5 border-b bg-gray-50">
+              <h3 className="font-extrabold text-[17px]">📋 제품 관리</h3>
+              <button onClick={() => setShowProductMgmt(false)} className="text-gray-400 hover:text-gray-800 w-8 h-8 rounded-full flex items-center justify-center font-bold">✕</button>
+            </div>
+            {/* 카테고리 탭 */}
+            <div className="flex-shrink-0 flex border-b">
+              {(['건식', '화장품', '기기'] as const).map(cat => (
+                <button key={cat} onClick={() => setProductMgmtCategory(cat)}
+                  className={`flex-1 py-3 text-[14px] font-bold transition-colors ${productMgmtCategory === cat ? 'text-[#00723a] border-b-2 border-[#00b050]' : 'text-gray-400 hover:text-gray-600'}`}>
+                  {cat}
+                </button>
+              ))}
+            </div>
+            {/* 제품 목록 */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {(productMgmtCategory === '건식' ? healthProducts : productMgmtCategory === '화장품' ? cosmeticsProducts : deviceProducts)
+                .filter(p => p !== '전체' && p !== '기타')
+                .map(name => (
+                  <div key={name} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                    <span className="text-[14px] font-medium text-gray-700">{name}</span>
+                    <button onClick={() => deleteProduct(productMgmtCategory, name)}
+                      className="text-[12px] bg-red-500 text-white px-3 py-1 rounded-lg font-bold hover:bg-red-600">삭제</button>
+                  </div>
+                ))}
+            </div>
+            {/* 새 제품 추가 */}
+            <div className="flex-shrink-0 p-4 border-t bg-gray-50 flex gap-2">
+              <input
+                type="text"
+                value={newProductName}
+                onChange={e => setNewProductName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addProduct()}
+                placeholder="새 제품명 입력"
+                className="flex-1 p-2.5 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#7a9a52]/50"
+              />
+              <button onClick={addProduct}
+                className="px-4 py-2.5 bg-[#00b050] text-white rounded-xl font-bold text-[14px] hover:bg-[#009030]">추가</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 사용자 관리 모달 */}
       {showUserMgmt && (
