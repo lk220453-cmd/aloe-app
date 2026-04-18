@@ -1169,6 +1169,7 @@ export default function Home() {
 
       {/* 🌿 스킨케어 스타일 히어로 */}
       {(() => {
+        if (showLanding && !megaMenuOpen) return null;
         const bannerCat = (megaMenuOpen && megaMenuOpen !== 'ALL') ? megaMenuOpen : selectedCategory;
         if (bannerCat === 'NONE' || bannerCat === 'ALL') return null;
         const catMeta: Record<string, { icon: string; bg: string; text: string; sub: string }> = {
@@ -1363,7 +1364,7 @@ export default function Home() {
             {/* 처음으로 버튼 */}
             <div className="relative flex items-center flex-shrink-0">
               <button
-                onClick={() => { setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(null); setMegaMenuPinned(false); setSelectedMenuCat(null); setHoveredCat(null); setSearch(''); }}
+                onClick={() => { setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(null); setMegaMenuPinned(false); setSelectedMenuCat(null); setSelectedCategory('ALL'); setHoveredCat(null); setSearch(''); }}
                 className="relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 text-[#4a6a30] font-normal hover:text-[#1a3010]"
               >
                 🏠 처음으로
