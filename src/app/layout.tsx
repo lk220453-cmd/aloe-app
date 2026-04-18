@@ -2,8 +2,18 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "김정문알로에 내부 플랫폼",
-  description: "사업자 및 카운셀러 전용 플랫폼",
+  title: "김정문알로에 더HB",
+  description: "사업자 및 카운셀러 전용 프리미엄 자료 플랫폼",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "알로에HB",
+  },
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -84,6 +94,14 @@ export default function RootLayout({
             <div>COPYRIGHT (c) 김정문알로에&nbsp; ALL RIGHTS RESERVED.</div>
           </div>
         </footer>
+        {/* 서비스워커 등록 — PWA 홈화면 추가 지원 */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+              navigator.serviceWorker.register('/sw.js');
+            });
+          }
+        `}} />
       </body>
     </html>
   );
