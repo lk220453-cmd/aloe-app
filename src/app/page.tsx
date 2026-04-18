@@ -1201,27 +1201,27 @@ export default function Home() {
         <div className="absolute right-0 top-0 bottom-0 w-[18%] bg-[#6a8840]/40 rounded-r-3xl" />
         <div className="absolute left-0 top-0 bottom-0 w-[4%] bg-[#6a8840]/20 rounded-l-3xl" />
 
-        <div className="relative z-10 flex items-center justify-between px-12 md:px-16 py-12 md:py-14 gap-6">
+        <div className="relative z-10 flex items-center justify-between px-5 md:px-12 lg:px-16 py-5 md:py-12 lg:py-14 gap-4 md:gap-6">
 
           {/* 좌: 텍스트 + 배지 */}
           <div className="flex-1 max-w-[480px]">
-            <p className={`font-bold tracking-[0.2em] uppercase mb-5 transition-all duration-300 ${hoveredBadge ? 'text-[#1a3010] text-[14px]' : 'text-[#2d4a1a]/55 text-[10px] tracking-[0.3em]'}`}>
+            <p className={`font-bold tracking-[0.2em] uppercase mb-2 md:mb-5 transition-all duration-300 ${hoveredBadge ? 'text-[#1a3010] text-[11px] md:text-[14px]' : 'text-[#2d4a1a]/55 text-[9px] md:text-[10px] tracking-[0.3em]'}`}>
               {hoveredBadge ? '김정문알로에 경영이념' : 'Kim Jung Moon Aloe · Premium Platform'}
             </p>
-            <div className="relative mb-5" style={{ minHeight: '120px' }}>
+            <div className="relative mb-2 md:mb-5" style={{ minHeight: 'clamp(60px, 12vw, 120px)' }}>
               {/* 기본 제목 */}
-              <h1 className={`text-[#1a3010] text-[44px] md:text-[54px] font-black leading-[1.1] tracking-tight break-keep transition-opacity duration-300 ${hoveredBadge ? 'opacity-0' : 'opacity-100'}`}>
+              <h1 className={`text-[#1a3010] text-[26px] md:text-[44px] lg:text-[54px] font-black leading-[1.1] tracking-tight break-keep transition-opacity duration-300 ${hoveredBadge ? 'opacity-0' : 'opacity-100'}`}>
                 {selectedCategory === 'ALL'
                   ? <>건강한 아름다움을<br />자연에서 찾다</>
                   : <>{heroConfigs[selectedCategory]?.subTitle || heroConfigs['ALL'].subTitle}<br />{heroConfigs[selectedCategory]?.title || ''}</>
                 }
               </h1>
               {/* 경영이념 제목 오버레이 */}
-              <h1 className={`absolute top-0 left-0 text-[#1a3010] text-[44px] md:text-[54px] font-black leading-[1.1] tracking-tight break-keep transition-opacity duration-300 ${hoveredBadge ? 'opacity-100' : 'opacity-0'}`}>
+              <h1 className={`absolute top-0 left-0 text-[#1a3010] text-[26px] md:text-[44px] lg:text-[54px] font-black leading-[1.1] tracking-tight break-keep transition-opacity duration-300 ${hoveredBadge ? 'opacity-100' : 'opacity-0'}`}>
                 {hoveredBadge || ''}
               </h1>
             </div>
-            <p className="text-[#2d4a1a]/65 text-[14px] font-medium leading-relaxed mb-10 max-w-sm break-keep transition-all duration-300">
+            <p className="text-[#2d4a1a]/65 text-[12px] md:text-[14px] font-medium leading-relaxed mb-4 md:mb-10 max-w-sm break-keep transition-all duration-300">
               {selectedCategory === 'ALL'
                 ? '사업자 및 카운셀러님의 성공적인 영업을 돕는 프리미엄 교육 자료 플랫폼입니다.'
                 : (heroConfigs[selectedCategory]?.desc || '').substring(0, 60) + '…'
@@ -1229,7 +1229,7 @@ export default function Home() {
             </p>
 
             {/* 3개 아이콘 배지 */}
-            <div className="flex items-center gap-7">
+            <div className="flex items-center gap-4 md:gap-7">
               {[
                 { icon: '🍃', label: '자연주의', desc: '자연은 인간이 가장 인간다운 삶을 영위할 수 있는 최상의 조건이며, 인간은 자연에 대한 연구와 그 결과의 선용을 통해 자연성을 회복할 수 있다는 것이 김정문알로에의 신념이다.' },
                 { icon: '🤝', label: '인간존중', desc: '인간은 기업활동의 무한한 원천이며 궁극적인 목적이다. 구성원들 자신의 개성과 창의성 및 잠재능력을 발휘할 수 있는 여건을 마련해주는 것이 기업경영의 제일과제다.' },
@@ -1238,11 +1238,11 @@ export default function Home() {
                 <div key={i}
                   onMouseEnter={() => setHoveredBadge(badge.label)}
                   onMouseLeave={() => setHoveredBadge(null)}
-                  className="flex flex-col items-center gap-2 cursor-pointer group">
-                  <div className={`w-[52px] h-[52px] rounded-full border-2 backdrop-blur-sm flex items-center justify-center text-[22px] transition-all duration-200 ${hoveredBadge === badge.label ? 'bg-[#1a3010] border-[#1a3010] scale-110 shadow-lg' : 'border-[#2d4a1a]/25 bg-white/25'}`}>
+                  className="flex flex-col items-center gap-1 md:gap-2 cursor-pointer group">
+                  <div className={`w-[36px] h-[36px] md:w-[52px] md:h-[52px] rounded-full border-2 backdrop-blur-sm flex items-center justify-center text-[16px] md:text-[22px] transition-all duration-200 ${hoveredBadge === badge.label ? 'bg-[#1a3010] border-[#1a3010] scale-110 shadow-lg' : 'border-[#2d4a1a]/25 bg-white/25'}`}>
                     {badge.icon}
                   </div>
-                  <span className={`text-[10px] font-bold tracking-wide transition-colors ${hoveredBadge === badge.label ? 'text-[#1a3010]' : 'text-[#2d4a1a]/55'}`}>{badge.label}</span>
+                  <span className={`text-[9px] md:text-[10px] font-bold tracking-wide transition-colors ${hoveredBadge === badge.label ? 'text-[#1a3010]' : 'text-[#2d4a1a]/55'}`}>{badge.label}</span>
                 </div>
               ))}
             </div>
@@ -1254,7 +1254,7 @@ export default function Home() {
           </div>
 
           {/* 우: 원형 이미지 + 경영이념 오버레이 (절대위치로 흔들림 없음) */}
-          <div className="flex-shrink-0 relative w-[220px] h-[220px] md:w-[260px] md:h-[260px]">
+          <div className="flex-shrink-0 relative w-[110px] h-[110px] md:w-[220px] md:h-[220px] lg:w-[260px] lg:h-[260px]">
             {/* 기본: 원형 이미지 */}
             {(() => {
               const cfg = heroConfigs[selectedCategory];
