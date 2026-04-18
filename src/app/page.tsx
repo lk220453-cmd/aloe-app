@@ -1408,7 +1408,8 @@ export default function Home() {
         {/* 메가 메뉴 패널 */}
         {megaMenuOpen && megaMenuOpen !== 'ALL' && (
           <div
-            className="absolute left-0 right-0 top-full z-50 bg-white shadow-2xl border border-gray-100 border-t-0 rounded-b-2xl overflow-hidden"
+            className="absolute left-0 right-0 top-full z-50 bg-white shadow-2xl border border-gray-100 border-t-0 rounded-b-2xl overflow-y-auto"
+            style={{maxHeight: 'calc(100vh - 120px)'}}
             onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
             onMouseLeave={() => { if (!megaMenuPinned) megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 150); }}
           >
@@ -1416,29 +1417,29 @@ export default function Home() {
             {/* 건식 */}
             {megaMenuOpen === '건식' && (
               <div className="flex">
-                <div className="flex-1 p-8">
+                <div className="flex-1 p-4 md:p-8">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">자료 형식</p>
-                  <div className="flex gap-4 mb-5 pb-4 border-b border-gray-100">
+                  <div className="flex gap-4 mb-3 md:mb-5 pb-3 md:pb-4 border-b border-gray-100">
                     {[{ id: 'ALL', label: '모두' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '▶ 영상' }].map(t => (
                       <button key={t.id} onClick={() => { handleCategoryChange('건식'); setSelectedType(t.id); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
-                        className={`text-[13px] transition-colors relative pb-1 ${selectedCategory === '건식' && selectedType === t.id ? 'text-[#00b050] font-bold' : 'text-gray-500 hover:text-[#00723a]'}`}>
+                        className={`text-[12px] md:text-[13px] transition-colors relative pb-1 ${selectedCategory === '건식' && selectedType === t.id ? 'text-[#00b050] font-bold' : 'text-gray-500 hover:text-[#00723a]'}`}>
                         {t.label}
                         {selectedCategory === '건식' && selectedType === t.id && <span className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#00b050] rounded-full block" />}
                       </button>
                     ))}
                   </div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">건강기능식품 제품군</p>
-                  <div className="grid grid-cols-3 gap-x-2 gap-y-0.5">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-4">건강기능식품 제품군</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-x-1 gap-y-0">
                     {healthProducts.map(prod => (
                       <button key={prod} onClick={() => { handleCategoryChange('건식'); setSelectedProduct(prod); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
-                        className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-1.5 ${selectedCategory === '건식' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
+                        className={`text-left py-1.5 px-2 md:py-2 md:px-3 rounded-lg text-[12px] md:text-[13px] transition-all flex items-center gap-1 ${selectedCategory === '건식' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '건식' && selectedProduct === prod && <span className="text-[11px]">➔</span>}
                         {prod}
                       </button>
                     ))}
                   </div>
                 </div>
-                <div className="w-52 relative overflow-hidden flex-shrink-0">
+                <div className="hidden md:block w-52 relative overflow-hidden flex-shrink-0">
                   <img src="/supps1.png" alt="건강기능식품" className="w-full h-full object-cover opacity-50" />
                   <div className="absolute inset-0 bg-gradient-to-r from-white/80 to-transparent" />
                   <div className="absolute bottom-6 left-6">
@@ -1452,29 +1453,29 @@ export default function Home() {
             {/* 화장품 */}
             {megaMenuOpen === '화장품' && (
               <div className="flex">
-                <div className="flex-1 p-8">
+                <div className="flex-1 p-4 md:p-8">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">자료 형식</p>
-                  <div className="flex gap-4 mb-5 pb-4 border-b border-gray-100">
+                  <div className="flex gap-4 mb-3 md:mb-5 pb-3 md:pb-4 border-b border-gray-100">
                     {[{ id: 'ALL', label: '모두' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '▶ 영상' }].map(t => (
                       <button key={t.id} onClick={() => { handleCategoryChange('화장품'); setSelectedType(t.id); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
-                        className={`text-[13px] transition-colors relative pb-1 ${selectedCategory === '화장품' && selectedType === t.id ? 'text-[#00b050] font-bold' : 'text-gray-500 hover:text-[#00723a]'}`}>
+                        className={`text-[12px] md:text-[13px] transition-colors relative pb-1 ${selectedCategory === '화장품' && selectedType === t.id ? 'text-[#00b050] font-bold' : 'text-gray-500 hover:text-[#00723a]'}`}>
                         {t.label}
                         {selectedCategory === '화장품' && selectedType === t.id && <span className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#00b050] rounded-full block" />}
                       </button>
                     ))}
                   </div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">코스메틱 제품군</p>
-                  <div className="flex flex-col gap-0.5">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-4">코스메틱 제품군</p>
+                  <div className="grid grid-cols-2 md:flex md:flex-col gap-0.5">
                     {cosmeticsProducts.map(prod => (
                       <button key={prod} onClick={() => { handleCategoryChange('화장품'); setSelectedProduct(prod); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
-                        className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '화장품' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
+                        className={`text-left py-1.5 px-2 md:py-2 md:px-3 rounded-lg text-[12px] md:text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '화장품' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '화장품' && selectedProduct === prod && <span className="text-[11px]">➔</span>}
                         {prod}
                       </button>
                     ))}
                   </div>
                 </div>
-                <div className="w-52 relative overflow-hidden flex-shrink-0">
+                <div className="hidden md:block w-52 relative overflow-hidden flex-shrink-0">
                   <img src="/cosmetics.jpg" alt="화장품" className="w-full h-full object-cover opacity-50" />
                   <div className="absolute inset-0 bg-gradient-to-r from-white/80 to-transparent" />
                   <div className="absolute bottom-6 left-6">
@@ -1488,29 +1489,29 @@ export default function Home() {
             {/* 기기 */}
             {megaMenuOpen === '기기' && (
               <div className="flex">
-                <div className="flex-1 p-8">
+                <div className="flex-1 p-4 md:p-8">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">자료 형식</p>
-                  <div className="flex gap-4 mb-5 pb-4 border-b border-gray-100">
+                  <div className="flex gap-4 mb-3 md:mb-5 pb-3 md:pb-4 border-b border-gray-100">
                     {[{ id: 'ALL', label: '모두' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '▶ 영상' }].map(t => (
                       <button key={t.id} onClick={() => { handleCategoryChange('기기'); setSelectedType(t.id); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
-                        className={`text-[13px] transition-colors relative pb-1 ${selectedCategory === '기기' && selectedType === t.id ? 'text-[#00b050] font-bold' : 'text-gray-500 hover:text-[#00723a]'}`}>
+                        className={`text-[12px] md:text-[13px] transition-colors relative pb-1 ${selectedCategory === '기기' && selectedType === t.id ? 'text-[#00b050] font-bold' : 'text-gray-500 hover:text-[#00723a]'}`}>
                         {t.label}
                         {selectedCategory === '기기' && selectedType === t.id && <span className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#00b050] rounded-full block" />}
                       </button>
                     ))}
                   </div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">디바이스 제품군</p>
-                  <div className="flex flex-col gap-0.5">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-4">디바이스 제품군</p>
+                  <div className="grid grid-cols-2 md:flex md:flex-col gap-0.5">
                     {deviceProducts.map(prod => (
                       <button key={prod} onClick={() => { handleCategoryChange('기기'); setSelectedProduct(prod); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
-                        className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '기기' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
+                        className={`text-left py-1.5 px-2 md:py-2 md:px-3 rounded-lg text-[12px] md:text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '기기' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '기기' && selectedProduct === prod && <span className="text-[11px]">➔</span>}
                         {prod}
                       </button>
                     ))}
                   </div>
                 </div>
-                <div className="w-52 relative overflow-hidden flex-shrink-0">
+                <div className="hidden md:block w-52 relative overflow-hidden flex-shrink-0">
                   <img src="/device.png" alt="닥터셀이온" className="w-full h-full object-cover opacity-80"
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                   <div className="absolute inset-0 bg-gradient-to-r from-white/70 to-transparent" />
@@ -1525,7 +1526,7 @@ export default function Home() {
             {/* 회사소식/홍보 */}
             {megaMenuOpen === '회사소식/홍보' && (
               <div className="flex">
-                <div className="flex-1 p-8">
+                <div className="flex-1 p-4 md:p-8">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">자료 형식</p>
                   <div className="flex flex-col gap-1">
                     {[{ id: 'ALL', label: '모두 보기' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '▶ 영상' }].map(t => (
@@ -1537,7 +1538,7 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-                <div className="w-52 relative overflow-hidden flex-shrink-0 bg-slate-50 flex items-center justify-center">
+                <div className="hidden md:flex w-52 relative overflow-hidden flex-shrink-0 bg-slate-50 items-center justify-center">
                   <div className="text-7xl opacity-15">📂</div>
                   <div className="absolute bottom-6 left-6">
                     <p className="text-[10px] font-bold text-slate-500/50 tracking-wider uppercase">Archive</p>
@@ -1550,7 +1551,7 @@ export default function Home() {
             {/* 영업자료집 */}
             {megaMenuOpen === '영업자료집' && (
               <div className="flex">
-                <div className="flex-1 p-8">
+                <div className="flex-1 p-4 md:p-8">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">자료 형식</p>
                   <div className="flex flex-col gap-1">
                     {[{ id: 'ALL', label: '모두 보기' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '▶ 영상' }].map(t => (
@@ -1562,7 +1563,7 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-                <div className="w-52 relative overflow-hidden flex-shrink-0 bg-teal-50 flex items-center justify-center">
+                <div className="hidden md:flex w-52 relative overflow-hidden flex-shrink-0 bg-teal-50 items-center justify-center">
                   <div className="text-7xl opacity-15">📋</div>
                   <div className="absolute bottom-6 left-6">
                     <p className="text-[10px] font-bold text-teal-500/50 tracking-wider uppercase">Sales</p>
@@ -1575,7 +1576,7 @@ export default function Home() {
             {/* 게시판 */}
             {megaMenuOpen === '게시판' && (
               <div className="flex">
-                <div className="flex-1 p-8">
+                <div className="flex-1 p-4 md:p-8">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">게시판 종류</p>
                   <div className="flex flex-col gap-1">
                     {[{ id: 'ALL', label: '전체 게시글' }, { id: 'NOTICE', label: '📢 공지사항' }, { id: 'FREE', label: '💬 자유게시판' }].map(t => (
@@ -1587,7 +1588,7 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-                <div className="w-52 relative overflow-hidden flex-shrink-0 bg-indigo-50/60 flex items-center justify-center">
+                <div className="hidden md:flex w-52 relative overflow-hidden flex-shrink-0 bg-indigo-50/60 items-center justify-center">
                   <div className="text-7xl opacity-15">💬</div>
                   <div className="absolute bottom-6 left-6">
                     <p className="text-[10px] font-bold text-indigo-500/50 tracking-wider uppercase">Community</p>
