@@ -1419,7 +1419,7 @@ export default function Home() {
                   {idx > 0 && (
                     <span className="text-[#a8b890] text-[12px] select-none">|</span>
                   )}
-                  <div onMouseEnter={() => { setHoveredCat(cat); if (cat !== 'ALL') { setMegaMenuOpen(cat); } else { setMegaMenuOpen(null); } }} onMouseLeave={() => setHoveredCat(null)}>
+                  <div onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } setHoveredCat(cat); if (cat !== 'ALL') { setMegaMenuOpen(cat); } else { setMegaMenuOpen(null); } }} onMouseLeave={() => setHoveredCat(null)}>
                     <button
                       onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(true); setSelectedMenuCat('ALL'); } else { setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(cat); setMegaMenuPinned(true); setSelectedMenuCat(cat); } }}
                       className={`relative px-3 py-[11px] md:px-5 md:py-[15px] text-[12px] md:text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
