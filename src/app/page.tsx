@@ -1360,6 +1360,16 @@ export default function Home() {
       >
         <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-center overflow-x-auto scrollbar-hide">
+            {/* 처음으로 버튼 */}
+            <div className="relative flex items-center flex-shrink-0">
+              <button
+                onClick={() => { setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(null); setMegaMenuPinned(false); setSelectedMenuCat(null); setHoveredCat(null); setSearch(''); }}
+                className="relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 text-[#4a6a30] font-normal hover:text-[#1a3010]"
+              >
+                🏠 처음으로
+              </button>
+              <span className="text-[#a8b890] text-[12px] select-none">|</span>
+            </div>
             {categories.map((cat, idx) => {
               const isActive = hoveredCat ? hoveredCat === cat : selectedMenuCat === cat;
               const isAll = cat === 'ALL';
