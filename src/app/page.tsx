@@ -1256,6 +1256,7 @@ export default function Home() {
                 <div key={i}
                   onMouseEnter={() => setHoveredBadge(badge.label)}
                   onMouseLeave={() => setHoveredBadge(null)}
+                  onClick={() => setHoveredBadge(hoveredBadge === badge.label ? null : badge.label)}
                   className="flex flex-col items-center gap-1 md:gap-2 cursor-pointer group">
                   <div className={`w-[36px] h-[36px] md:w-[52px] md:h-[52px] rounded-full border-2 backdrop-blur-sm flex items-center justify-center text-[16px] md:text-[22px] transition-all duration-200 ${hoveredBadge === badge.label ? 'bg-[#1a3010] border-[#1a3010] scale-110 shadow-lg' : 'border-[#2d4a1a]/25 bg-white/25'}`}>
                     {badge.icon}
@@ -1294,13 +1295,13 @@ export default function Home() {
             {/* 오버레이: 경영이념 사각 패널 */}
             <div className={`absolute inset-0 rounded-2xl overflow-hidden bg-white shadow-2xl flex items-center justify-center transition-opacity duration-300 ${hoveredBadge ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
               <img src="/icon.png" alt="logo bg" className="absolute inset-0 w-full h-full object-contain p-6 opacity-[0.18] pointer-events-none" />
-              <div className="relative z-10 w-full h-full flex items-center justify-center p-5">
+              <div className="relative z-10 w-full h-full flex items-center justify-center p-2 md:p-5">
                 {[
-                  { label: '자연주의', desc: '자연은 인간이 가장\n인간다운 삶을 영위할 수 있는\n최상의 조건이며, 인간은 자연에\n대한 연구와 그 결과의 선용을\n통해 자연성을 회복할 수 있다는\n것이 김정문알로에의 신념이다.' },
-                  { label: '인간존중', desc: '인간은 기업활동의\n무한한 원천이며 궁극적인 목적이다.\n구성원들 자신의 개성과 창의성\n및 잠재능력을 발휘할 수 있는\n여건을 마련해주는 것이\n기업경영의 제일과제다.' },
-                  { label: '사회기여', desc: '김정문알로에는 경영활동의\n결과가 사회와 환경에 미치는\n영향을 스스로 점검하고,\n기업이윤을 최대한 사회에\n환원할 수 있는 방법을\n끊임없이 발굴하여 실천한다.' },
+                  { label: '자연주의', desc: '자연은 인간이 가장 인간다운 삶을 영위할 수 있는 최상의 조건이며, 인간은 자연에 대한 연구와 그 결과의 선용을 통해 자연성을 회복할 수 있다는 것이 김정문알로에의 신념이다.' },
+                  { label: '인간존중', desc: '인간은 기업활동의 무한한 원천이며 궁극적인 목적이다. 구성원들 자신의 개성과 창의성 및 잠재능력을 발휘할 수 있는 여건을 마련해주는 것이 기업경영의 제일과제다.' },
+                  { label: '사회기여', desc: '김정문알로에는 경영활동의 결과가 사회와 환경에 미치는 영향을 스스로 점검하고, 기업이윤을 최대한 사회에 환원할 수 있는 방법을 끊임없이 발굴하여 실천한다.' },
                 ].map(b => (
-                  <p key={b.label} className={`text-[#1a3010] text-[15px] font-bold leading-[1.75] text-center transition-opacity duration-200 absolute inset-0 flex items-center justify-center px-4 py-2 whitespace-pre-line ${hoveredBadge === b.label ? 'opacity-100' : 'opacity-0'}`}>
+                  <p key={b.label} className={`text-[#1a3010] text-[10px] md:text-[15px] font-bold leading-snug md:leading-[1.75] text-center transition-opacity duration-200 absolute inset-0 flex items-center justify-center px-2 md:px-4 py-2 ${hoveredBadge === b.label ? 'opacity-100' : 'opacity-0'}`}>
                     {b.desc}
                   </p>
                 ))}
