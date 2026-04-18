@@ -56,13 +56,19 @@ export default function RootLayout({
           </div>
         </header>
 
-        <main className="flex-1 w-full pb-[88px]">
+        <main className="flex-1 w-full pb-[56px] md:pb-[88px]">
           {children}
         </main>
 
         {/* 하단 고정 푸터 */}
         <footer className="fixed bottom-0 left-0 right-0 z-40 bg-[#ebebeb] border-t border-[#d0d0d0]">
-          <div className="max-w-6xl mx-auto px-6 py-2.5 text-[11px] text-[#888] leading-[1.8] tracking-tight">
+          {/* 모바일: 1줄 간략 표시 */}
+          <div className="md:hidden px-4 py-2 text-[10px] text-[#888] text-center leading-[1.6]">
+            <span className="font-semibold text-[#666]">김정문알로에</span> · TEL 080-022-9191 · 사업자 220-81-08624
+            <span className="ml-2">COPYRIGHT (c) 김정문알로에 ALL RIGHTS RESERVED.</span>
+          </div>
+          {/* 데스크탑: 전체 표시 */}
+          <div className="hidden md:block max-w-6xl mx-auto px-6 py-2.5 text-[11px] text-[#888] leading-[1.8] tracking-tight">
             <div className="flex flex-wrap gap-x-7">
               <span><span className="font-semibold text-[#666]">COMPANY</span> : 김정문알로에</span>
               <span><span className="font-semibold text-[#666]">CEO</span> : 최연매</span>

@@ -620,7 +620,7 @@ export default function Home() {
   if (!currentUser) return null;
 
   return (
-    <div className="max-w-6xl mx-auto p-4 py-8">
+    <div className="max-w-6xl mx-auto p-2 py-4 md:p-4 md:py-8">
 
       {/* 상단 사용자 정보 바 */}
       <div className="flex justify-end items-center gap-3 mb-4">
@@ -1367,7 +1367,7 @@ export default function Home() {
             <div className="relative flex items-center flex-shrink-0">
               <button
                 onClick={() => { window.scrollTo(0, 0); setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(null); setMegaMenuPinned(false); setSelectedMenuCat(null); setSelectedCategory('ALL'); setHoveredCat(null); setSearch(''); }}
-                className="relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 text-[#4a6a30] font-normal hover:text-[#1a3010]"
+                className="relative px-3 py-[11px] md:px-5 md:py-[15px] text-[12px] md:text-[13px] whitespace-nowrap transition-colors duration-150 text-[#4a6a30] font-normal hover:text-[#1a3010]"
               >
                 🏠 처음으로
               </button>
@@ -1384,7 +1384,7 @@ export default function Home() {
                   <div onMouseEnter={() => { setHoveredCat(cat); if (cat !== 'ALL') setMegaMenuOpen(cat); else { setMegaMenuOpen(null); handleCategoryChange('ALL'); } setMegaMenuPinned(false); }} onMouseLeave={() => setHoveredCat(null)}>
                     <button
                       onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(false); setSelectedMenuCat('ALL'); } else { setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(cat); setMegaMenuPinned(true); setSelectedMenuCat(cat); } }}
-                      className={`relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
+                      className={`relative px-3 py-[11px] md:px-5 md:py-[15px] text-[12px] md:text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
                           ? isActive
                             ? 'text-[#1a3010] font-bold'
                             : 'text-[#3a5a20] font-bold hover:text-[#1a3010]'
@@ -1653,16 +1653,16 @@ export default function Home() {
 
       {/* ============== 랜딩 슬라이드쇼 ============== */}
       {showLanding && search.trim() === '' && (
-        <div className="relative w-full overflow-hidden rounded-2xl shadow-xl mt-2" style={{height:'480px'}}>
+        <div className="relative w-full overflow-hidden rounded-2xl shadow-xl mt-2" style={{height:'clamp(220px, 45vw, 480px)'}}>
           {['/slide1.jpeg','/slide2.jpeg','/slide3.jpeg'].map((src, i) => (
             <div key={i} className="absolute inset-0 transition-opacity duration-1000"
               style={{opacity: slideIndex === i ? 1 : 0, backgroundImage:`url('${src}')`, backgroundSize:'cover', backgroundPosition:'center'}}>
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"/>
             </div>
           ))}
-          <div className="absolute bottom-10 left-10 text-white">
-            <p className="text-[12px] font-bold tracking-widest uppercase opacity-70 mb-2">Kim Jung Moon Aloe · Premium Platform</p>
-            <h2 className="text-[32px] font-black leading-tight drop-shadow-lg">
+          <div className="absolute bottom-4 left-4 md:bottom-10 md:left-10 text-white">
+            <p className="hidden md:block text-[12px] font-bold tracking-widest uppercase opacity-70 mb-2">Kim Jung Moon Aloe · Premium Platform</p>
+            <h2 className="text-[20px] md:text-[32px] font-black leading-tight drop-shadow-lg">
               {slideIndex === 0 && <>자연에서 온<br/>건강한 아름다움</>}
               {slideIndex === 1 && <>알로에의 순수한<br/>자연 에너지</>}
               {slideIndex === 2 && <>대자연이 키운<br/>김정문알로에</>}
