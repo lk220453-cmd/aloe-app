@@ -1407,9 +1407,12 @@ export default function Home() {
 
         {/* 메가 메뉴 패널 */}
         {megaMenuOpen && megaMenuOpen !== 'ALL' && (
+          <>
+          {/* 모바일: fixed 전체화면 오버레이 */}
+          <div className="fixed inset-0 bg-black/20 z-40 md:hidden" onClick={() => { setMegaMenuOpen(null); setMegaMenuPinned(false); }} />
           <div
-            className="absolute left-0 right-0 top-full z-50 bg-white shadow-2xl border border-gray-100 border-t-0 rounded-b-2xl overflow-y-auto"
-            style={{maxHeight: 'calc(100vh - 120px)'}}
+            className="fixed md:absolute left-0 right-0 top-[44px] md:top-full z-50 bg-white shadow-2xl border border-gray-100 border-t-0 md:rounded-b-2xl overflow-y-auto"
+            style={{maxHeight: 'calc(100vh - 44px)'}}
             onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
             onMouseLeave={() => { if (!megaMenuPinned) megaMenuCloseTimer.current = setTimeout(() => setMegaMenuOpen(null), 150); }}
           >
@@ -1645,6 +1648,7 @@ export default function Home() {
 
             </div>{/* max-w-6xl mx-auto */}
           </div>
+          </>
         )}
       </div>
 
