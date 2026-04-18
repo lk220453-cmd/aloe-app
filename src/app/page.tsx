@@ -1358,7 +1358,7 @@ export default function Home() {
         id="category-nav"
         className="sticky top-0 mb-6"
         style={{zIndex: 40, width: '100vw', marginLeft: 'calc(50% - 50vw)'}}
-        onMouseLeave={() => { const isAll = selectedMenuCat === 'ALL'; if (!megaMenuPinned) megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(null); if (isAll) { setShowLanding(true); setSelectedMenuCat(null); } }, 150); }}
+        onMouseLeave={() => { if (!megaMenuPinned) megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(null); }, 150); }}
         onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
       >
         <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
