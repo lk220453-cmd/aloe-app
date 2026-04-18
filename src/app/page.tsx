@@ -623,29 +623,29 @@ export default function Home() {
     <div className="max-w-6xl mx-auto p-2 py-4 md:p-4 md:py-8">
 
       {/* 상단 사용자 정보 바 */}
-      <div className="flex justify-end items-center gap-3 mb-4">
-        <span className="text-[13px] text-gray-500">
+      <div className="flex justify-end items-center gap-2 mb-2 md:gap-3 md:mb-4 flex-wrap">
+        <span className="text-[11px] md:text-[13px] text-gray-500">
           {currentUser.role === 'ADMIN' ? '🔑 관리자' : '🏬 사업자'} <strong>{currentUser.name}</strong>님
         </span>
         {currentUser.role === 'ADMIN' && (
           <>
             <button
               onClick={loadPendingUsers}
-              className="text-[12px] bg-[#7a9a52] text-white px-3 py-1.5 rounded-lg font-bold hover:bg-[#5f7d3a] transition-colors"
+              className="text-[11px] md:text-[12px] bg-[#7a9a52] text-white px-2 py-1 md:px-3 md:py-1.5 rounded-lg font-bold hover:bg-[#5f7d3a] transition-colors"
             >
-              👥 사용자 관리
+              👥 <span className="hidden sm:inline">사용자 관리</span>
             </button>
             <button
               onClick={() => { setShowProductMgmt(true); loadProducts(); }}
-              className="text-[12px] bg-[#7a9a52] text-white px-3 py-1.5 rounded-lg font-bold hover:bg-[#5f7d3a] transition-colors"
+              className="text-[11px] md:text-[12px] bg-[#7a9a52] text-white px-2 py-1 md:px-3 md:py-1.5 rounded-lg font-bold hover:bg-[#5f7d3a] transition-colors"
             >
-              📋 제품 관리
+              📋 <span className="hidden sm:inline">제품 관리</span>
             </button>
           </>
         )}
         <button
           onClick={handleLogout}
-          className="text-[12px] bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg font-bold hover:bg-gray-300 transition-colors"
+          className="text-[11px] md:text-[12px] bg-gray-200 text-gray-600 px-2 py-1 md:px-3 md:py-1.5 rounded-lg font-bold hover:bg-gray-300 transition-colors"
         >
           로그아웃
         </button>
