@@ -558,13 +558,15 @@ export default function Home() {
   };
   // ==========================================
 
-  // 파일 열기 — 모바일 호환 (오피스 파일은 Google Docs 뷰어)
+  // 파일 열기 — PC/모바일 호환
   const openFile = (fileUrl: string) => {
     const ext = fileUrl.split('?')[0].split('.').pop()?.toLowerCase() || '';
-    const officeExts = ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'hwp', 'hwpx'];
-    if (officeExts.includes(ext)) {
-      window.open(`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}`, '_blank');
+    // MS Office Online 뷰어: PPT/DOC/XLS (HWP 제외 — 미지원)
+    const msOfficeExts = ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'];
+    if (msOfficeExts.includes(ext)) {
+      window.open(`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`, '_blank');
     } else {
+      // PDF, 이미지, 영상, HWP 등 → 직접 열기/다운로드
       const a = document.createElement('a');
       a.href = fileUrl;
       a.target = '_blank';
