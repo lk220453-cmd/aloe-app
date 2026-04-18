@@ -558,6 +558,23 @@ export default function Home() {
   };
   // ==========================================
 
+  // 파일 열기 — 모바일 호환 (오피스 파일은 Google Docs 뷰어)
+  const openFile = (fileUrl: string) => {
+    const ext = fileUrl.split('?')[0].split('.').pop()?.toLowerCase() || '';
+    const officeExts = ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'hwp', 'hwpx'];
+    if (officeExts.includes(ext)) {
+      window.open(`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}`, '_blank');
+    } else {
+      const a = document.createElement('a');
+      a.href = fileUrl;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  };
+
   const handleCategoryChange = (cat: string) => {
     if (showLanding) history.pushState({ aloe: 'content' }, '');
     setShowLanding(false);
@@ -1091,15 +1108,15 @@ export default function Home() {
               {detailMat.fileUrl && detailMat.fileName && (
                 <div>
                   <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">첨부파일</p>
-                  <a href={detailMat.fileUrl} download={detailMat.fileName}
-                    className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200 hover:bg-green-100 transition-colors group">
+                  <button onClick={() => openFile(detailMat.fileUrl!)}
+                    className="w-full flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200 hover:bg-green-100 transition-colors group text-left">
                     <span className="text-2xl">📎</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-[14px] font-bold text-[#1a3010] truncate">{detailMat.fileName}</p>
-                      <p className="text-[11px] text-gray-400 mt-0.5">클릭하여 다운로드</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">클릭하여 열기</p>
                     </div>
-                    <span className="text-[#00b050] font-bold text-[13px] group-hover:underline">⬇ 다운로드</span>
-                  </a>
+                    <span className="text-[#00b050] font-bold text-[13px] group-hover:underline">⬇ 열기</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -1973,7 +1990,7 @@ export default function Home() {
                         if (mat.youtubeUrl || mat.content) {
                           setDetailMat(mat); setShowDetailModal(true);
                         } else if (mat.fileUrl) {
-                          window.open(mat.fileUrl, '_blank');
+                          openFile(mat.fileUrl);
                         } else {
                           alert(`[뷰어 오류] 이 자료는 예전에 등록된 껍데기(테스트) 자료라 실제 파일이 존재하지 않습니다. 방금 새로 업로드하신 파일을 클릭해 보세요!`);
                         }
