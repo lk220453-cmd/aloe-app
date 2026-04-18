@@ -252,6 +252,23 @@ export default function Home() {
     return () => clearInterval(timer);
   }, [showLanding]);
 
+  // 모바일 뒤로가기 버튼 → 초기화면으로
+  useEffect(() => {
+    history.pushState({ aloe: 'app' }, '');
+    const handlePopState = () => {
+      setShowLanding(true);
+      setSlideIndex(0);
+      setMegaMenuOpen(null);
+      setMegaMenuPinned(false);
+      setSelectedMenuCat(null);
+      setSelectedCategory('ALL');
+      setSearch('');
+      history.pushState({ aloe: 'app' }, '');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const [selectedType, setSelectedType] = useState('ALL');
   const [selectedSubBoard, setSelectedSubBoard] = useState('ALL');
   const [selectedProduct, setSelectedProduct] = useState('전체');
@@ -542,6 +559,7 @@ export default function Home() {
   // ==========================================
 
   const handleCategoryChange = (cat: string) => {
+    if (showLanding) history.pushState({ aloe: 'content' }, '');
     setShowLanding(false);
     setSelectedCategory(cat);
     setSelectedMenuCat(cat);
