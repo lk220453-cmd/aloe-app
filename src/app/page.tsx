@@ -1364,7 +1364,7 @@ export default function Home() {
             {/* 처음으로 버튼 */}
             <div className="relative flex items-center flex-shrink-0">
               <button
-                onClick={() => { setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(null); setMegaMenuPinned(false); setSelectedMenuCat(null); setSelectedCategory('ALL'); setHoveredCat(null); setSearch(''); }}
+                onClick={() => { window.scrollTo(0, 0); setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(null); setMegaMenuPinned(false); setSelectedMenuCat(null); setSelectedCategory('ALL'); setHoveredCat(null); setSearch(''); }}
                 className="relative px-5 py-[15px] text-[13px] whitespace-nowrap transition-colors duration-150 text-[#4a6a30] font-normal hover:text-[#1a3010]"
               >
                 🏠 처음으로
