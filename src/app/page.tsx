@@ -713,6 +713,7 @@ export default function Home() {
                   <thead>
                     <tr className="border-b text-gray-500 text-left">
                       <th className="pb-2 font-bold">이름</th>
+                      <th className="pb-2 font-bold">거래처명</th>
                       <th className="pb-2 font-bold">아이디</th>
                       <th className="pb-2 font-bold">상태</th>
                       <th className="pb-2 font-bold">관리</th>
@@ -722,6 +723,7 @@ export default function Home() {
                     {pendingUsers.map(u => (
                       <tr key={u.id} className="border-b py-2">
                         <td className="py-2">{u.name}</td>
+                        <td className="py-2 text-gray-600">{u.company || '-'}</td>
                         <td className="py-2">{u.username}</td>
                         <td className="py-2">
                           <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${u.status === 'approved' ? 'bg-green-100 text-green-700' : u.status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-700'}`}>
