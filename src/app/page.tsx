@@ -681,6 +681,12 @@ export default function Home() {
 
   if (!currentUser) return null;
 
+  // 콘텐츠 영역 표시 여부: 건식/화장품/기기/브랜드판촉은 hover 중 숨김, 회사소식·영업자료집·게시판은 hover시 표시
+  const _hov = hoveredCat || megaMenuOpen || '';
+  const _hideOnHover = ['건식', '화장품', '기기', '브랜드판촉'];
+  const _showOnHover = ['회사소식/홍보', '영업자료집', '게시판'];
+  const showContentArea = (!showLanding && !_hideOnHover.includes(_hov)) || _showOnHover.includes(_hov) || search.trim() !== '';
+
   return (
     <div className="max-w-6xl mx-auto p-2 py-4 md:p-4 md:py-8">
 
@@ -1746,17 +1752,7 @@ export default function Home() {
       )}
 
       {/* ============== 콘텐츠 영역 ============== */}
-      {/* 건식/화장품/기기/브랜드판촉: hover 중 콘텐츠 숨김 / 회사소식·영업자료집·게시판: hover시 자료 표시 */}
-      {(() => {
-        const hideOnHover = ['건식', '화장품', '기기', '브랜드판촉'];
-        const showOnHover = ['회사소식/홍보', '영업자료집', '게시판'];
-        const hov = hoveredCat || megaMenuOpen || '';
-        return (
-          (!showLanding && !hideOnHover.includes(hov)) ||
-          showOnHover.includes(hov) ||
-          search.trim() !== ''
-        );
-      })() && <>
+      {showContentArea && <>
 
       {/* ============== 브랜드판촉 UI ============== */}
       {(hoveredCat || megaMenuOpen || selectedCategory) === '브랜드판촉' && search.trim() === '' ? (
