@@ -685,7 +685,7 @@ export default function Home() {
   const _hov = megaMenuOpen || '';
   const _hideOnHover = ['건식', '화장품', '기기', '브랜드판촉'];
   const _showOnHover = ['회사소식/홍보', '영업자료집', '게시판'];
-  const showContentArea = (!showLanding && !_hideOnHover.includes(_hov)) || _showOnHover.includes(_hov) || search.trim() !== '';
+  const showContentArea = !showLanding || _showOnHover.includes(_hov) || search.trim() !== '';
 
   return (
     <div className="max-w-6xl mx-auto p-2 py-4 md:p-4 md:py-8">
@@ -1239,7 +1239,7 @@ export default function Home() {
 
       {/* 🌿 스킨케어 스타일 히어로 */}
       {(() => {
-        if (showLanding && !megaMenuOpen) return null;
+        if (showLanding) return null;
         const bannerCat = (megaMenuOpen && megaMenuOpen !== 'ALL') ? megaMenuOpen : selectedCategory;
         if (bannerCat === 'NONE' || bannerCat === 'ALL') return null;
         const catMeta: Record<string, { icon: string; bg: string; text: string; sub: string }> = {
@@ -1427,8 +1427,8 @@ export default function Home() {
         id="category-nav"
         className="sticky top-0 mb-6"
         style={{zIndex: 60, width: '100vw', marginLeft: 'calc(50% - 50vw)'}}
-        onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(isPinnedRef.current ? pinnedCatRef.current : null); setHoveredCat(null); }, 150); }}
-        onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
+        onPointerLeave={(e) => { if (e.pointerType !== 'mouse') return; megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(isPinnedRef.current ? pinnedCatRef.current : null); setHoveredCat(null); }, 150); }}
+        onPointerEnter={(e) => { if (e.pointerType !== 'mouse') return; if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
       >
         <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-center overflow-x-auto scrollbar-hide" style={{WebkitOverflowScrolling: 'touch' as never, touchAction: 'pan-x'}}>
@@ -1450,9 +1450,25 @@ export default function Home() {
                   {idx > 0 && (
                     <span className="text-[#a8b890] text-[12px] select-none">|</span>
                   )}
-                  <div onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } setHoveredCat(cat); setMegaMenuOpen(cat); }}>
+                  <div onPointerEnter={(e) => { if (e.pointerType !== 'mouse') return; if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } setHoveredCat(cat); setMegaMenuOpen(cat); }}>
                     <button
-                      onClick={() => { isPinnedRef.current = true; pinnedCatRef.current = cat; setMegaMenuOpen(cat); setSelectedMenuCat(cat); }}
+                      onClick={() => {
+                        if (megaMenuOpen === cat && isPinnedRef.current) {
+                          // 이미 핀 상태에서 같은 메뉴 재클릭 → 닫기
+                          isPinnedRef.current = false;
+                          setMegaMenuOpen(null);
+                          if (!showLanding) setSelectedMenuCat(selectedCategory);
+                        } else {
+                          // hover로 열려있거나 닫혀있을 때 → 핀 고정
+                          isPinnedRef.current = true;
+                          pinnedCatRef.current = cat;
+                          setMegaMenuOpen(cat);
+                          setSelectedMenuCat(cat);
+                          if (showLanding && cat !== 'ALL') {
+                            handleCategoryChange(cat);
+                          }
+                        }
+                      }}
                       className={`relative px-3 py-[11px] md:px-5 md:py-[15px] text-[12px] md:text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
                           ? isActive
                             ? 'text-[#1a3010] font-bold'
@@ -1478,9 +1494,9 @@ export default function Home() {
         {megaMenuOpen && megaMenuOpen !== 'ALL' && (
           <>
           <div
-            className="absolute md:relative left-0 right-0 top-full md:top-auto z-50 md:z-auto bg-white shadow-lg border-b border-gray-100 overflow-y-auto md:overflow-visible max-h-[calc(100vh-3rem)] md:max-h-none"
-            onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
-            onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(isPinnedRef.current ? pinnedCatRef.current : null); setHoveredCat(null); }, 150); }}
+            className="absolute left-0 right-0 top-full z-50 bg-white shadow-lg border-b border-gray-100 overflow-y-auto md:overflow-visible max-h-[calc(100vh-3rem)] md:max-h-[70vh]"
+            onPointerEnter={(e) => { if (e.pointerType !== 'mouse') return; if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
+            onPointerLeave={(e) => { if (e.pointerType !== 'mouse') return; megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(isPinnedRef.current ? pinnedCatRef.current : null); setHoveredCat(null); }, 150); }}
           >
             <div className="max-w-6xl mx-auto">
             {/* 건식 */}
