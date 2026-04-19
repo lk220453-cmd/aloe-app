@@ -318,6 +318,7 @@ export default function Home() {
   const megaMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPinnedRef = useRef(false);
   const pinnedCatRef = useRef<string>('ALL');
+  const [promoModal, setPromoModal] = useState<{ year: string; month: string; title: string } | null>(null);
 
   // ============== 폴더 수정 로직 ==============
   const handleAddFolder = async () => {
@@ -1666,7 +1667,7 @@ export default function Home() {
                     <div className="flex flex-col gap-2">
                       {nearMonths.map(({ year, month, isCurrent }) => (
                         <button key={`${year}-${month}`}
-                          onClick={() => { handleCategoryChange('브랜드판촉'); setPromoYear(year); setPromoMonth(month); isPinnedRef.current = false; setMegaMenuOpen(null); }}
+                          onClick={() => { const folder = promoFolders.find(f => f.year === year && f.month === month); setPromoModal({ year, month, title: folder?.title || '' }); isPinnedRef.current = false; setMegaMenuOpen(null); }}
                           className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-3 ${isCurrent ? 'bg-[#00b050]/10 text-[#00723a] font-extrabold' : 'text-gray-500 hover:text-[#00723a] hover:bg-gray-50'}`}>
                           <span className={`text-[11px] font-bold w-14 flex-shrink-0 ${isCurrent ? 'text-[#00b050]' : 'text-gray-400'}`}>
                             {year}년 {month}월
@@ -2102,6 +2103,56 @@ export default function Home() {
       </>}
 
       </div>{/* min-height wrapper */}
+
+      {/* ============== 브랜드판촉 제목 입력 모달 ============== */}
+      {promoModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40" onClick={() => setPromoModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-[320px] flex flex-col gap-4" onClick={e => e.stopPropagation()}>
+            <p className="text-[13px] font-bold text-gray-700">{promoModal.year}년 {promoModal.month}월 판촉 행사 제목</p>
+            <input
+              autoFocus
+              type="text"
+              value={promoModal.title}
+              onChange={e => setPromoModal({ ...promoModal, title: e.target.value })}
+              onKeyDown={async e => {
+                if (e.key === 'Enter') {
+                  const { year, month, title } = promoModal;
+                  const existing = promoFolders.find(f => f.year === year && f.month === month);
+                  if (existing) {
+                    await supabase.from('promo_folders').update({ title }).eq('id', existing.id);
+                    setPromoFolders(promoFolders.map(f => f.id === existing.id ? { ...f, title } : f));
+                  } else {
+                    const nf = { id: 'f' + Date.now(), year, month, title };
+                    await supabase.from('promo_folders').insert(nf);
+                    setPromoFolders([...promoFolders, nf]);
+                  }
+                  handleCategoryChange('브랜드판촉'); setPromoYear(year); setPromoMonth(month); setPromoModal(null);
+                }
+                if (e.key === 'Escape') setPromoModal(null);
+              }}
+              placeholder="예: 5월 가정의 달 기념"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-[13px] outline-none focus:border-[#00b050] w-full"
+            />
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setPromoModal(null)} className="px-4 py-1.5 rounded-lg text-[13px] text-gray-500 hover:bg-gray-100">취소</button>
+              <button onClick={async () => {
+                const { year, month, title } = promoModal;
+                const existing = promoFolders.find(f => f.year === year && f.month === month);
+                if (existing) {
+                  await supabase.from('promo_folders').update({ title }).eq('id', existing.id);
+                  setPromoFolders(promoFolders.map(f => f.id === existing.id ? { ...f, title } : f));
+                } else {
+                  const nf = { id: 'f' + Date.now(), year, month, title };
+                  await supabase.from('promo_folders').insert(nf);
+                  setPromoFolders([...promoFolders, nf]);
+                }
+                handleCategoryChange('브랜드판촉'); setPromoYear(year); setPromoMonth(month); setPromoModal(null);
+              }} className="px-4 py-1.5 rounded-lg text-[13px] bg-[#00b050] text-white font-bold hover:bg-[#00723a]">확인</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
