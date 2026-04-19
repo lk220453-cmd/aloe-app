@@ -1746,7 +1746,8 @@ export default function Home() {
       )}
 
       {/* ============== 콘텐츠 영역 (랜딩 시 숨김) ============== */}
-      {(!showLanding || hoveredCat !== null || search.trim() !== '') && <>
+      {/* 회사소식/영업자료집/게시판은 hover만 해도 자료 표시, 나머지는 서브 클릭 후에만 표시 */}
+      {(!showLanding || ['회사소식/홍보', '영업자료집', '게시판'].includes(hoveredCat || megaMenuOpen || '') || search.trim() !== '') && <>
 
       {/* ============== 브랜드판촉 UI ============== */}
       {(hoveredCat || megaMenuOpen || selectedCategory) === '브랜드판촉' && search.trim() === '' ? (
