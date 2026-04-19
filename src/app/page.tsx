@@ -1749,7 +1749,7 @@ export default function Home() {
       {(!showLanding || hoveredCat !== null || search.trim() !== '') && <>
 
       {/* ============== 브랜드판촉 UI ============== */}
-      {selectedCategory === '브랜드판촉' && search.trim() === '' ? (
+      {(hoveredCat || selectedCategory) === '브랜드판촉' && search.trim() === '' ? (
         <div className="flex flex-col md:flex-row gap-6 mt-4">
 
           {/* 좌측 사이드바: 연도/월 관리 및 네비게이션 트리 */}
