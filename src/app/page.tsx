@@ -1421,7 +1421,7 @@ export default function Home() {
                   )}
                   <div onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } setHoveredCat(cat); if (cat !== 'ALL') { setMegaMenuOpen(cat); } else { setMegaMenuOpen(null); } }} onMouseLeave={() => setHoveredCat(null)}>
                     <button
-                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(true); setSelectedMenuCat('ALL'); } else if (cat === '회사소식/홍보') { handleCategoryChange(cat); setSelectedType('ALL'); setMegaMenuOpen(null); setMegaMenuPinned(false); setSelectedMenuCat(cat); } else { setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(cat); setMegaMenuPinned(true); setSelectedMenuCat(cat); } }}
+                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(true); setSelectedMenuCat('ALL'); } else { handleCategoryChange(cat); setSelectedType('ALL'); setSelectedProduct('전체'); setMegaMenuOpen(null); setMegaMenuPinned(false); setSelectedMenuCat(cat); } }}
                       className={`relative px-3 py-[11px] md:px-5 md:py-[15px] text-[12px] md:text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
                           ? isActive
                             ? 'text-[#1a3010] font-bold'
