@@ -682,7 +682,7 @@ export default function Home() {
   if (!currentUser) return null;
 
   // 콘텐츠 영역 표시 여부: 건식/화장품/기기/브랜드판촉은 hover 중 숨김, 회사소식·영업자료집·게시판은 hover시 표시
-  const _hov = hoveredCat || megaMenuOpen || '';
+  const _hov = megaMenuOpen || '';
   const _hideOnHover = ['건식', '화장품', '기기', '브랜드판촉'];
   const _showOnHover = ['회사소식/홍보', '영업자료집', '게시판'];
   const showContentArea = (!showLanding && !_hideOnHover.includes(_hov)) || _showOnHover.includes(_hov) || search.trim() !== '';
