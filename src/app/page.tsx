@@ -1421,7 +1421,7 @@ export default function Home() {
                   )}
                   <div onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } setHoveredCat(cat); if (cat !== 'ALL') { setMegaMenuOpen(cat); } else { setMegaMenuOpen(null); } }} onMouseLeave={() => setHoveredCat(null)}>
                     <button
-                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(true); setSelectedMenuCat('ALL'); } else { setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(cat); setMegaMenuPinned(true); setSelectedMenuCat(cat); } }}
+                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(true); setSelectedMenuCat('ALL'); } else if (cat === '회사소식/홍보') { handleCategoryChange(cat); setSelectedType('ALL'); setMegaMenuOpen(null); setMegaMenuPinned(false); setSelectedMenuCat(cat); } else { setShowLanding(true); setSlideIndex(0); setMegaMenuOpen(cat); setMegaMenuPinned(true); setSelectedMenuCat(cat); } }}
                       className={`relative px-3 py-[11px] md:px-5 md:py-[15px] text-[12px] md:text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
                           ? isActive
                             ? 'text-[#1a3010] font-bold'
@@ -1567,17 +1567,13 @@ export default function Home() {
             {/* 회사소식/홍보 */}
             {megaMenuOpen === '회사소식/홍보' && (
               <div className="flex">
-                <div className="flex-1 p-4 md:p-8">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">자료 형식</p>
-                  <div className="flex flex-col gap-1">
-                    {[{ id: 'ALL', label: '모두 보기' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '▶ 영상' }].map(t => (
-                      <button key={t.id} onClick={() => { handleCategoryChange('회사소식/홍보'); setSelectedType(t.id); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
-                        className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '회사소식/홍보' && selectedType === t.id ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
-                        {selectedCategory === '회사소식/홍보' && selectedType === t.id && <span className="text-[11px]">➔</span>}
-                        {t.label}
-                      </button>
-                    ))}
-                  </div>
+                <div className="flex-1 p-4 md:p-8 flex flex-col gap-3">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">회사소식 · 홍보</p>
+                  <button onClick={() => { handleCategoryChange('회사소식/홍보'); setSelectedType('ALL'); setMegaMenuOpen(null); setMegaMenuPinned(false); }}
+                    className="text-left py-2 px-3 rounded-lg text-[14px] font-bold text-[#00b050] bg-[#00b050]/10 hover:bg-[#00b050]/20 transition-all flex items-center gap-2">
+                    <span>📢</span> 전체 보기 (업로드순)
+                  </button>
+                  <p className="text-[11px] text-gray-400 mt-1">각 자료에 📄 문서 / 🎬 영상 구분이 표시됩니다.</p>
                 </div>
                 <div className="hidden md:flex w-52 relative overflow-hidden flex-shrink-0 bg-slate-50 items-center justify-center">
                   <div className="text-7xl opacity-15">📂</div>
