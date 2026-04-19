@@ -1837,14 +1837,20 @@ export default function Home() {
               <div className="mb-6 pb-6 border-b border-gray-100">
                 {/* 행사 제목 + 저장 버튼 */}
                 <div className="flex items-center gap-3 mb-4">
-                  <input
-                    type="text"
-                    value={promoTableTitle}
-                    onChange={e => setPromoTableTitle(e.target.value)}
-                    placeholder="행사 제목 입력 (예: 5월 가정의 달 기념)"
-                    className="flex-1 border-b-2 border-gray-200 focus:border-[#00b050] outline-none text-[16px] font-bold text-gray-800 pb-1 bg-transparent transition-colors"
-                  />
-                  <button onClick={savePromoTable} className="px-4 py-1.5 bg-[#00b050] text-white text-[12px] font-bold rounded-lg hover:bg-[#00723a] flex-shrink-0">저장</button>
+                  {userRole === 'ADMIN' ? (
+                    <input
+                      type="text"
+                      value={promoTableTitle}
+                      onChange={e => setPromoTableTitle(e.target.value)}
+                      placeholder="행사 제목 입력 (예: 5월 가정의 달 기념)"
+                      className="flex-1 border-b-2 border-gray-200 focus:border-[#00b050] outline-none text-[16px] font-bold text-gray-800 pb-1 bg-transparent transition-colors"
+                    />
+                  ) : (
+                    <h3 className="flex-1 text-[16px] font-bold text-gray-800">{promoTableTitle || `${promoYear}년 ${promoMonth}월 판촉 계획표`}</h3>
+                  )}
+                  {userRole === 'ADMIN' && (
+                    <button onClick={savePromoTable} className="px-4 py-1.5 bg-[#00b050] text-white text-[12px] font-bold rounded-lg hover:bg-[#00723a] flex-shrink-0">저장</button>
+                  )}
                 </div>
                 {/* 표 */}
                 <div className="overflow-x-auto">
@@ -1854,7 +1860,7 @@ export default function Home() {
                         {['브랜드 품목','운영수량','브랜드적용 단위','지원품목','지원수량','비고'].map(col => (
                           <th key={col} className="border border-gray-300 bg-[#d6e4f0] px-3 py-2 text-center font-bold text-gray-700 whitespace-nowrap">{col}</th>
                         ))}
-                        <th className="border-0 w-6" />
+                        {userRole === 'ADMIN' && <th className="border-0 w-6" />}
                       </tr>
                     </thead>
                     <tbody>
@@ -1862,28 +1868,36 @@ export default function Home() {
                         <tr key={ri} className="hover:bg-blue-50/30">
                           {row.map((cell: string, ci: number) => (
                             <td key={ci} className="border border-gray-200 p-0">
-                              <input
-                                type="text"
-                                value={cell}
-                                onChange={e => {
-                                  const nr = promoTableRows.map((r: string[], rIdx: number) => r.map((c: string, cIdx: number) => rIdx === ri && cIdx === ci ? e.target.value : c));
-                                  setPromoTableRows(nr);
-                                }}
-                                className="w-full px-2 py-[7px] outline-none bg-transparent text-gray-700 min-w-[70px] focus:bg-[#f0f7ff]"
-                              />
+                              {userRole === 'ADMIN' ? (
+                                <input
+                                  type="text"
+                                  value={cell}
+                                  onChange={e => {
+                                    const nr = promoTableRows.map((r: string[], rIdx: number) => r.map((c: string, cIdx: number) => rIdx === ri && cIdx === ci ? e.target.value : c));
+                                    setPromoTableRows(nr);
+                                  }}
+                                  className="w-full px-2 py-[7px] outline-none bg-transparent text-gray-700 min-w-[70px] focus:bg-[#f0f7ff]"
+                                />
+                              ) : (
+                                <div className="px-2 py-[7px] min-h-[32px] text-gray-700">{cell}</div>
+                              )}
                             </td>
                           ))}
-                          <td className="border-0 pl-1">
-                            <button onClick={() => setPromoTableRows(promoTableRows.filter((_: string[], i: number) => i !== ri))}
-                              className="text-gray-200 hover:text-red-400 text-[15px]">×</button>
-                          </td>
+                          {userRole === 'ADMIN' && (
+                            <td className="border-0 pl-1">
+                              <button onClick={() => setPromoTableRows(promoTableRows.filter((_: string[], i: number) => i !== ri))}
+                                className="text-gray-200 hover:text-red-400 text-[15px]">×</button>
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                <button onClick={() => setPromoTableRows([...promoTableRows, Array(6).fill('')])}
-                  className="mt-2 text-[12px] text-[#00b050] hover:text-[#00723a] font-medium">+ 행 추가</button>
+                {userRole === 'ADMIN' && (
+                  <button onClick={() => setPromoTableRows([...promoTableRows, Array(6).fill('')])}
+                    className="mt-2 text-[12px] text-[#00b050] hover:text-[#00723a] font-medium">+ 행 추가</button>
+                )}
               </div>
 
               <div className="flex flex-col mb-6 pb-5 border-b border-gray-100">
