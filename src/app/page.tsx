@@ -318,7 +318,7 @@ export default function Home() {
   const megaMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isPinnedRef = useRef(false);
   const pinnedCatRef = useRef<string>('ALL');
-  const [promoModal, setPromoModal] = useState<{ year: string; month: string; title: string } | null>(null);
+  const [promoModal, setPromoModal] = useState<{ year: string; month: string; title: string; rows: string[][] } | null>(null);
 
   // ============== 폴더 수정 로직 ==============
   const handleAddFolder = async () => {
@@ -1667,7 +1667,7 @@ export default function Home() {
                     <div className="flex flex-col gap-2">
                       {nearMonths.map(({ year, month, isCurrent }) => (
                         <button key={`${year}-${month}`}
-                          onClick={() => { const folder = promoFolders.find(f => f.year === year && f.month === month); setPromoModal({ year, month, title: folder?.title || '' }); isPinnedRef.current = false; setMegaMenuOpen(null); }}
+                          onClick={() => { const folder = promoFolders.find(f => f.year === year && f.month === month); const saved = typeof window !== 'undefined' ? localStorage.getItem(`promoTable_${year}_${month}`) : null; const rows: string[][] = saved ? JSON.parse(saved) : [['항목','내용','기간','비고'],['','','',''],['','','',''],['','','',''],['','','','']]; setPromoModal({ year, month, title: folder?.title || '', rows }); isPinnedRef.current = false; setMegaMenuOpen(null); }}
                           className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-3 ${isCurrent ? 'bg-[#00b050]/10 text-[#00723a] font-extrabold' : 'text-gray-500 hover:text-[#00723a] hover:bg-gray-50'}`}>
                           <span className={`text-[11px] font-bold w-14 flex-shrink-0 ${isCurrent ? 'text-[#00b050]' : 'text-gray-400'}`}>
                             {year}년 {month}월
@@ -2104,39 +2104,67 @@ export default function Home() {
 
       </div>{/* min-height wrapper */}
 
-      {/* ============== 브랜드판촉 제목 입력 모달 ============== */}
+      {/* ============== 브랜드판촉 텍스트 표 모달 ============== */}
       {promoModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40" onClick={() => setPromoModal(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-[320px] flex flex-col gap-4" onClick={e => e.stopPropagation()}>
-            <p className="text-[13px] font-bold text-gray-700">{promoModal.year}년 {promoModal.month}월 판촉 행사 제목</p>
-            <input
-              autoFocus
-              type="text"
-              value={promoModal.title}
-              onChange={e => setPromoModal({ ...promoModal, title: e.target.value })}
-              onKeyDown={async e => {
-                if (e.key === 'Enter') {
-                  const { year, month, title } = promoModal;
-                  const existing = promoFolders.find(f => f.year === year && f.month === month);
-                  if (existing) {
-                    await supabase.from('promo_folders').update({ title }).eq('id', existing.id);
-                    setPromoFolders(promoFolders.map(f => f.id === existing.id ? { ...f, title } : f));
-                  } else {
-                    const nf = { id: 'f' + Date.now(), year, month, title };
-                    await supabase.from('promo_folders').insert(nf);
-                    setPromoFolders([...promoFolders, nf]);
-                  }
-                  handleCategoryChange('브랜드판촉'); setPromoYear(year); setPromoMonth(month); setPromoModal(null);
-                }
-                if (e.key === 'Escape') setPromoModal(null);
-              }}
-              placeholder="예: 5월 가정의 달 기념"
-              className="border border-gray-300 rounded-lg px-3 py-2 text-[13px] outline-none focus:border-[#00b050] w-full"
-            />
-            <div className="flex gap-2 justify-end">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 p-4" onClick={() => setPromoModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl flex flex-col w-full max-w-2xl max-h-[90vh]" onClick={e => e.stopPropagation()}>
+            {/* 헤더 */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <span className="text-[14px] font-bold text-gray-800">📋 {promoModal.year}년 {promoModal.month}월 판촉 계획표</span>
+              <button onClick={() => setPromoModal(null)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+            </div>
+            {/* 제목 입력 */}
+            <div className="px-5 pt-4 pb-2">
+              <input
+                autoFocus
+                type="text"
+                value={promoModal.title}
+                onChange={e => setPromoModal({ ...promoModal, title: e.target.value })}
+                placeholder="행사 제목 (예: 5월 가정의 달 기념)"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-[13px] outline-none focus:border-[#00b050]"
+              />
+            </div>
+            {/* 표 */}
+            <div className="px-5 pb-3 overflow-auto flex-1">
+              <table className="w-full border-collapse text-[13px]">
+                <tbody>
+                  {promoModal.rows.map((row, ri) => (
+                    <tr key={ri}>
+                      {row.map((cell, ci) => (
+                        <td key={ci} className={`border border-gray-200 p-0 ${ri === 0 ? 'bg-[#f0f7ec]' : ''}`}>
+                          <input
+                            type="text"
+                            value={cell}
+                            onChange={e => {
+                              const newRows = promoModal.rows.map((r, rIdx) => r.map((c, cIdx) => rIdx === ri && cIdx === ci ? e.target.value : c));
+                              setPromoModal({ ...promoModal, rows: newRows });
+                            }}
+                            className={`w-full px-2 py-1.5 outline-none bg-transparent ${ri === 0 ? 'font-bold text-[#00723a]' : 'text-gray-700'}`}
+                          />
+                        </td>
+                      ))}
+                      {ri > 0 && (
+                        <td className="border-0 pl-1">
+                          <button onClick={() => setPromoModal({ ...promoModal, rows: promoModal.rows.filter((_, i) => i !== ri) })}
+                            className="text-gray-300 hover:text-red-400 text-[16px] leading-none">×</button>
+                        </td>
+                      )}
+                      {ri === 0 && <td className="border-0 w-5" />}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <button
+                onClick={() => setPromoModal({ ...promoModal, rows: [...promoModal.rows, promoModal.rows[0].map(() => '')] })}
+                className="mt-2 text-[12px] text-[#00b050] hover:text-[#00723a] font-medium">
+                + 행 추가
+              </button>
+            </div>
+            {/* 하단 버튼 */}
+            <div className="flex gap-2 justify-end px-5 py-3 border-t border-gray-100">
               <button onClick={() => setPromoModal(null)} className="px-4 py-1.5 rounded-lg text-[13px] text-gray-500 hover:bg-gray-100">취소</button>
               <button onClick={async () => {
-                const { year, month, title } = promoModal;
+                const { year, month, title, rows } = promoModal;
                 const existing = promoFolders.find(f => f.year === year && f.month === month);
                 if (existing) {
                   await supabase.from('promo_folders').update({ title }).eq('id', existing.id);
@@ -2146,8 +2174,9 @@ export default function Home() {
                   await supabase.from('promo_folders').insert(nf);
                   setPromoFolders([...promoFolders, nf]);
                 }
+                localStorage.setItem(`promoTable_${year}_${month}`, JSON.stringify(rows));
                 handleCategoryChange('브랜드판촉'); setPromoYear(year); setPromoMonth(month); setPromoModal(null);
-              }} className="px-4 py-1.5 rounded-lg text-[13px] bg-[#00b050] text-white font-bold hover:bg-[#00723a]">확인</button>
+              }} className="px-4 py-1.5 rounded-lg text-[13px] bg-[#00b050] text-white font-bold hover:bg-[#00723a]">저장</button>
             </div>
           </div>
         </div>
