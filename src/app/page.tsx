@@ -1455,7 +1455,7 @@ export default function Home() {
           {/* 모바일: fixed 전체화면 오버레이 */}
           <div className="fixed inset-0 bg-black/20 z-40 md:hidden" onClick={() => { setMegaMenuOpen(null); setMegaMenuPinned(false); }} />
           <div
-            className="fixed md:absolute left-0 right-0 top-[44px] md:top-full z-50 bg-white shadow-2xl border border-gray-100 border-t-0 md:rounded-b-2xl overflow-y-auto"
+            className="fixed md:relative left-0 right-0 top-[44px] md:top-auto z-50 md:z-auto bg-white shadow-lg border-b border-gray-100 overflow-y-auto md:overflow-visible"
             style={{maxHeight: 'calc(100vh - 44px)'}}
             onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
             onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(null); setMegaMenuPinned(false); setHoveredCat(null); }, 150); }}
