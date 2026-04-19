@@ -1426,7 +1426,7 @@ export default function Home() {
       <div
         id="category-nav"
         className="sticky top-0 mb-6"
-        style={{zIndex: 40, width: '100vw', marginLeft: 'calc(50% - 50vw)'}}
+        style={{zIndex: 60, width: '100vw', marginLeft: 'calc(50% - 50vw)'}}
         onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(isPinnedRef.current ? pinnedCatRef.current : null); setHoveredCat(null); }, 150); }}
         onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
       >
