@@ -1494,7 +1494,7 @@ export default function Home() {
         {megaMenuOpen && megaMenuOpen !== 'ALL' && (
           <>
           <div
-            className="absolute left-0 right-0 top-full z-50 bg-white shadow-lg border-b border-gray-100 overflow-y-auto md:overflow-visible max-h-[calc(100vh-3rem)] md:max-h-[70vh]"
+            className={`${['회사소식/홍보','영업자료집','게시판'].includes(megaMenuOpen) ? 'relative md:absolute md:top-full' : 'absolute top-full'} left-0 right-0 z-50 bg-white shadow-lg border-b border-gray-100 overflow-y-auto md:overflow-visible max-h-[50vh] md:max-h-[70vh]`}
             onPointerEnter={(e) => { if (e.pointerType !== 'mouse') return; if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
             onPointerLeave={(e) => { if (e.pointerType !== 'mouse') return; megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(isPinnedRef.current ? pinnedCatRef.current : null); setHoveredCat(null); }, 150); }}
           >
@@ -1733,8 +1733,8 @@ export default function Home() {
           </>
         )}
       </div>
-      {/* 모바일 메가메뉴 오버레이 — sticky 컨테이너 밖에 두어 stacking context 분리 */}
-      {megaMenuOpen && megaMenuOpen !== 'ALL' && (
+      {/* 모바일 메가메뉴 오버레이 — list-cat은 relative(flow)라 오버레이 불필요 */}
+      {megaMenuOpen && megaMenuOpen !== 'ALL' && !['회사소식/홍보','영업자료집','게시판'].includes(megaMenuOpen) && (
         <div className="fixed inset-0 bg-black/20 z-40 md:hidden" onClick={() => { isPinnedRef.current = false; setMegaMenuOpen(null); }} />
       )}
 
