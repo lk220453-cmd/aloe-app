@@ -1837,7 +1837,7 @@ export default function Home() {
               <div className="mb-6 pb-6 border-b border-gray-100">
                 {/* 표 제목 + 저장 버튼 */}
                 <div className="flex items-center gap-3 mb-4">
-                  <h3 className="flex-1 text-[16px] font-bold text-gray-800">해당 월 브랜드판촉 자료</h3>
+                  <h3 className="flex-1 text-[16px] font-bold text-gray-800">{promoYear}년 {promoMonth}월 브랜드판촉 자료</h3>
                   {userRole === 'ADMIN' && (
                     <button onClick={savePromoTable} className="px-4 py-1.5 bg-[#00b050] text-white text-[12px] font-bold rounded-lg hover:bg-[#00723a] flex-shrink-0">저장</button>
                   )}
@@ -1892,62 +1892,6 @@ export default function Home() {
                 )}
               </div>
 
-              <div className="flex flex-col mb-6 pb-5 border-b border-gray-100">
-                <p className="text-sm text-gray-500 font-medium">
-                  등록 자료 총 <span className="text-[#00b050] font-extrabold mx-1">{promoMaterials.length}</span>건
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                {promoMaterials.map((mat, idx) => (
-                  <div key={mat.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-[#00b050] hover:shadow-md transition-all cursor-pointer group bg-gray-50/30"
-                    onClick={() => { setDetailMat(mat); setShowDetailModal(true); }}>
-                    <div className="flex items-center space-x-4 w-full">
-                      {/* 번호 */}
-                      <div className="w-8 h-8 rounded-lg bg-[#00b050]/10 flex items-center justify-center text-[13px] font-extrabold text-[#00b050] flex-shrink-0">
-                        {idx + 1}
-                      </div>
-                      <div className="w-10 h-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-lg shadow-sm group-hover:scale-105 transition-transform flex-shrink-0">
-                        {mat.type === 'VIDEO' ? '🎬' : mat.fileUrl ? '📎' : '📝'}
-                      </div>
-                      <div className="flex-1 min-w-0 pr-4">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-[15px] text-gray-800 group-hover:text-[#00b050] transition-colors truncate">{mat.title}</h4>
-                          {mat.fileUrl && <span className="text-[10px] bg-green-50 text-[#00b050] border border-green-200 px-1.5 py-0.5 rounded font-bold flex-shrink-0">첨부</span>}
-                          {userRole === 'ADMIN' && (
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1 flex-shrink-0">
-                              <button onClick={(e) => { e.stopPropagation(); openEditModal(mat); }} className="text-[11px] font-bold bg-white hover:bg-green-50 text-gray-500 hover:text-[#00b050] border border-gray-200 hover:border-green-200 px-2 py-0.5 rounded shadow-sm transition-colors">수정</button>
-                              <button onClick={(e) => { e.stopPropagation(); handleDeleteMaterial(mat.id); }} className="text-[11px] font-bold bg-white hover:bg-red-50 text-gray-500 hover:text-red-500 border border-gray-200 hover:border-red-200 px-2 py-0.5 rounded shadow-sm transition-colors">삭제</button>
-                            </div>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-400 mt-0.5 truncate">
-                          {mat.content ? mat.content.substring(0, 40) + (mat.content.length > 40 ? '…' : '') : '등록일: ' + mat.year + '.' + (mat.month || '').padStart(2, '0') + '.01'}
-                        </p>
-                      </div>
-                    </div>
-                    <button onClick={(e) => { e.stopPropagation(); setDetailMat(mat); setShowDetailModal(true); }}
-                      className="text-[13px] font-bold bg-white text-gray-500 border border-gray-200 px-4 py-2 rounded-lg group-hover:bg-[#00b050] group-hover:text-white group-hover:border-[#00b050] active:scale-95 transition-all shadow-sm whitespace-nowrap">
-                      열람
-                    </button>
-                  </div>
-                ))}
-
-                {promoMaterials.length === 0 && (
-                  <div className="py-16 text-center flex flex-col items-center justify-center">
-                    <div className="relative w-32 h-32 mb-4 animate-bounce" style={{ animationDuration: '3s' }}>
-                      {/* NOTE: 요정 캐릭터 이미지 연동 */}
-                      <img src="/fairy.png" alt="알로에 요정" className="w-full h-full object-contain drop-shadow-xl" onError={(e) => { e.currentTarget.outerHTML = '<span class="text-5xl opacity-30 grayscale filter">😥</span>'; }} />
-                    </div>
-                    <p className="text-[16px] font-extrabold text-gray-700">아직 이 섹션에 등록된 맞춤 프로모션 자료가 없네요!</p>
-                    {userRole === 'ADMIN' && (
-                      <p className="text-[13px] mt-2 text-[#00b050] font-medium bg-green-50 px-4 py-2 rounded-full">
-                        상단의 <strong className="font-bold">+업로드 기능</strong>을 사용해 내 컴퓨터의 문서를 바로 업로드해 보세요!
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
             </>
           </div>
         </div>
