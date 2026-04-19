@@ -2065,13 +2065,7 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="py-24 flex flex-col items-center justify-center bg-white rounded-3xl border border-dashed border-gray-200 mt-4">
-                  <img src="/fairy.png" alt="알로에 요정" className="w-28 h-28 object-contain drop-shadow-xl mb-4 animate-bounce" style={{ animationDuration: '4s' }} onError={(e) => { e.currentTarget.outerHTML = '<span class="text-5xl text-gray-300 mb-4">🍃</span>'; }} />
-                  <p className="text-[17px] font-extrabold text-gray-700">찾으시는 탭에 아직 등록된 자료가 없습니다.</p>
-                  <p className="text-[13px] text-gray-500 mt-2 font-medium">관리자 또는 사업자 권한이라면 상단 로컬 업로드 버튼을 통해 즉시 추가해 보세요!</p>
-                </div>
-              )}
+              ) : null}
 
               {/* 페이지네이션 */}
               {totalPages > 1 && (
