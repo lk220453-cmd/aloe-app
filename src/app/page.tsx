@@ -595,27 +595,28 @@ export default function Home() {
     // 검색어 있으면 전체 카테고리에서 키워드만으로 검색
     if (search.trim() !== '') return matchSearch;
 
-    const matchCategory = selectedCategory === 'ALL' || mat.category === selectedCategory;
+    const effCat = hoveredCat || selectedCategory;
+    const matchCategory = effCat === 'ALL' || mat.category === effCat;
 
     let matchType = true;
-    if (selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') {
+    if (effCat === '건식' || effCat === '화장품' || effCat === '기기') {
       matchType = selectedType === 'ALL' || mat.type === selectedType;
-      if ((selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') && selectedProduct !== '전체') {
+      if ((effCat === '건식' || effCat === '화장품' || effCat === '기기') && selectedProduct !== '전체') {
         if ((mat.productName || '기타') !== selectedProduct) matchType = false;
       }
-    } else if (selectedCategory === '회사소식/홍보' || selectedCategory === '영업자료집') {
+    } else if (effCat === '회사소식/홍보' || effCat === '영업자료집') {
       const isWebLink = !!(mat.fileUrl && mat.fileUrl === mat.fileName && !mat.youtubeUrl);
       if (selectedType === 'WEBLINK') matchType = isWebLink;
       else if (selectedType === 'DOCUMENT') matchType = mat.type === 'DOCUMENT' && !isWebLink;
       else if (selectedType === 'VIDEO') matchType = mat.type === 'VIDEO' || !!mat.youtubeUrl;
       else matchType = true;
-    } else if (selectedCategory === '게시판') {
+    } else if (effCat === '게시판') {
       matchType = selectedSubBoard === 'ALL' || mat.type === selectedSubBoard;
-    } else if (selectedCategory === '브랜드판촉' && mat.category === '브랜드판촉') {
+    } else if (effCat === '브랜드판촉' && mat.category === '브랜드판촉') {
       matchType = mat.year === promoYear && mat.month === promoMonth;
     }
 
-    if (selectedCategory === 'ALL' && mat.category === '브랜드판촉') {
+    if (effCat === 'ALL' && mat.category === '브랜드판촉') {
       const latestFolder = [...promoFolders].sort((a, b) => {
         if (a.year !== b.year) return Number(b.year) - Number(a.year);
         return Number(b.month) - Number(a.month);
@@ -1402,7 +1403,7 @@ export default function Home() {
         id="category-nav"
         className="sticky top-0 mb-6"
         style={{zIndex: 40, width: '100vw', marginLeft: 'calc(50% - 50vw)'}}
-        onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(null); setMegaMenuPinned(false); setHoveredCat(null); }, 150); }}
+        onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(megaMenuPinned ? selectedCategory : null); setHoveredCat(null); }, 150); }}
         onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
       >
         <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
@@ -1425,7 +1426,7 @@ export default function Home() {
                   {idx > 0 && (
                     <span className="text-[#a8b890] text-[12px] select-none">|</span>
                   )}
-                  <div onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } setHoveredCat(cat); setMegaMenuOpen(cat); handleCategoryChange(cat); setSelectedType('ALL'); setSelectedProduct('전체'); setSelectedMenuCat(cat); }} onMouseLeave={() => setHoveredCat(null)}>
+                  <div onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } setHoveredCat(cat); setMegaMenuOpen(cat); }}>
                     <button
                       onClick={() => { handleCategoryChange(cat); setSelectedType('ALL'); setSelectedProduct('전체'); setMegaMenuOpen(cat); setMegaMenuPinned(true); setSelectedMenuCat(cat); }}
                       className={`relative px-3 py-[11px] md:px-5 md:py-[15px] text-[12px] md:text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
@@ -1458,7 +1459,7 @@ export default function Home() {
             className="fixed md:relative left-0 right-0 top-[44px] md:top-auto z-50 md:z-auto bg-white shadow-lg border-b border-gray-100 overflow-y-auto md:overflow-visible"
             style={{maxHeight: 'calc(100vh - 44px)'}}
             onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
-            onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(null); setMegaMenuPinned(false); setHoveredCat(null); }, 150); }}
+            onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(megaMenuPinned ? selectedCategory : null); setHoveredCat(null); }, 150); }}
           >
             <div className="max-w-6xl mx-auto">
             {/* 건식 */}
@@ -1727,7 +1728,7 @@ export default function Home() {
       )}
 
       {/* ============== 콘텐츠 영역 (랜딩 시 숨김) ============== */}
-      {(!showLanding || search.trim() !== '') && <>
+      {(!showLanding || hoveredCat !== null || search.trim() !== '') && <>
 
       {/* ============== 브랜드판촉 UI ============== */}
       {selectedCategory === '브랜드판촉' && search.trim() === '' ? (
