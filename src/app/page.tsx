@@ -1835,19 +1835,9 @@ export default function Home() {
             <>
               {/* ===== 판촉 계획표 ===== */}
               <div className="mb-6 pb-6 border-b border-gray-100">
-                {/* 행사 제목 + 저장 버튼 */}
+                {/* 표 제목 + 저장 버튼 */}
                 <div className="flex items-center gap-3 mb-4">
-                  {userRole === 'ADMIN' ? (
-                    <input
-                      type="text"
-                      value={promoTableTitle}
-                      onChange={e => setPromoTableTitle(e.target.value)}
-                      placeholder="행사 제목 입력 (예: 5월 가정의 달 기념)"
-                      className="flex-1 border-b-2 border-gray-200 focus:border-[#00b050] outline-none text-[16px] font-bold text-gray-800 pb-1 bg-transparent transition-colors"
-                    />
-                  ) : (
-                    <h3 className="flex-1 text-[16px] font-bold text-gray-800">{promoTableTitle || `${promoYear}년 ${promoMonth}월 판촉 계획표`}</h3>
-                  )}
+                  <h3 className="flex-1 text-[16px] font-bold text-gray-800">해당 월 브랜드판촉 자료</h3>
                   {userRole === 'ADMIN' && (
                     <button onClick={savePromoTable} className="px-4 py-1.5 bg-[#00b050] text-white text-[12px] font-bold rounded-lg hover:bg-[#00723a] flex-shrink-0">저장</button>
                   )}
@@ -1903,9 +1893,6 @@ export default function Home() {
               </div>
 
               <div className="flex flex-col mb-6 pb-5 border-b border-gray-100">
-                <h3 className="font-extrabold text-[22px] text-gray-800 flex items-center mb-2">
-                  <span className="text-2xl mr-2">📋</span> {promoYear}년 {promoMonth}월 판촉 자료
-                </h3>
                 <p className="text-sm text-gray-500 font-medium">
                   등록 자료 총 <span className="text-[#00b050] font-extrabold mx-1">{promoMaterials.length}</span>건
                 </p>
