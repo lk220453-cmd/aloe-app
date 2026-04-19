@@ -1494,7 +1494,7 @@ export default function Home() {
         {megaMenuOpen && megaMenuOpen !== 'ALL' && (
           <>
           <div
-            className={`${['회사소식/홍보','영업자료집','게시판'].includes(megaMenuOpen) ? 'relative md:absolute md:top-full' : 'absolute top-full'} left-0 right-0 z-50 bg-white shadow-lg border-b border-gray-100 overflow-y-auto md:overflow-visible max-h-[50vh] md:max-h-[70vh]`}
+            className={`${selectedMenuCat === megaMenuOpen ? 'relative' : 'absolute top-full'} left-0 right-0 z-50 bg-white shadow-lg border-b border-gray-100 overflow-y-auto md:overflow-visible max-h-[50vh] md:max-h-[70vh]`}
             onPointerEnter={(e) => { if (e.pointerType !== 'mouse') return; if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
             onPointerLeave={(e) => { if (e.pointerType !== 'mouse') return; megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(isPinnedRef.current ? pinnedCatRef.current : null); setHoveredCat(null); }, 150); }}
           >
