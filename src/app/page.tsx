@@ -1430,7 +1430,7 @@ export default function Home() {
         onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(isPinnedRef.current ? pinnedCatRef.current : null); setHoveredCat(null); }, 150); }}
         onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
       >
-        <nav className="bg-[#c8d4b0] border-b border-[#a8b890]" style={{position: 'relative', zIndex: 70}}>
+        <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-center overflow-x-auto scrollbar-hide" style={{WebkitOverflowScrolling: 'touch' as never, touchAction: 'pan-x'}}>
             {/* 처음으로 버튼 */}
             <div className="relative flex items-center flex-shrink-0">
@@ -1477,8 +1477,6 @@ export default function Home() {
         {/* 메가 메뉴 패널 */}
         {megaMenuOpen && megaMenuOpen !== 'ALL' && (
           <>
-          {/* 모바일: fixed 전체화면 오버레이 */}
-          <div className="fixed inset-0 bg-black/20 z-40 md:hidden" onClick={() => { isPinnedRef.current = false; setMegaMenuOpen(null); }} />
           <div
             className="absolute md:relative left-0 right-0 top-full md:top-auto z-50 md:z-auto bg-white shadow-lg border-b border-gray-100 overflow-y-auto md:overflow-visible max-h-[calc(100vh-3rem)] md:max-h-none"
             onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
@@ -1719,7 +1717,10 @@ export default function Home() {
           </>
         )}
       </div>
-
+      {/* 모바일 메가메뉴 오버레이 — sticky 컨테이너 밖에 두어 stacking context 분리 */}
+      {megaMenuOpen && megaMenuOpen !== 'ALL' && (
+        <div className="fixed inset-0 bg-black/20 z-40 md:hidden" onClick={() => { isPinnedRef.current = false; setMegaMenuOpen(null); }} />
+      )}
 
       {/* ============== 랜딩 슬라이드쇼 + 콘텐츠 래퍼 (min-height 로 높이 급변 방지) ============== */}
       <div style={{minHeight: 'calc(100vh - 160px)'}}>
