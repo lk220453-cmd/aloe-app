@@ -1402,7 +1402,7 @@ export default function Home() {
         id="category-nav"
         className="sticky top-0 mb-6"
         style={{zIndex: 40, width: '100vw', marginLeft: 'calc(50% - 50vw)'}}
-        onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => { if (megaMenuPinned) { setMegaMenuOpen(selectedMenuCat); } else { setMegaMenuOpen(null); } setHoveredCat(null); }, 150); }}
+        onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(null); setMegaMenuPinned(false); setHoveredCat(null); }, 150); }}
         onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
       >
         <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
@@ -1425,9 +1425,9 @@ export default function Home() {
                   {idx > 0 && (
                     <span className="text-[#a8b890] text-[12px] select-none">|</span>
                   )}
-                  <div onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } setHoveredCat(cat); if (cat !== 'ALL') { setMegaMenuOpen(cat); } else { setMegaMenuOpen(null); } }} onMouseLeave={() => setHoveredCat(null)}>
+                  <div onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } setHoveredCat(cat); setMegaMenuOpen(cat); handleCategoryChange(cat); setSelectedType('ALL'); setSelectedProduct('전체'); setSelectedMenuCat(cat); }} onMouseLeave={() => setHoveredCat(null)}>
                     <button
-                      onClick={() => { if (isAll) { handleCategoryChange(cat); setMegaMenuOpen(null); setMegaMenuPinned(true); setSelectedMenuCat('ALL'); } else { handleCategoryChange(cat); setSelectedType('ALL'); setSelectedProduct('전체'); setMegaMenuOpen(null); setMegaMenuPinned(false); setSelectedMenuCat(cat); } }}
+                      onClick={() => { handleCategoryChange(cat); setSelectedType('ALL'); setSelectedProduct('전체'); setMegaMenuOpen(cat); setMegaMenuPinned(true); setSelectedMenuCat(cat); }}
                       className={`relative px-3 py-[11px] md:px-5 md:py-[15px] text-[12px] md:text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
                           ? isActive
                             ? 'text-[#1a3010] font-bold'
@@ -1458,7 +1458,7 @@ export default function Home() {
             className="fixed md:absolute left-0 right-0 top-[44px] md:top-full z-50 bg-white shadow-2xl border border-gray-100 border-t-0 md:rounded-b-2xl overflow-y-auto"
             style={{maxHeight: 'calc(100vh - 44px)'}}
             onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
-            onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => { if (megaMenuPinned) { setMegaMenuOpen(selectedMenuCat); } else { setMegaMenuOpen(null); } setHoveredCat(null); }, 150); }}
+            onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(null); setMegaMenuPinned(false); setHoveredCat(null); }, 150); }}
           >
             <div className="max-w-6xl mx-auto">
             {/* 건식 */}
