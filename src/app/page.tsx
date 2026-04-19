@@ -613,7 +613,7 @@ export default function Home() {
     // 검색어 있으면 전체 카테고리에서 키워드만으로 검색
     if (search.trim() !== '') return matchSearch;
 
-    const effCat = hoveredCat || selectedCategory;
+    const effCat = hoveredCat || megaMenuOpen || selectedCategory;
     const matchCategory = effCat === 'ALL' || mat.category === effCat;
 
     let matchType = true;
@@ -1749,7 +1749,7 @@ export default function Home() {
       {(!showLanding || hoveredCat !== null || search.trim() !== '') && <>
 
       {/* ============== 브랜드판촉 UI ============== */}
-      {(hoveredCat || selectedCategory) === '브랜드판촉' && search.trim() === '' ? (
+      {(hoveredCat || megaMenuOpen || selectedCategory) === '브랜드판촉' && search.trim() === '' ? (
         <div className="flex flex-col md:flex-row gap-6 mt-4">
 
           {/* 좌측 사이드바: 연도/월 관리 및 네비게이션 트리 */}
