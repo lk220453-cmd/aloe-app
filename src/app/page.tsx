@@ -1428,7 +1428,7 @@ export default function Home() {
                   )}
                   <div onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } setHoveredCat(cat); setMegaMenuOpen(cat); }}>
                     <button
-                      onClick={() => { isPinnedRef.current = true; pinnedCatRef.current = cat; handleCategoryChange(cat); setSelectedType('ALL'); setSelectedProduct('전체'); setMegaMenuOpen(cat); setSelectedMenuCat(cat); }}
+                      onClick={() => { isPinnedRef.current = true; pinnedCatRef.current = cat; setMegaMenuOpen(cat); setSelectedMenuCat(cat); }}
                       className={`relative px-3 py-[11px] md:px-5 md:py-[15px] text-[12px] md:text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
                           ? isActive
                             ? 'text-[#1a3010] font-bold'
