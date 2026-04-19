@@ -1746,12 +1746,17 @@ export default function Home() {
       )}
 
       {/* ============== 콘텐츠 영역 ============== */}
-      {/* 회사소식/영업자료집/게시판: hover시 자료 표시 / 브랜드판촉 hover·pin 중에는 숨김 */}
-      {(
-        (!showLanding && hoveredCat !== '브랜드판촉' && megaMenuOpen !== '브랜드판촉') ||
-        ['회사소식/홍보', '영업자료집', '게시판'].includes(hoveredCat || megaMenuOpen || '') ||
-        search.trim() !== ''
-      ) && <>
+      {/* 건식/화장품/기기/브랜드판촉: hover 중 콘텐츠 숨김 / 회사소식·영업자료집·게시판: hover시 자료 표시 */}
+      {(() => {
+        const hideOnHover = ['건식', '화장품', '기기', '브랜드판촉'];
+        const showOnHover = ['회사소식/홍보', '영업자료집', '게시판'];
+        const hov = hoveredCat || megaMenuOpen || '';
+        return (
+          (!showLanding && !hideOnHover.includes(hov)) ||
+          showOnHover.includes(hov) ||
+          search.trim() !== ''
+        );
+      })() && <>
 
       {/* ============== 브랜드판촉 UI ============== */}
       {(hoveredCat || megaMenuOpen || selectedCategory) === '브랜드판촉' && search.trim() === '' ? (
