@@ -1478,7 +1478,7 @@ export default function Home() {
         {megaMenuOpen && megaMenuOpen !== 'ALL' && (
           <>
           {/* 모바일: fixed 전체화면 오버레이 */}
-          <div className="fixed inset-0 bg-black/20 z-40 md:hidden" onClick={() => { isPinnedRef.current = false; setMegaMenuOpen(null); }} />
+          <div className="fixed inset-x-0 bottom-0 top-[44px] bg-black/20 z-40 md:hidden" onClick={() => { isPinnedRef.current = false; setMegaMenuOpen(null); }} />
           <div
             className="fixed md:relative left-0 right-0 top-[44px] md:top-auto z-50 md:z-auto bg-white shadow-lg border-b border-gray-100 overflow-y-auto md:overflow-visible"
             style={{maxHeight: 'calc(100vh - 44px)'}}
