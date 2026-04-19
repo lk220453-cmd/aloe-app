@@ -1430,8 +1430,8 @@ export default function Home() {
         onMouseLeave={() => { megaMenuCloseTimer.current = setTimeout(() => { setMegaMenuOpen(isPinnedRef.current ? pinnedCatRef.current : null); setHoveredCat(null); }, 150); }}
         onMouseEnter={() => { if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } }}
       >
-        <nav className="bg-[#c8d4b0] border-b border-[#a8b890]">
-          <div className="max-w-6xl mx-auto px-6 flex items-center justify-center overflow-x-auto scrollbar-hide">
+        <nav className="bg-[#c8d4b0] border-b border-[#a8b890]" style={{position: 'relative', zIndex: 70}}>
+          <div className="max-w-6xl mx-auto px-6 flex items-center justify-center overflow-x-auto scrollbar-hide" style={{WebkitOverflowScrolling: 'touch' as never, touchAction: 'pan-x'}}>
             {/* 처음으로 버튼 */}
             <div className="relative flex items-center flex-shrink-0">
               <button
