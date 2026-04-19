@@ -1869,17 +1869,19 @@ export default function Home() {
                           {row.map((cell: string, ci: number) => (
                             <td key={ci} className="border border-gray-200 p-0">
                               {userRole === 'ADMIN' ? (
-                                <input
-                                  type="text"
+                                <textarea
                                   value={cell}
+                                  rows={1}
                                   onChange={e => {
                                     const nr = promoTableRows.map((r: string[], rIdx: number) => r.map((c: string, cIdx: number) => rIdx === ri && cIdx === ci ? e.target.value : c));
                                     setPromoTableRows(nr);
                                   }}
-                                  className="w-full px-2 py-[7px] outline-none bg-transparent text-gray-700 min-w-[70px] focus:bg-[#f0f7ff]"
+                                  onInput={e => { const t = e.currentTarget; t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }}
+                                  className="w-full px-2 py-[7px] outline-none bg-transparent text-gray-700 min-w-[70px] focus:bg-[#f0f7ff] resize-none overflow-hidden"
+                                  style={{height: 'auto'}}
                                 />
                               ) : (
-                                <div className="px-2 py-[7px] min-h-[32px] text-gray-700">{cell}</div>
+                                <div className="px-2 py-[7px] min-h-[32px] text-gray-700 whitespace-pre-wrap">{cell}</div>
                               )}
                             </td>
                           ))}
