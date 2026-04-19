@@ -320,15 +320,12 @@ export default function Home() {
   const pinnedCatRef = useRef<string>('ALL');
   const [promoTableTitle, setPromoTableTitle] = useState('');
   const [promoTableRows, setPromoTableRows] = useState<string[][]>(() => Array(15).fill(null).map(() => Array(6).fill('')));
-  const [promoTableEditing, setPromoTableEditing] = useState(false);
-
   useEffect(() => {
     if (selectedCategory !== '브랜드판촉') return;
     const key = `promoTable_${promoYear}_${promoMonth}`;
     const saved = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
     if (saved) { const d = JSON.parse(saved); setPromoTableTitle(d.title || ''); setPromoTableRows(d.rows || Array(15).fill(null).map(() => Array(6).fill(''))); }
     else { setPromoTableTitle(''); setPromoTableRows(Array(15).fill(null).map(() => Array(6).fill(''))); }
-    setPromoTableEditing(false);
   }, [promoYear, promoMonth, selectedCategory]);
 
   const savePromoTable = async () => {
@@ -338,7 +335,6 @@ export default function Home() {
       if (existing) { await supabase.from('promo_folders').update({ title: promoTableTitle }).eq('id', existing.id); setPromoFolders(promoFolders.map(f => f.id === existing.id ? { ...f, title: promoTableTitle } : f)); }
       else { const nf = { id: 'f' + Date.now(), year: promoYear, month: promoMonth, title: promoTableTitle }; await supabase.from('promo_folders').insert(nf); setPromoFolders([...promoFolders, nf]); }
     }
-    setPromoTableEditing(false);
   };
 
   // ============== 폴더 수정 로직 ==============
@@ -1839,27 +1835,16 @@ export default function Home() {
             <>
               {/* ===== 판촉 계획표 ===== */}
               <div className="mb-6 pb-6 border-b border-gray-100">
-                {/* 행사 제목 */}
+                {/* 행사 제목 + 저장 버튼 */}
                 <div className="flex items-center gap-3 mb-4">
-                  {promoTableEditing ? (
-                    <input
-                      autoFocus
-                      type="text"
-                      value={promoTableTitle}
-                      onChange={e => setPromoTableTitle(e.target.value)}
-                      placeholder="행사 제목 입력 (예: 5월 가정의 달 기념)"
-                      className="flex-1 border-b-2 border-[#00b050] outline-none text-[16px] font-bold text-gray-800 pb-1 bg-transparent"
-                    />
-                  ) : (
-                    <h3 className="flex-1 text-[16px] font-bold text-gray-800">
-                      {promoTableTitle || `${promoYear}년 ${promoMonth}월 판촉 계획표`}
-                    </h3>
-                  )}
-                  {promoTableEditing ? (
-                    <button onClick={savePromoTable} className="px-4 py-1.5 bg-[#00b050] text-white text-[12px] font-bold rounded-lg hover:bg-[#00723a]">저장</button>
-                  ) : (
-                    <button onClick={() => setPromoTableEditing(true)} className="px-3 py-1.5 bg-gray-100 text-gray-600 text-[12px] font-bold rounded-lg hover:bg-gray-200">✏️ 수정</button>
-                  )}
+                  <input
+                    type="text"
+                    value={promoTableTitle}
+                    onChange={e => setPromoTableTitle(e.target.value)}
+                    placeholder="행사 제목 입력 (예: 5월 가정의 달 기념)"
+                    className="flex-1 border-b-2 border-gray-200 focus:border-[#00b050] outline-none text-[16px] font-bold text-gray-800 pb-1 bg-transparent transition-colors"
+                  />
+                  <button onClick={savePromoTable} className="px-4 py-1.5 bg-[#00b050] text-white text-[12px] font-bold rounded-lg hover:bg-[#00723a] flex-shrink-0">저장</button>
                 </div>
                 {/* 표 */}
                 <div className="overflow-x-auto">
@@ -1869,44 +1854,36 @@ export default function Home() {
                         {['브랜드 품목','운영수량','브랜드적용 단위','지원품목','지원수량','비고'].map(col => (
                           <th key={col} className="border border-gray-300 bg-[#d6e4f0] px-3 py-2 text-center font-bold text-gray-700 whitespace-nowrap">{col}</th>
                         ))}
-                        {promoTableEditing && <th className="border-0 w-6" />}
+                        <th className="border-0 w-6" />
                       </tr>
                     </thead>
                     <tbody>
                       {promoTableRows.map((row: string[], ri: number) => (
-                        <tr key={ri} className="hover:bg-gray-50/50">
+                        <tr key={ri} className="hover:bg-blue-50/30">
                           {row.map((cell: string, ci: number) => (
                             <td key={ci} className="border border-gray-200 p-0">
-                              {promoTableEditing ? (
-                                <input
-                                  type="text"
-                                  value={cell}
-                                  onChange={e => {
-                                    const nr = promoTableRows.map((r: string[], rIdx: number) => r.map((c: string, cIdx: number) => rIdx === ri && cIdx === ci ? e.target.value : c));
-                                    setPromoTableRows(nr);
-                                  }}
-                                  className="w-full px-2 py-1.5 outline-none bg-transparent text-gray-700 min-w-[80px]"
-                                />
-                              ) : (
-                                <div className="px-2 py-1.5 min-h-[30px] text-gray-700">{cell}</div>
-                              )}
+                              <input
+                                type="text"
+                                value={cell}
+                                onChange={e => {
+                                  const nr = promoTableRows.map((r: string[], rIdx: number) => r.map((c: string, cIdx: number) => rIdx === ri && cIdx === ci ? e.target.value : c));
+                                  setPromoTableRows(nr);
+                                }}
+                                className="w-full px-2 py-[7px] outline-none bg-transparent text-gray-700 min-w-[70px] focus:bg-[#f0f7ff]"
+                              />
                             </td>
                           ))}
-                          {promoTableEditing && (
-                            <td className="border-0 pl-1">
-                              <button onClick={() => setPromoTableRows(promoTableRows.filter((_: string[], i: number) => i !== ri))}
-                                className="text-gray-300 hover:text-red-400 text-[15px]">×</button>
-                            </td>
-                          )}
+                          <td className="border-0 pl-1">
+                            <button onClick={() => setPromoTableRows(promoTableRows.filter((_: string[], i: number) => i !== ri))}
+                              className="text-gray-200 hover:text-red-400 text-[15px]">×</button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                {promoTableEditing && (
-                  <button onClick={() => setPromoTableRows([...promoTableRows, Array(6).fill('')])}
-                    className="mt-2 text-[12px] text-[#00b050] hover:text-[#00723a] font-medium">+ 행 추가</button>
-                )}
+                <button onClick={() => setPromoTableRows([...promoTableRows, Array(6).fill('')])}
+                  className="mt-2 text-[12px] text-[#00b050] hover:text-[#00723a] font-medium">+ 행 추가</button>
               </div>
 
               <div className="flex flex-col mb-6 pb-5 border-b border-gray-100">
