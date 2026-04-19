@@ -1675,7 +1675,7 @@ export default function Home() {
                 if (m < 1) { y -= 1; m += 12; }
                 if (m > 12) { y += 1; m -= 12; }
                 const folder = promoFolders.find(f => f.year === String(y) && f.month === String(m));
-                return { year: String(y), month: String(m), title: folder?.title || null, isCurrent: offset === 0 };
+                return { year: String(y), month: String(m), title: folder?.title || null, isCurrent: String(y) === promoYear && String(m) === promoMonth };
               });
               return (
                 <div className="flex">
@@ -1745,9 +1745,13 @@ export default function Home() {
         </div>
       )}
 
-      {/* ============== 콘텐츠 영역 (랜딩 시 숨김) ============== */}
-      {/* 회사소식/영업자료집/게시판은 hover만 해도 자료 표시, 나머지는 서브 클릭 후에만 표시 */}
-      {(!showLanding || ['회사소식/홍보', '영업자료집', '게시판'].includes(hoveredCat || megaMenuOpen || '') || search.trim() !== '') && <>
+      {/* ============== 콘텐츠 영역 ============== */}
+      {/* 회사소식/영업자료집/게시판: hover시 자료 표시 / 브랜드판촉 hover·pin 중에는 숨김 */}
+      {(
+        (!showLanding && hoveredCat !== '브랜드판촉' && megaMenuOpen !== '브랜드판촉') ||
+        ['회사소식/홍보', '영업자료집', '게시판'].includes(hoveredCat || megaMenuOpen || '') ||
+        search.trim() !== ''
+      ) && <>
 
       {/* ============== 브랜드판촉 UI ============== */}
       {(hoveredCat || megaMenuOpen || selectedCategory) === '브랜드판촉' && search.trim() === '' ? (
