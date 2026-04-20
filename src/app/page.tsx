@@ -322,14 +322,33 @@ export default function Home() {
   const [promoTableRows, setPromoTableRows] = useState<string[][]>(() => Array(15).fill(null).map(() => Array(6).fill('')));
   useEffect(() => {
     if (selectedCategory !== '브랜드판촉') return;
-    const key = `promoTable_${promoYear}_${promoMonth}`;
-    const saved = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
-    if (saved) { const d = JSON.parse(saved); setPromoTableTitle(d.title || ''); setPromoTableRows(d.rows || Array(15).fill(null).map(() => Array(6).fill(''))); }
-    else { setPromoTableTitle(''); setPromoTableRows(Array(15).fill(null).map(() => Array(6).fill(''))); }
+    const emptyRows = () => Array(15).fill(null).map(() => Array(6).fill(''));
+    const load = async () => {
+      const { data } = await supabase
+        .from('promo_table_data')
+        .select('rows')
+        .eq('year', promoYear)
+        .eq('month', promoMonth)
+        .maybeSingle();
+      if (data?.rows) {
+        setPromoTableRows(data.rows);
+        setPromoTableTitle('');
+      } else {
+        // localStorage 폴백 (이전 데이터 마이그레이션용)
+        const key = `promoTable_${promoYear}_${promoMonth}`;
+        const saved = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
+        if (saved) { const d = JSON.parse(saved); setPromoTableTitle(d.title || ''); setPromoTableRows(d.rows || emptyRows()); }
+        else { setPromoTableTitle(''); setPromoTableRows(emptyRows()); }
+      }
+    };
+    load();
   }, [promoYear, promoMonth, selectedCategory]);
 
   const savePromoTable = async () => {
-    localStorage.setItem(`promoTable_${promoYear}_${promoMonth}`, JSON.stringify({ title: promoTableTitle, rows: promoTableRows }));
+    await supabase
+      .from('promo_table_data')
+      .upsert({ year: promoYear, month: promoMonth, rows: promoTableRows }, { onConflict: 'year,month' });
+    // promo_folders 제목 업데이트
     const existing = promoFolders.find(f => f.year === promoYear && f.month === promoMonth);
     if (promoTableTitle) {
       if (existing) { await supabase.from('promo_folders').update({ title: promoTableTitle }).eq('id', existing.id); setPromoFolders(promoFolders.map(f => f.id === existing.id ? { ...f, title: promoTableTitle } : f)); }
