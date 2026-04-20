@@ -1453,20 +1453,13 @@ export default function Home() {
                   <div onPointerEnter={(e) => { if (e.pointerType !== 'mouse') return; if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } setHoveredCat(cat); setMegaMenuOpen(cat); }}>
                     <button
                       onClick={() => {
-                        if (megaMenuOpen === cat && isPinnedRef.current) {
-                          // 이미 핀 상태에서 같은 메뉴 재클릭 → 닫기
-                          isPinnedRef.current = false;
-                          setMegaMenuOpen(null);
-                          if (!showLanding) setSelectedMenuCat(selectedCategory);
-                        } else {
-                          // hover로 열려있거나 닫혀있을 때 → 핀 고정
-                          isPinnedRef.current = true;
-                          pinnedCatRef.current = cat;
-                          setMegaMenuOpen(cat);
-                          setSelectedMenuCat(cat);
-                          if (showLanding && cat !== 'ALL') {
-                            handleCategoryChange(cat);
-                          }
+                        // 항상 핀 고정 (재클릭해도 서브메뉴 유지)
+                        isPinnedRef.current = true;
+                        pinnedCatRef.current = cat;
+                        setMegaMenuOpen(cat);
+                        setSelectedMenuCat(cat);
+                        if (showLanding && cat !== 'ALL') {
+                          handleCategoryChange(cat);
                         }
                       }}
                       className={`relative px-3 py-[11px] md:px-5 md:py-[15px] text-[12px] md:text-[13px] whitespace-nowrap transition-colors duration-150 ${isAll
