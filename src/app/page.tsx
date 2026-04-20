@@ -1691,26 +1691,26 @@ export default function Home() {
               });
               return (
                 <div className="flex">
-                  <div className="flex-1 p-8">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-5">이달의 판촉 행사</p>
-                    <div className="flex flex-col gap-2">
+                  <div className="flex-1 p-4 md:p-8">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 md:mb-5">이달의 판촉 행사</p>
+                    <div className="flex flex-col gap-1 md:gap-2">
                       {nearMonths.map(({ year, month, isCurrent }) => (
                         <button key={`${year}-${month}`}
                           onClick={() => { handleCategoryChange('브랜드판촉'); setPromoYear(year); setPromoMonth(month); isPinnedRef.current = false; setMegaMenuOpen(null); }}
-                          className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-3 ${isCurrent ? 'bg-[#00b050]/10 text-[#00723a] font-extrabold' : 'text-gray-500 hover:text-[#00723a] hover:bg-gray-50'}`}>
-                          <span className={`text-[11px] font-bold w-14 flex-shrink-0 ${isCurrent ? 'text-[#00b050]' : 'text-gray-400'}`}>
+                          className={`text-left py-2 px-3 rounded-lg transition-all flex items-center gap-2 ${isCurrent ? 'bg-[#00b050]/10 text-[#00723a] font-extrabold' : 'text-gray-500 hover:text-[#00723a] hover:bg-gray-50'}`}>
+                          <span className={`text-[11px] font-bold whitespace-nowrap flex-shrink-0 ${isCurrent ? 'text-[#00b050]' : 'text-gray-400'}`}>
                             {year}년 {month}월
                           </span>
-                          <span className="text-gray-300">|</span>
-                          {isCurrent && <span className="text-[11px] text-[#00b050]">➔</span>}
-                          <span className="text-[13px]">
-                            {year}년 {month}월 판촉 자료
+                          <span className="text-gray-300 flex-shrink-0">|</span>
+                          {isCurrent && <span className="text-[11px] text-[#00b050] flex-shrink-0">➔</span>}
+                          <span className="text-[12px] md:text-[13px] whitespace-nowrap">
+                            {month}월 판촉 자료
                           </span>
                         </button>
                       ))}
                     </div>
                   </div>
-                  <div className="w-44 relative overflow-hidden flex-shrink-0 bg-green-50/60 flex items-center justify-center">
+                  <div className="hidden md:flex w-44 relative overflow-hidden flex-shrink-0 bg-green-50/60 items-center justify-center">
                     <div className="text-7xl opacity-10">🎁</div>
                     <div className="absolute bottom-6 left-6">
                       <p className="text-[10px] font-bold text-[#00b050]/50 tracking-wider uppercase">Promotion</p>
