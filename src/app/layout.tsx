@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import InstallPWA from "@/components/InstallPWA";
 
 export const metadata: Metadata = {
   title: "김정문알로에 더HB",
   description: "사업자 및 카운셀러 전용 프리미엄 자료 플랫폼",
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -94,14 +94,8 @@ export default function RootLayout({
             <div>COPYRIGHT (c) 김정문알로에&nbsp; ALL RIGHTS RESERVED.</div>
           </div>
         </footer>
-        {/* 서비스워커 등록 — PWA 홈화면 추가 지원 */}
-        <script dangerouslySetInnerHTML={{ __html: `
-          if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-              navigator.serviceWorker.register('/sw.js');
-            });
-          }
-        `}} />
+        {/* PWA 설치 버튼 및 서비스워커 등록부 */}
+        <InstallPWA />
       </body>
     </html>
   );
