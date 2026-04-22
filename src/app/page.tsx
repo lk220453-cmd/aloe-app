@@ -151,10 +151,13 @@ export default function Home() {
   const [healthProducts, setHealthProducts] = useState<string[]>(['전체', '기타']);
   const [cosmeticsProducts, setCosmeticsProducts] = useState<string[]>(['전체', '기타']);
   const [deviceProducts, setDeviceProducts] = useState<string[]>(['전체', '기타']);
+  const [newsSubmenus, setNewsSubmenus] = useState<string[]>(['전체', '기타']);
+  const [salesSubmenus, setSalesSubmenus] = useState<string[]>(['전체', '기타']);
+  const [boardSubmenus, setBoardSubmenus] = useState<string[]>(['전체', '공지사항', '자유게시판', '기타']);
 
-  const [showProductMgmt, setShowProductMgmt] = useState(false);
-  const [productMgmtCategory, setProductMgmtCategory] = useState<'건식'|'화장품'|'기기'>('건식');
-  const [newProductName, setNewProductName] = useState('');
+  const [showSubmenuMgmt, setShowSubmenuMgmt] = useState(false);
+  const [submenuMgmtCategory, setSubmenuMgmtCategory] = useState<'건식'|'화장품'|'기기'|'회사소식/홍보'|'영업자료집'|'게시판'>('건식');
+  const [newSubmenuName, setNewSubmenuName] = useState('');
 
   useEffect(() => {
     const session = localStorage.getItem('aloeSession');
@@ -194,26 +197,29 @@ export default function Home() {
     loadPendingUsers();
   };
 
-  const loadProducts = async () => {
+  const loadSubmenus = async () => {
     const { data } = await supabase.from('products').select('*').order('sort_order', { ascending: true });
     if (data) {
       setHealthProducts(['전체', ...data.filter((p: any) => p.category === '건식').map((p: any) => p.name), '기타']);
       setCosmeticsProducts(['전체', ...data.filter((p: any) => p.category === '화장품').map((p: any) => p.name), '기타']);
       setDeviceProducts(['전체', ...data.filter((p: any) => p.category === '기기').map((p: any) => p.name), '기타']);
+      setNewsSubmenus(['전체', ...data.filter((p: any) => p.category === '회사소식/홍보').map((p: any) => p.name), '기타']);
+      setSalesSubmenus(['전체', ...data.filter((p: any) => p.category === '영업자료집').map((p: any) => p.name), '기타']);
+      setBoardSubmenus(['전체', '공지사항', '자유게시판', ...data.filter((p: any) => p.category === '게시판').map((p: any) => p.name), '기타']);
     }
   };
 
-  const addProduct = async () => {
-    if (!newProductName.trim()) return;
-    await supabase.from('products').insert({ category: productMgmtCategory, name: newProductName.trim(), sort_order: 99 });
-    setNewProductName('');
-    loadProducts();
+  const addSubmenu = async () => {
+    if (!newSubmenuName.trim()) return;
+    await supabase.from('products').insert({ category: submenuMgmtCategory, name: newSubmenuName.trim(), sort_order: 99 });
+    setNewSubmenuName('');
+    loadSubmenus();
   };
 
-  const deleteProduct = async (category: string, name: string) => {
-    if (!confirm(`"${name}" 제품을 삭제하시겠습니까?`)) return;
+  const deleteSubmenu = async (category: string, name: string) => {
+    if (!confirm(`"${name}" 서브메뉴를 삭제하시겠습니까?`)) return;
     await supabase.from('products').delete().eq('category', category).eq('name', name);
-    loadProducts();
+    loadSubmenus();
   };
 
   const [materials, setMaterials] = useState<Material[]>(initialMockMaterials);
@@ -236,7 +242,7 @@ export default function Home() {
       if (foldersData && foldersData.length > 0) {
         setPromoFolders(foldersData);
       }
-      await loadProducts();
+      await loadSubmenus();
     };
     loadData();
   }, []);
@@ -299,7 +305,7 @@ export default function Home() {
   const [showWriteModal, setShowWriteModal] = useState(false);
   const [writeTitle, setWriteTitle] = useState('');
   const [writeContent, setWriteContent] = useState('');
-  const [writeType, setWriteType] = useState<'NOTICE' | 'FREE'>('FREE');
+  const [writeType, setWriteType] = useState<string>('FREE');
   const writeFileRef = useRef<HTMLInputElement>(null);
   const [writeFile, setWriteFile] = useState<File | null>(null);
 
@@ -414,10 +420,14 @@ export default function Home() {
     setUploadMode('file');
     setUploadYoutubeUrl('');
     setUploadWebUrl('');
-    if ((selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') && selectedProduct !== '전체') {
-      setUploadProduct(selectedProduct);
-    } else {
-      setUploadProduct(selectedCategory === '화장품' ? '뉴)세레브퓨어알로에' : selectedCategory === '기기' ? '닥터셀이온' : '스피그린');
+    if (selectedCategory !== '브랜드판촉' && selectedCategory !== 'ALL' && selectedCategory !== 'NONE') {
+      if (selectedCategory === '게시판') {
+         setUploadProduct(selectedSubBoard !== 'ALL' ? selectedSubBoard : '기타');
+      } else if (selectedProduct !== '전체') {
+         setUploadProduct(selectedProduct);
+      } else {
+         setUploadProduct('기타');
+      }
     }
     setShowUploadModal(true);
   };
@@ -493,18 +503,20 @@ export default function Home() {
     const newPost: Material = {
       id: 'm' + Date.now(),
       title: writeTitle.trim(),
-      type: selectedCategory === '게시판' ? writeType : 'DOCUMENT',
+      type: selectedCategory === '게시판' ? (['NOTICE', 'FREE'].includes(writeType) ? writeType as MaterialType : 'DOCUMENT') : 'DOCUMENT',
       thumbnailUrl: '',
       category: selectedCategory,
       year: promoYear || String(now.getFullYear()),
       month: promoMonth || String(now.getMonth() + 1),
       content: writeContent,
       fileName, fileUrl,
+      productName: selectedCategory === '게시판' && !['NOTICE', 'FREE'].includes(writeType) ? writeType : undefined,
     };
     await supabase.from('materials').insert({
       id: newPost.id, title: newPost.title, type: newPost.type, thumbnail_url: '',
       category: newPost.category, year: newPost.year, month: newPost.month,
       content: newPost.content, file_name: fileName, file_url: fileUrl,
+      product_name: newPost.productName,
     });
     setMaterials(prev => [newPost, ...prev]);
     setShowWriteModal(false);
@@ -528,7 +540,7 @@ export default function Home() {
 
     let finalType: MaterialType = uploadTypeState;
     if (selectedCategory === '게시판') {
-      finalType = selectedSubBoard === 'NOTICE' ? 'NOTICE' : selectedSubBoard === 'FREE' ? 'FREE' : 'DOCUMENT';
+      finalType = ['NOTICE', 'FREE'].includes(uploadProduct) ? uploadProduct as MaterialType : 'DOCUMENT';
     } else if (selectedCategory === '브랜드판촉') {
       finalType = 'DOCUMENT';
     }
@@ -539,11 +551,13 @@ export default function Home() {
         id: 'm' + Date.now().toString(), title: uploadTitle, type: uploadTypeState,
         thumbnailUrl: 'https://picsum.photos/seed/' + Math.floor(Math.random() * 100) + '/400/225',
         category: selectedCategory, year: promoYear, month: promoMonth, fileUrl: url, fileName: url,
+        productName: (selectedCategory !== '브랜드판촉') ? uploadProduct : undefined
       };
       await supabase.from('materials').insert({
         id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
         thumbnail_url: newMaterial.thumbnailUrl, category: newMaterial.category,
         year: newMaterial.year, month: newMaterial.month, file_url: url, file_name: url,
+        product_name: newMaterial.productName,
       });
       setMaterials([newMaterial, ...materials]);
       setUploadLoading(false);
@@ -556,7 +570,7 @@ export default function Home() {
         id: 'm' + Date.now().toString(), title: uploadTitle, type: 'VIDEO',
         thumbnailUrl: newThumbnail, category: selectedCategory, year: promoYear, month: promoMonth,
         youtubeUrl: youtubeId ? `https://www.youtube.com/embed/${youtubeId}` : undefined,
-        productName: (selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') ? uploadProduct : undefined
+        productName: (selectedCategory !== '브랜드판촉') ? uploadProduct : undefined
       };
       await supabase.from('materials').insert({
         id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
@@ -577,7 +591,7 @@ export default function Home() {
           id: 'm' + Date.now().toString() + Math.random(), title, type: fileType,
           thumbnailUrl: newThumbnail, category: selectedCategory, year: promoYear, month: promoMonth,
           fileName: uploaded.fileName, fileUrl: uploaded.fileUrl,
-          productName: (selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기') ? uploadProduct : undefined
+          productName: (selectedCategory !== '브랜드판촉') ? uploadProduct : undefined
         };
         await supabase.from('materials').insert({
           id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
@@ -638,7 +652,7 @@ export default function Home() {
     let matchType = true;
     if (effCat === '건식' || effCat === '화장품' || effCat === '기기') {
       matchType = selectedType === 'ALL' || mat.type === selectedType;
-      if ((effCat === '건식' || effCat === '화장품' || effCat === '기기') && selectedProduct !== '전체') {
+      if (selectedProduct !== '전체') {
         if ((mat.productName || '기타') !== selectedProduct) matchType = false;
       }
     } else if (effCat === '회사소식/홍보' || effCat === '영업자료집') {
@@ -647,8 +661,17 @@ export default function Home() {
       else if (selectedType === 'DOCUMENT') matchType = mat.type === 'DOCUMENT' && !isWebLink;
       else if (selectedType === 'VIDEO') matchType = mat.type === 'VIDEO' || !!mat.youtubeUrl;
       else matchType = true;
+      if (selectedProduct !== '전체') {
+        if ((mat.productName || '기타') !== selectedProduct) matchType = false;
+      }
     } else if (effCat === '게시판') {
-      matchType = selectedSubBoard === 'ALL' || mat.type === selectedSubBoard;
+      if (selectedSubBoard === 'ALL') {
+        matchType = true;
+      } else if (selectedSubBoard === 'NOTICE' || selectedSubBoard === 'FREE') {
+        matchType = mat.type === selectedSubBoard;
+      } else {
+        matchType = mat.productName === selectedSubBoard;
+      }
     } else if (effCat === '브랜드판촉' && mat.category === '브랜드판촉') {
       matchType = mat.year === promoYear && mat.month === promoMonth;
     }
@@ -723,10 +746,10 @@ export default function Home() {
               👥 <span className="hidden sm:inline">사용자 관리</span>
             </button>
             <button
-              onClick={() => { setShowProductMgmt(true); loadProducts(); }}
+              onClick={() => { setShowSubmenuMgmt(true); loadSubmenus(); }}
               className="text-[11px] md:text-[12px] bg-[#7a9a52] text-white px-2 py-1 md:px-3 md:py-1.5 rounded-lg font-bold hover:bg-[#5f7d3a] transition-colors"
             >
-              📋 <span className="hidden sm:inline">제품 관리</span>
+              📋 <span className="hidden sm:inline">서브메뉴 관리</span>
             </button>
           </>
         )}
@@ -738,47 +761,60 @@ export default function Home() {
         </button>
       </div>
 
-      {/* 제품 관리 모달 */}
-      {showProductMgmt && (
+      {/* 서브메뉴 관리 모달 */}
+      {showSubmenuMgmt && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style={{maxHeight: 'calc(100vh - 64px)'}}>
             <div className="flex-shrink-0 flex justify-between items-center p-5 border-b bg-gray-50">
-              <h3 className="font-extrabold text-[17px]">📋 제품 관리</h3>
-              <button onClick={() => setShowProductMgmt(false)} className="text-gray-400 hover:text-gray-800 w-8 h-8 rounded-full flex items-center justify-center font-bold">✕</button>
+              <h3 className="font-extrabold text-[17px]">📋 서브메뉴 관리</h3>
+              <button onClick={() => setShowSubmenuMgmt(false)} className="text-gray-400 hover:text-gray-800 w-8 h-8 rounded-full flex items-center justify-center font-bold">✕</button>
             </div>
             {/* 카테고리 탭 */}
-            <div className="flex-shrink-0 flex border-b">
-              {(['건식', '화장품', '기기'] as const).map(cat => (
-                <button key={cat} onClick={() => setProductMgmtCategory(cat)}
-                  className={`flex-1 py-3 text-[14px] font-bold transition-colors ${productMgmtCategory === cat ? 'text-[#00723a] border-b-2 border-[#00b050]' : 'text-gray-400 hover:text-gray-600'}`}>
-                  {cat}
+            <div className="flex-shrink-0 grid grid-cols-6 border-b">
+              {(['건식', '화장품', '기기', '회사소식/홍보', '영업자료집', '게시판'] as const).map(cat => (
+                <button key={cat} onClick={() => setSubmenuMgmtCategory(cat)}
+                  className={`py-3 px-1 text-[11px] sm:text-[13px] font-bold transition-colors ${submenuMgmtCategory === cat ? 'text-[#00723a] border-b-2 border-[#00b050]' : 'text-gray-400 hover:text-gray-600'} break-keep`}>
+                  {cat.replace('소식/홍보', '홍보')}
                 </button>
               ))}
             </div>
-            {/* 제품 목록 */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {(productMgmtCategory === '건식' ? healthProducts : productMgmtCategory === '화장품' ? cosmeticsProducts : deviceProducts)
-                .filter(p => p !== '전체' && p !== '기타')
+            {/* 서브메뉴 목록 */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-white">
+              {(submenuMgmtCategory === '건식' ? healthProducts 
+                : submenuMgmtCategory === '화장품' ? cosmeticsProducts 
+                : submenuMgmtCategory === '기기' ? deviceProducts
+                : submenuMgmtCategory === '회사소식/홍보' ? newsSubmenus
+                : submenuMgmtCategory === '영업자료집' ? salesSubmenus
+                : boardSubmenus)
+                .filter(p => !['전체', '기타', '공지사항', '자유게시판'].includes(p))
                 .map(name => (
-                  <div key={name} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                  <div key={name} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
                     <span className="text-[14px] font-medium text-gray-700">{name}</span>
-                    <button onClick={() => deleteProduct(productMgmtCategory, name)}
-                      className="text-[12px] bg-red-500 text-white px-3 py-1 rounded-lg font-bold hover:bg-red-600">삭제</button>
+                    <button onClick={() => deleteSubmenu(submenuMgmtCategory, name)}
+                      className="text-[12px] bg-red-500 text-white px-3 py-1 rounded-lg font-bold hover:bg-red-600 shadow-sm">삭제</button>
                   </div>
                 ))}
+                {((submenuMgmtCategory === '건식' ? healthProducts 
+                : submenuMgmtCategory === '화장품' ? cosmeticsProducts 
+                : submenuMgmtCategory === '기기' ? deviceProducts
+                : submenuMgmtCategory === '회사소식/홍보' ? newsSubmenus
+                : submenuMgmtCategory === '영업자료집' ? salesSubmenus
+                : boardSubmenus).filter(p => !['전체', '기타', '공지사항', '자유게시판'].includes(p)).length === 0) && (
+                  <p className="text-center text-gray-400 py-8 text-[13px]">등록된 커스텀 서브메뉴가 없습니다.</p>
+                )}
             </div>
-            {/* 새 제품 추가 */}
+            {/* 새 서브메뉴 추가 */}
             <div className="flex-shrink-0 p-4 border-t bg-gray-50 flex gap-2">
               <input
                 type="text"
-                value={newProductName}
-                onChange={e => setNewProductName(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addProduct()}
-                placeholder="새 제품명 입력"
-                className="flex-1 p-2.5 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#7a9a52]/50"
+                value={newSubmenuName}
+                onChange={e => setNewSubmenuName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addSubmenu()}
+                placeholder="새 서브메뉴(제품명 등) 입력"
+                className="flex-1 p-2.5 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:ring-2 focus:ring-[#7a9a52]/50 bg-white"
               />
-              <button onClick={addProduct}
-                className="px-4 py-2.5 bg-[#00b050] text-white rounded-xl font-bold text-[14px] hover:bg-[#009030]">추가</button>
+              <button onClick={addSubmenu}
+                className="px-5 py-2.5 bg-[#00b050] text-white rounded-xl font-bold text-[14px] hover:bg-[#009030] shadow-sm">추가</button>
             </div>
           </div>
         </div>
@@ -1195,13 +1231,16 @@ export default function Home() {
             <div className="p-6 space-y-4">
               {/* 게시판 타입 선택 */}
               {selectedCategory === '게시판' && (
-                <div className="flex gap-2">
-                  {(['FREE', 'NOTICE'] as const).map(t => (
-                    <button key={t}
-                      onClick={() => setWriteType(t)}
-                      className={`px-4 py-2 rounded-lg text-[13px] font-bold border transition-colors ${writeType === t ? 'bg-[#00b050] text-white border-[#00b050]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#00b050]'}`}
+                <div className="flex gap-2 flex-wrap">
+                  {([ { id: 'NOTICE', label: '📢 공지사항' }, { id: 'FREE', label: '💬 자유게시판' } ]
+                    .concat(boardSubmenus.filter(m => !['전체', '공지사항', '자유게시판', '기타'].includes(m)).map(m => ({ id: m, label: `📝 ${m}` })))
+                    .concat({ id: '기타', label: '📂 기타' })
+                  ).map(t => (
+                    <button key={t.id}
+                      onClick={() => setWriteType(t.id)}
+                      className={`px-4 py-2 rounded-lg text-[13px] font-bold border transition-colors ${writeType === t.id ? 'bg-[#00b050] text-white border-[#00b050]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#00b050]'}`}
                     >
-                      {t === 'FREE' ? '💬 자유게시판' : '📢 공지사항'}
+                      {t.label}
                     </button>
                   ))}
                 </div>
@@ -1624,13 +1663,23 @@ export default function Home() {
             {megaMenuOpen === '회사소식/홍보' && (
               <div className="flex">
                 <div className="flex-1 p-4 md:p-8">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">자료 형식</p>
-                  <div className="flex flex-col gap-1">
-                    {[{ id: 'ALL', label: '📋 전체 (업로드순)' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '🎬 영상' }, { id: 'WEBLINK', label: '🔗 웹링크' }].map(t => (
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">자료 형식</p>
+                  <div className="flex gap-4 mb-3 md:mb-5 pb-3 md:pb-4 border-b border-gray-100">
+                    {[{ id: 'ALL', label: '📋 전체' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '🎬 영상' }, { id: 'WEBLINK', label: '🔗 링크' }].map(t => (
                       <button key={t.id} onClick={() => { handleCategoryChange('회사소식/홍보'); setSelectedType(t.id); isPinnedRef.current = false; setMegaMenuOpen(null); }}
-                        className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '회사소식/홍보' && selectedType === t.id ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
-                        {selectedCategory === '회사소식/홍보' && selectedType === t.id && <span className="text-[11px]">➔</span>}
+                        className={`text-[12px] md:text-[13px] transition-colors relative pb-1 ${selectedCategory === '회사소식/홍보' && selectedType === t.id ? 'text-[#00b050] font-bold' : 'text-gray-500 hover:text-[#00723a]'}`}>
                         {t.label}
+                        {selectedCategory === '회사소식/홍보' && selectedType === t.id && <span className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#00b050] rounded-full block" />}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-4">세부 분류 (서브메뉴)</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
+                    {newsSubmenus.map(prod => (
+                      <button key={prod} onClick={() => { handleCategoryChange('회사소식/홍보'); setSelectedProduct(prod); isPinnedRef.current = false; setMegaMenuOpen(null); }}
+                        className={`text-left py-1.5 px-2 md:py-2 md:px-3 rounded-lg text-[12px] md:text-[13px] transition-all flex items-center gap-1 ${selectedCategory === '회사소식/홍보' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
+                        {selectedCategory === '회사소식/홍보' && selectedProduct === prod && <span className="text-[11px]">➔</span>}
+                        {prod}
                       </button>
                     ))}
                   </div>
@@ -1649,13 +1698,23 @@ export default function Home() {
             {megaMenuOpen === '영업자료집' && (
               <div className="flex">
                 <div className="flex-1 p-4 md:p-8">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">자료 형식</p>
-                  <div className="flex flex-col gap-1">
-                    {[{ id: 'ALL', label: '📋 전체 (업로드순)' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '🎬 영상' }, { id: 'WEBLINK', label: '🔗 웹링크' }].map(t => (
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">자료 형식</p>
+                  <div className="flex gap-4 mb-3 md:mb-5 pb-3 md:pb-4 border-b border-gray-100">
+                    {[{ id: 'ALL', label: '📋 전체' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '🎬 영상' }, { id: 'WEBLINK', label: '🔗 링크' }].map(t => (
                       <button key={t.id} onClick={() => { handleCategoryChange('영업자료집'); setSelectedType(t.id); isPinnedRef.current = false; setMegaMenuOpen(null); }}
-                        className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '영업자료집' && selectedType === t.id ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
-                        {selectedCategory === '영업자료집' && selectedType === t.id && <span className="text-[11px]">➔</span>}
+                        className={`text-[12px] md:text-[13px] transition-colors relative pb-1 ${selectedCategory === '영업자료집' && selectedType === t.id ? 'text-[#00b050] font-bold' : 'text-gray-500 hover:text-[#00723a]'}`}>
                         {t.label}
+                        {selectedCategory === '영업자료집' && selectedType === t.id && <span className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#00b050] rounded-full block" />}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-4">세부 분류 (서브메뉴)</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
+                    {salesSubmenus.map(prod => (
+                      <button key={prod} onClick={() => { handleCategoryChange('영업자료집'); setSelectedProduct(prod); isPinnedRef.current = false; setMegaMenuOpen(null); }}
+                        className={`text-left py-1.5 px-2 md:py-2 md:px-3 rounded-lg text-[12px] md:text-[13px] transition-all flex items-center gap-1 ${selectedCategory === '영업자료집' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
+                        {selectedCategory === '영업자료집' && selectedProduct === prod && <span className="text-[11px]">➔</span>}
+                        {prod}
                       </button>
                     ))}
                   </div>
@@ -1674,9 +1733,12 @@ export default function Home() {
             {megaMenuOpen === '게시판' && (
               <div className="flex">
                 <div className="flex-1 p-4 md:p-8">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">게시판 종류</p>
-                  <div className="flex flex-col gap-1">
-                    {[{ id: 'ALL', label: '전체 게시글' }, { id: 'NOTICE', label: '📢 공지사항' }, { id: 'FREE', label: '💬 자유게시판' }].map(t => (
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">게시판 종류 (서브메뉴)</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {[{ id: 'ALL', label: '전체 게시글' }, { id: 'NOTICE', label: '📢 공지사항' }, { id: 'FREE', label: '💬 자유게시판' }]
+                      .concat(boardSubmenus.filter(m => !['전체', '공지사항', '자유게시판', '기타'].includes(m)).map(m => ({ id: m, label: `📝 ${m}` })))
+                      .concat({ id: '기타', label: '📂 기타' })
+                      .map(t => (
                       <button key={t.id} onClick={() => { handleCategoryChange('게시판'); setSelectedSubBoard(t.id); isPinnedRef.current = false; setMegaMenuOpen(null); }}
                         className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '게시판' && selectedSubBoard === t.id ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '게시판' && selectedSubBoard === t.id && <span className="text-[11px]">➔</span>}
