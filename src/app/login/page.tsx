@@ -79,6 +79,21 @@ export default function LoginPage() {
     }
     setLoading(true);
 
+    const { data: existByName } = await supabase.from('users').select('id').eq('name', signupName).limit(1);
+    const hasNameDuplicate = Boolean(existByName && existByName.length > 0);
+    
+    let hasCompanyDuplicate = false;
+    if (signupCompany) {
+      const { data: existByCompany } = await supabase.from('users').select('id').eq('company', signupCompany).limit(1);
+      hasCompanyDuplicate = Boolean(existByCompany && existByCompany.length > 0);
+    }
+
+    if (hasNameDuplicate || hasCompanyDuplicate) {
+      setLoading(false);
+      setError('이미 가입되어 있는 이름 또는 거래처명입니다.');
+      return;
+    }
+
     const { error: insertError } = await supabase.from('users').insert({
       id: 'u' + Date.now(),
       username: signupUsername,
