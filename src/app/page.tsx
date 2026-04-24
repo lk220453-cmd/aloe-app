@@ -326,6 +326,7 @@ export default function Home() {
   const pinnedCatRef = useRef<string>('ALL');
   const [promoTableTitle, setPromoTableTitle] = useState('');
   const [promoTableRows, setPromoTableRows] = useState<string[][]>(() => Array(15).fill(null).map(() => Array(6).fill('')));
+  const [isEditingPromo, setIsEditingPromo] = useState(false);
   useEffect(() => {
     if (selectedCategory !== '브랜드판촉') return;
     const emptyRows = () => Array(15).fill(null).map(() => Array(6).fill(''));
@@ -360,6 +361,7 @@ export default function Home() {
       if (existing) { await supabase.from('promo_folders').update({ title: promoTableTitle }).eq('id', existing.id); setPromoFolders(promoFolders.map(f => f.id === existing.id ? { ...f, title: promoTableTitle } : f)); }
       else { const nf = { id: 'f' + Date.now(), year: promoYear, month: promoMonth, title: promoTableTitle }; await supabase.from('promo_folders').insert(nf); setPromoFolders([...promoFolders, nf]); }
     }
+    setIsEditingPromo(false);
   };
 
   // ============== 폴더 수정 로직 ==============
@@ -1872,7 +1874,7 @@ export default function Home() {
                       return (
                         <div key={folder.id} className="flex items-center group relative">
                           <button
-                            onClick={() => setPromoMonth(folder.month)}
+                            onClick={() => { setPromoMonth(folder.month); setIsEditingPromo(false); }}
                             className={`flex-1 text-left text-[13px] px-3 py-2 rounded-l-lg transition-all truncate ${isSelected ? 'bg-[#00b050] text-white font-bold shadow-sm' : 'text-gray-600 hover:bg-green-50 hover:text-[#00b050] font-medium'}`}
                           >
                             {folder.month}월
@@ -1935,7 +1937,16 @@ export default function Home() {
                 <div className="flex items-center gap-3 mb-4">
                   <h3 className="flex-1 text-[16px] font-bold text-gray-800">{promoYear}년 {promoMonth}월 브랜드판촉 자료</h3>
                   {userRole === 'ADMIN' && (
-                    <button onClick={savePromoTable} className="px-4 py-1.5 bg-[#00b050] text-white text-[12px] font-bold rounded-lg hover:bg-[#00723a] flex-shrink-0">저장</button>
+                    <div className="flex gap-2">
+                      {isEditingPromo ? (
+                        <>
+                          <button onClick={() => setIsEditingPromo(false)} className="px-4 py-1.5 bg-gray-200 text-gray-700 text-[12px] font-bold rounded-lg hover:bg-gray-300 flex-shrink-0">취소</button>
+                          <button onClick={savePromoTable} className="px-4 py-1.5 bg-[#00b050] text-white text-[12px] font-bold rounded-lg hover:bg-[#00723a] flex-shrink-0">저장</button>
+                        </>
+                      ) : (
+                        <button onClick={() => setIsEditingPromo(true)} className="px-4 py-1.5 bg-blue-500 text-white text-[12px] font-bold rounded-lg hover:bg-blue-600 flex-shrink-0">수정</button>
+                      )}
+                    </div>
                   )}
                 </div>
                 {/* 표 */}
@@ -1946,7 +1957,7 @@ export default function Home() {
                         {['브랜드 품목','운영수량','브랜드적용 단위','지원품목','지원수량','비고'].map(col => (
                           <th key={col} className="border border-gray-300 bg-[#d6e4f0] px-3 py-2 text-center font-bold text-gray-700 whitespace-nowrap">{col}</th>
                         ))}
-                        {userRole === 'ADMIN' && <th className="border-0 w-6" />}
+                        {userRole === 'ADMIN' && isEditingPromo && <th className="border-0 w-6" />}
                       </tr>
                     </thead>
                     <tbody>
@@ -1954,7 +1965,7 @@ export default function Home() {
                         <tr key={ri} className="hover:bg-blue-50/30">
                           {row.map((cell: string, ci: number) => (
                             <td key={ci} className="border border-gray-200 p-0">
-                              {userRole === 'ADMIN' ? (
+                              {userRole === 'ADMIN' && isEditingPromo ? (
                                 <textarea
                                   value={cell}
                                   rows={1}
@@ -1971,7 +1982,7 @@ export default function Home() {
                               )}
                             </td>
                           ))}
-                          {userRole === 'ADMIN' && (
+                          {userRole === 'ADMIN' && isEditingPromo && (
                             <td className="border-0 pl-1">
                               <button onClick={() => setPromoTableRows(promoTableRows.filter((_: string[], i: number) => i !== ri))}
                                 className="text-gray-200 hover:text-red-400 text-[15px]">×</button>
@@ -1982,7 +1993,7 @@ export default function Home() {
                     </tbody>
                   </table>
                 </div>
-                {userRole === 'ADMIN' && (
+                {userRole === 'ADMIN' && isEditingPromo && (
                   <button onClick={() => setPromoTableRows([...promoTableRows, Array(6).fill('')])}
                     className="mt-2 text-[12px] text-[#00b050] hover:text-[#00723a] font-medium">+ 행 추가</button>
                 )}
