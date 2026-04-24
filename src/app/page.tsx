@@ -401,13 +401,6 @@ export default function Home() {
   };
 
   // ============== 항목 수정 및 삭제 로직 ==============
-  const handleEditMaterialTitle = async (mId: string, oldTitle: string) => {
-    const titleInput = window.prompt('변경할 자료 제목을 입력하세요:', oldTitle);
-    if (!titleInput) return;
-    await supabase.from('materials').update({ title: titleInput }).eq('id', mId);
-    setMaterials(materials.map(m => m.id === mId ? { ...m, title: titleInput } : m));
-  };
-
   const handleDeleteMaterial = async (mId: string) => {
     if (window.confirm('정말로 이 자료를 완전히 삭제/숨김 처리하시겠습니까?')) {
       await supabase.from('materials').delete().eq('id', mId);
@@ -2071,7 +2064,7 @@ export default function Home() {
                       <div className="w-16 flex items-center justify-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
                         {(userRole === 'ADMIN' || (userRole === 'BUSINESS' && (mat.category === '회사소식/홍보' || (mat.category === '게시판' && mat.type === 'FREE')))) && selectedCategory !== 'ALL' && (
                           <>
-                            <button onClick={(e) => { e.stopPropagation(); handleEditMaterialTitle(mat.id, mat.title); }} className="text-[11px] text-gray-400 hover:text-[#00b050] transition-colors opacity-0 group-hover:opacity-100">수정</button>
+                            <button onClick={(e) => { e.stopPropagation(); openEditModal(mat); }} className="text-[11px] text-gray-400 hover:text-[#00b050] transition-colors opacity-0 group-hover:opacity-100">수정</button>
                             <button onClick={(e) => { e.stopPropagation(); handleDeleteMaterial(mat.id); }} className="text-[11px] text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">삭제</button>
                           </>
                         )}
