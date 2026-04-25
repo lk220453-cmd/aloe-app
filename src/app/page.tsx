@@ -607,19 +607,29 @@ export default function Home() {
   // 파일 열기 — PC/모바일 호환
   const openFile = (fileUrl: string) => {
     const ext = fileUrl.split('?')[0].split('.').pop()?.toLowerCase() || '';
-    // MS Office Online 뷰어: PPT/DOC/XLS (HWP 제외 — 미지원)
     const msOfficeExts = ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'];
     if (msOfficeExts.includes(ext)) {
       window.open(`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`, '_blank');
     } else {
-      // PDF, 이미지, 영상, HWP 등 → 직접 열기/다운로드
+      // HTML 포함 PDF, 이미지, 영상 등 → 새 탭에서 열기 (브라우저가 직접 렌더링)
+      window.open(fileUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const downloadFile = async (fileUrl: string, fileName: string) => {
+    try {
+      const res = await fetch(fileUrl);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = fileUrl;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
+      a.href = blobUrl;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      window.open(fileUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -981,7 +991,7 @@ export default function Home() {
                           <p className="mb-2 text-sm text-gray-500 font-medium">
                             <span className="font-extrabold text-[#00b050]">클릭해서 내 컴퓨터 파일 찾기 (다중 선택 가능)</span>
                           </p>
-                          <p className="text-[11px] text-gray-400">지원 확장자: PDF, MP4, JPEG, PPTX, TXT 등 (최대 100MB)</p>
+                          <p className="text-[11px] text-gray-400">지원 확장자: PDF, HTML, MP4, JPEG, PPTX, TXT 등 (최대 100MB)</p>
                         </div>
                         <input
                           type="file"
@@ -1191,15 +1201,16 @@ export default function Home() {
               {detailMat.fileUrl && detailMat.fileName && (
                 <div>
                   <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">첨부파일</p>
-                  <button onClick={() => openFile(detailMat.fileUrl!)}
-                    className="w-full flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200 hover:bg-green-100 transition-colors group text-left">
+                  <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
                     <span className="text-2xl">📎</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-[14px] font-bold text-[#1a3010] truncate">{detailMat.fileName}</p>
-                      <p className="text-[11px] text-gray-400 mt-0.5">클릭하여 열기</p>
                     </div>
-                    <span className="text-[#00b050] font-bold text-[13px] group-hover:underline">⬇ 열기</span>
-                  </button>
+                    <button onClick={() => openFile(detailMat.fileUrl!)}
+                      className="text-[12px] font-bold text-[#00b050] hover:underline px-2 py-1 rounded-lg hover:bg-green-100">🔍 열람</button>
+                    <button onClick={() => downloadFile(detailMat.fileUrl!, detailMat.fileName!)}
+                      className="text-[12px] font-bold text-blue-600 hover:underline px-2 py-1 rounded-lg hover:bg-blue-50">⬇ 다운</button>
+                  </div>
                 </div>
               )}
             </div>
@@ -2062,6 +2073,14 @@ export default function Home() {
 
                       {/* 열람 버튼 + 수정/삭제 */}
                       <div className="w-16 flex items-center justify-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                        {mat.fileUrl && mat.fileName && (() => {
+                          const ext = mat.fileName.split('.').pop()?.toLowerCase() || '';
+                          if (ext === 'html') return (
+                            <button onClick={(e) => { e.stopPropagation(); downloadFile(mat.fileUrl!, mat.fileName!); }}
+                              className="text-[11px] text-blue-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100">⬇</button>
+                          );
+                          return null;
+                        })()}
                         {(userRole === 'ADMIN' || (userRole === 'BUSINESS' && (mat.category === '회사소식/홍보' || (mat.category === '게시판' && mat.type === 'FREE')))) && selectedCategory !== 'ALL' && (
                           <>
                             <button onClick={(e) => { e.stopPropagation(); openEditModal(mat); }} className="text-[11px] text-gray-400 hover:text-[#00b050] transition-colors opacity-0 group-hover:opacity-100">수정</button>
