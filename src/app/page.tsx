@@ -1511,7 +1511,7 @@ export default function Home() {
                         pinnedCatRef.current = cat;
                         setMegaMenuOpen(cat);
                         setSelectedMenuCat(cat);
-                        if (showLanding && cat !== 'ALL') {
+                        if (cat !== 'ALL') {
                           handleCategoryChange(cat);
                         }
                       }}
