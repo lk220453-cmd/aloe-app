@@ -605,13 +605,24 @@ export default function Home() {
   // ==========================================
 
   // 파일 열기 — PC/모바일 호환
-  const openFile = (fileUrl: string) => {
+  const openFile = async (fileUrl: string) => {
     const ext = fileUrl.split('?')[0].split('.').pop()?.toLowerCase() || '';
     const msOfficeExts = ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'];
     if (msOfficeExts.includes(ext)) {
       window.open(`https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`, '_blank');
+    } else if (ext === 'html' || ext === 'htm') {
+      // HTML은 fetch 후 text/html Blob으로 새 탭에서 렌더링 (서버 Content-Type 무관)
+      try {
+        const res = await fetch(fileUrl);
+        const text = await res.text();
+        const blob = new Blob([text], { type: 'text/html; charset=utf-8' });
+        const blobUrl = URL.createObjectURL(blob);
+        const win = window.open(blobUrl, '_blank');
+        if (win) setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+      } catch {
+        window.open(fileUrl, '_blank', 'noopener,noreferrer');
+      }
     } else {
-      // HTML 포함 PDF, 이미지, 영상 등 → 새 탭에서 열기 (브라우저가 직접 렌더링)
       window.open(fileUrl, '_blank', 'noopener,noreferrer');
     }
   };
@@ -2075,9 +2086,9 @@ export default function Home() {
                       <div className="w-16 flex items-center justify-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
                         {mat.fileUrl && mat.fileName && (() => {
                           const ext = mat.fileName.split('.').pop()?.toLowerCase() || '';
-                          if (ext === 'html') return (
+                          if (ext === 'html' || ext === 'htm') return (
                             <button onClick={(e) => { e.stopPropagation(); downloadFile(mat.fileUrl!, mat.fileName!); }}
-                              className="text-[11px] text-blue-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100">⬇</button>
+                              className="text-[11px] text-blue-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100 whitespace-nowrap">⬇ 다운로드</button>
                           );
                           return null;
                         })()}
