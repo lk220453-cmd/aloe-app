@@ -312,6 +312,7 @@ export default function Home() {
   // 업로드 모달 상태 관리
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadTitle, setUploadTitle] = useState('');
+  const [uploadContent, setUploadContent] = useState('');
   const [uploadTypeState, setUploadTypeState] = useState<MaterialType>('DOCUMENT');
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [uploadProduct, setUploadProduct] = useState('스피그린');
@@ -410,6 +411,7 @@ export default function Home() {
 
   const openUploadModal = () => {
     setUploadTitle('');
+    setUploadContent('');
     setUploadFiles([]);
     setUploadTypeState('DOCUMENT');
     setUploadMode('file');
@@ -552,7 +554,7 @@ export default function Home() {
         id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
         thumbnail_url: newMaterial.thumbnailUrl, category: newMaterial.category,
         year: newMaterial.year, month: newMaterial.month, file_url: url, file_name: url,
-        product_name: newMaterial.productName,
+        product_name: newMaterial.productName, content: uploadContent || null,
       });
       setMaterials([newMaterial, ...materials]);
       setUploadLoading(false);
@@ -572,6 +574,7 @@ export default function Home() {
         thumbnail_url: newThumbnail, category: newMaterial.category,
         year: newMaterial.year, month: newMaterial.month,
         youtube_url: newMaterial.youtubeUrl, product_name: newMaterial.productName,
+        content: uploadContent || null,
       });
       setMaterials([newMaterial, ...materials]);
     } else {
@@ -593,7 +596,7 @@ export default function Home() {
           thumbnail_url: newThumbnail, category: newMaterial.category,
           year: newMaterial.year, month: newMaterial.month,
           file_name: newMaterial.fileName, file_url: newMaterial.fileUrl,
-          product_name: newMaterial.productName,
+          product_name: newMaterial.productName, content: uploadContent || null,
         });
         inserted.push(newMaterial);
       }
@@ -923,6 +926,20 @@ export default function Home() {
                   placeholder="앱에 노출될 자료의 제목을 입력하세요."
                 />
               </div>
+
+              {/* 설명 (회사소식/홍보, 영업자료집, 게시판) */}
+              {['회사소식/홍보', '영업자료집', '게시판'].includes(selectedCategory) && (
+                <div>
+                  <label className="block text-[13px] font-bold text-gray-700 mb-2">설명 <span className="text-gray-400 font-normal">(선택)</span></label>
+                  <textarea
+                    value={uploadContent}
+                    onChange={e => setUploadContent(e.target.value)}
+                    rows={3}
+                    placeholder="자료에 대한 간단한 설명을 입력하세요."
+                    className="w-full p-3.5 text-[14px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00b050]/50 focus:border-[#00b050] transition-all bg-gray-50/30 resize-none"
+                  />
+                </div>
+              )}
 
               {/* 업로드 방식 탭 */}
               <div>
@@ -2092,7 +2109,7 @@ export default function Home() {
                           );
                           return null;
                         })()}
-                        {(userRole === 'ADMIN' || (userRole === 'BUSINESS' && (mat.category === '회사소식/홍보' || (mat.category === '게시판' && mat.type === 'FREE')))) && selectedCategory !== 'ALL' && (
+                        {(userRole === 'ADMIN' || (userRole === 'BUSINESS' && ['회사소식/홍보', '영업자료집', '게시판'].includes(mat.category))) && selectedCategory !== 'ALL' && (
                           <>
                             <button onClick={(e) => { e.stopPropagation(); openEditModal(mat); }} className="text-[11px] text-gray-400 hover:text-[#00b050] transition-colors opacity-0 group-hover:opacity-100">수정</button>
                             <button onClick={(e) => { e.stopPropagation(); handleDeleteMaterial(mat.id); }} className="text-[11px] text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">삭제</button>
