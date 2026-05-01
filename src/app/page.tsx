@@ -226,24 +226,24 @@ export default function Home() {
   const [materials, setMaterials] = useState<Material[]>(initialMockMaterials);
   const [promoFolders, setPromoFolders] = useState<PromoFolder[]>(initialPromoFolders);
 
+  const loadMaterials = async () => {
+    const { data: matsData } = await supabase.from('materials').select('*').order('created_at', { ascending: false });
+    if (matsData && matsData.length > 0) {
+      setMaterials(matsData.map((m: any) => ({
+        id: m.id, title: m.title, type: m.type, thumbnailUrl: m.thumbnail_url || '',
+        category: m.category, year: m.year, month: m.month,
+        fileName: m.file_name, fileUrl: m.file_url, productName: m.product_name,
+        content: m.content, youtubeUrl: m.youtube_url, isPinned: m.is_pinned || false,
+        uploadedBy: m.uploaded_by,
+      })));
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
-      const { data: matsData } = await supabase.from('materials').select('*').order('created_at', { ascending: false });
+      await loadMaterials();
       const { data: foldersData } = await supabase.from('promo_folders').select('*');
-
-      if (matsData && matsData.length > 0) {
-        const mapped = matsData.map((m: any) => ({
-          id: m.id, title: m.title, type: m.type, thumbnailUrl: m.thumbnail_url || '',
-          category: m.category, year: m.year, month: m.month,
-          fileName: m.file_name, fileUrl: m.file_url, productName: m.product_name,
-          content: m.content, youtubeUrl: m.youtube_url, isPinned: m.is_pinned || false,
-          uploadedBy: m.uploaded_by,
-        }));
-        setMaterials(mapped);
-      }
-      if (foldersData && foldersData.length > 0) {
-        setPromoFolders(foldersData);
-      }
+      if (foldersData && foldersData.length > 0) setPromoFolders(foldersData);
       await loadSubmenus();
     };
     loadData();
@@ -309,6 +309,7 @@ export default function Home() {
   const [writeTitle, setWriteTitle] = useState('');
   const [writeContent, setWriteContent] = useState('');
   const [writeType, setWriteType] = useState<string>('FREE');
+  const [writeCustomerName, setWriteCustomerName] = useState('');
   const writeFileRef = useRef<HTMLInputElement>(null);
   const [writeFile, setWriteFile] = useState<File | null>(null);
 
@@ -510,7 +511,9 @@ export default function Home() {
       month: promoMonth || String(now.getMonth() + 1),
       content: writeContent,
       fileName, fileUrl,
-      productName: selectedCategory === '게시판' && !['NOTICE', 'FREE'].includes(writeType) ? writeType : undefined,
+      productName: writeType === 'FREE' && writeCustomerName.trim()
+        ? writeCustomerName.trim()
+        : (selectedCategory === '게시판' && !['NOTICE', 'FREE'].includes(writeType) ? writeType : undefined),
     };
     await supabase.from('materials').insert({
       id: newPost.id, title: newPost.title, type: newPost.type, thumbnail_url: '',
@@ -524,6 +527,7 @@ export default function Home() {
     setWriteContent('');
     setWriteFile(null);
     setWriteType('FREE');
+    setWriteCustomerName('');
   };
 
   const executeUpload = async () => {
@@ -1140,7 +1144,7 @@ export default function Home() {
                   const subLabel = (() => {
                     if (mat.category === '게시판') {
                       if (mat.type === 'NOTICE') return '공지사항';
-                      if (mat.type === 'FREE') return '자유게시판';
+                      if (mat.type === 'FREE') return mat.productName ? `자유게시판 · ${mat.productName}` : '자유게시판';
                       return mat.productName || '';
                     }
                     if (mat.category === '브랜드판촉') return `${mat.year}년 ${mat.month}월`;
@@ -1354,6 +1358,20 @@ export default function Home() {
                 </div>
               )}
 
+              {/* 거래처명 (자유게시판만) */}
+              {writeType === 'FREE' && (
+                <div>
+                  <label className="text-[12px] font-bold text-gray-500 mb-1 block">거래처명 <span className="text-gray-400 font-normal">(선택)</span></label>
+                  <input
+                    type="text"
+                    value={writeCustomerName}
+                    onChange={e => setWriteCustomerName(e.target.value)}
+                    placeholder="거래처명을 입력하세요"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#00b050]/40 focus:border-[#00b050]"
+                  />
+                </div>
+              )}
+
               {/* 제목 */}
               <div>
                 <label className="text-[12px] font-bold text-gray-500 mb-1 block">제목 *</label>
@@ -1526,7 +1544,7 @@ export default function Home() {
             {/* 회전형 배지 */}
             <div
               className="absolute -bottom-1 -right-1 w-[58px] h-[58px] rounded-full bg-[#1a3010] shadow-xl flex flex-col items-center justify-center cursor-pointer hover:bg-[#243d16] transition-colors"
-              onClick={() => setShowUpdateNews(true)}
+              onClick={() => { loadMaterials(); setShowUpdateNews(true); }}
             >
               <span className="text-white text-[11px] leading-none">🔔</span>
               <span className="text-white/70 text-[8px] font-bold mt-0.5">업뎃소식</span>
