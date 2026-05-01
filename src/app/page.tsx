@@ -528,6 +528,7 @@ export default function Home() {
     setWriteFile(null);
     setWriteType('FREE');
     setWriteCustomerName('');
+    loadMaterials();
   };
 
   const executeUpload = async () => {
@@ -613,6 +614,7 @@ export default function Home() {
     }
     setUploadLoading(false);
     setShowUploadModal(false);
+    loadMaterials();
   };
   // ==========================================
 
@@ -1544,7 +1546,7 @@ export default function Home() {
             {/* 회전형 배지 */}
             <div
               className="absolute -bottom-1 -right-1 w-[58px] h-[58px] rounded-full bg-[#1a3010] shadow-xl flex flex-col items-center justify-center cursor-pointer hover:bg-[#243d16] transition-colors"
-              onClick={() => { loadMaterials(); setShowUpdateNews(true); }}
+              onClick={() => setShowUpdateNews(true)}
             >
               <span className="text-white text-[11px] leading-none">🔔</span>
               <span className="text-white/70 text-[8px] font-bold mt-0.5">업뎃소식</span>
