@@ -280,8 +280,8 @@ export default function Home() {
   const [selectedSubBoard, setSelectedSubBoard] = useState('ALL');
   const [selectedProduct, setSelectedProduct] = useState('전체');
 
-  const [promoYear, setPromoYear] = useState('2026');
-  const [promoMonth, setPromoMonth] = useState('4');
+  const [promoYear, setPromoYear] = useState(() => String(new Date().getFullYear()));
+  const [promoMonth, setPromoMonth] = useState(() => String(new Date().getMonth() + 1));
   const [megaMenuOpen, setMegaMenuOpen] = useState<string | null>(null);
   const [hoveredCat, setHoveredCat] = useState<string | null>(null);
   const [selectedMenuCat, setSelectedMenuCat] = useState<string | null>(null);
@@ -660,6 +660,11 @@ export default function Home() {
     setSelectedSubBoard('ALL');
     setSelectedProduct('전체');
     setCurrentPage(1);
+    if (cat === '브랜드판촉') {
+      const now = new Date();
+      setPromoYear(String(now.getFullYear()));
+      setPromoMonth(String(now.getMonth() + 1));
+    }
   };
 
   const filteredMaterials = materials.filter(mat => {
@@ -1546,7 +1551,7 @@ export default function Home() {
                   {idx > 0 && (
                     <span className="text-[#a8b890] text-[12px] select-none">|</span>
                   )}
-                  <div onPointerEnter={(e) => { if (e.pointerType !== 'mouse') return; if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } setHoveredCat(cat); setMegaMenuOpen(cat); }}>
+                  <div onPointerEnter={(e) => { if (e.pointerType !== 'mouse') return; if (megaMenuCloseTimer.current) { clearTimeout(megaMenuCloseTimer.current); megaMenuCloseTimer.current = null; } setHoveredCat(cat); setMegaMenuOpen(cat); if (cat === '브랜드판촉') { const now = new Date(); setPromoYear(String(now.getFullYear())); setPromoMonth(String(now.getMonth() + 1)); } }}>
                     <button
                       onClick={() => {
                         // 항상 핀 고정 (재클릭해도 서브메뉴 유지)
