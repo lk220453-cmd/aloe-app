@@ -517,12 +517,20 @@ export default function Home() {
         ? writeCustomerName.trim()
         : (selectedCategory === '게시판' && !['NOTICE', 'FREE'].includes(writeType) ? writeType : undefined),
     };
-    await supabase.from('materials').insert({
+    const payload: Record<string, unknown> = {
       id: newPost.id, title: newPost.title, type: newPost.type, thumbnail_url: '',
       category: newPost.category, year: newPost.year, month: newPost.month,
       content: newPost.content, file_name: fileName, file_url: fileUrl,
       product_name: newPost.productName, uploaded_by: currentUser?.username,
-    });
+    };
+    const { error: insErr } = await supabase.from('materials').insert(payload);
+    if (insErr && insErr.message.includes('uploaded_by')) {
+      const { uploaded_by: _o, ...rest } = payload as any;
+      await supabase.from('materials').insert(rest);
+    } else if (insErr) {
+      alert(`저장 오류: ${insErr.message}`);
+      return;
+    }
     setMaterials(prev => [newPost, ...prev]);
     setShowWriteModal(false);
     setWriteTitle('');
@@ -552,24 +560,42 @@ export default function Home() {
       finalType = 'DOCUMENT';
     }
 
+    const doInsert = async (payload: Record<string, unknown>) => {
+      const base = { ...payload };
+      const { error } = await supabase.from('materials').insert(base);
+      if (error && error.message.includes('uploaded_by')) {
+        // uploaded_by 컬럼 없으면 제외 후 재시도
+        const { uploaded_by: _omit, ...rest } = base as any;
+        const { error: e2 } = await supabase.from('materials').insert(rest);
+        if (e2) { setUploadError(`DB 저장 오류: ${e2.message}`); return false; }
+      } else if (error) {
+        setUploadError(`DB 저장 오류: ${error.message}`);
+        return false;
+      }
+      return true;
+    };
+
     if (uploadMode === 'weblink') {
       const url = uploadWebUrl.trim();
       const newMaterial: Material = {
         id: 'm' + Date.now().toString(), title: uploadTitle, type: uploadTypeState,
         thumbnailUrl: 'https://picsum.photos/seed/' + Math.floor(Math.random() * 100) + '/400/225',
         category: selectedCategory, year: promoYear, month: promoMonth, fileUrl: url, fileName: url,
-        productName: (selectedCategory !== '브랜드판촉') ? uploadProduct : undefined
+        productName: (selectedCategory !== '브랜드판촉') ? uploadProduct : undefined,
+        uploadedBy: currentUser?.username,
       };
-      await supabase.from('materials').insert({
+      const ok = await doInsert({
         id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
         thumbnail_url: newMaterial.thumbnailUrl, category: newMaterial.category,
         year: newMaterial.year, month: newMaterial.month, file_url: url, file_name: url,
         product_name: newMaterial.productName, content: uploadContent || null,
         uploaded_by: currentUser?.username,
       });
+      if (!ok) { setUploadLoading(false); return; }
       setMaterials([newMaterial, ...materials]);
       setUploadLoading(false);
       setShowUploadModal(false);
+      loadMaterials();
       return;
     } else if (uploadMode === 'youtube') {
       const youtubeId = getYouTubeId(uploadYoutubeUrl.trim());
@@ -578,15 +604,17 @@ export default function Home() {
         id: 'm' + Date.now().toString(), title: uploadTitle, type: 'VIDEO',
         thumbnailUrl: newThumbnail, category: selectedCategory, year: promoYear, month: promoMonth,
         youtubeUrl: youtubeId ? `https://www.youtube.com/embed/${youtubeId}` : undefined,
-        productName: (selectedCategory !== '브랜드판촉') ? uploadProduct : undefined
+        productName: (selectedCategory !== '브랜드판촉') ? uploadProduct : undefined,
+        uploadedBy: currentUser?.username,
       };
-      await supabase.from('materials').insert({
+      const ok = await doInsert({
         id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
         thumbnail_url: newThumbnail, category: newMaterial.category,
         year: newMaterial.year, month: newMaterial.month,
         youtube_url: newMaterial.youtubeUrl, product_name: newMaterial.productName,
         content: uploadContent || null, uploaded_by: currentUser?.username,
       });
+      if (!ok) { setUploadLoading(false); return; }
       setMaterials([newMaterial, ...materials]);
     } else {
       const inserted: Material[] = [];
@@ -600,9 +628,10 @@ export default function Home() {
           id: 'm' + Date.now().toString() + Math.random(), title, type: fileType,
           thumbnailUrl: newThumbnail, category: selectedCategory, year: promoYear, month: promoMonth,
           fileName: uploaded.fileName, fileUrl: uploaded.fileUrl,
-          productName: (selectedCategory !== '브랜드판촉') ? uploadProduct : undefined
+          productName: (selectedCategory !== '브랜드판촉') ? uploadProduct : undefined,
+          uploadedBy: currentUser?.username,
         };
-        await supabase.from('materials').insert({
+        const ok = await doInsert({
           id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
           thumbnail_url: newThumbnail, category: newMaterial.category,
           year: newMaterial.year, month: newMaterial.month,
@@ -610,8 +639,9 @@ export default function Home() {
           product_name: newMaterial.productName, content: uploadContent || null,
           uploaded_by: currentUser?.username,
         });
-        inserted.push(newMaterial);
+        if (ok) inserted.push(newMaterial);
       }
+      if (inserted.length === 0) { setUploadLoading(false); return; }
       setMaterials([...inserted.reverse(), ...materials]);
     }
     setUploadLoading(false);
@@ -1553,7 +1583,7 @@ export default function Home() {
               onClick={async () => {
                 setShowUpdateNews(true);
                 setUpdateNewsLoading(true);
-                const { data } = await supabase.from('materials').select('*').order('created_at', { ascending: false });
+                const { data } = await supabase.from('materials').select('*').order('created_at', { ascending: false, nullsFirst: true });
                 if (data) {
                   setUpdateNewsMats(data.map((m: any) => ({
                     id: m.id, title: m.title, type: m.type, thumbnailUrl: m.thumbnail_url || '',
