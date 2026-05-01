@@ -26,6 +26,7 @@ interface Material {
   content?: string;
   youtubeUrl?: string;
   isPinned?: boolean;
+  uploadedBy?: string;
 }
 
 const getYouTubeId = (url: string): string | null => {
@@ -236,6 +237,7 @@ export default function Home() {
           category: m.category, year: m.year, month: m.month,
           fileName: m.file_name, fileUrl: m.file_url, productName: m.product_name,
           content: m.content, youtubeUrl: m.youtube_url, isPinned: m.is_pinned || false,
+          uploadedBy: m.uploaded_by,
         }));
         setMaterials(mapped);
       }
@@ -513,7 +515,7 @@ export default function Home() {
       id: newPost.id, title: newPost.title, type: newPost.type, thumbnail_url: '',
       category: newPost.category, year: newPost.year, month: newPost.month,
       content: newPost.content, file_name: fileName, file_url: fileUrl,
-      product_name: newPost.productName,
+      product_name: newPost.productName, uploaded_by: currentUser?.username,
     });
     setMaterials(prev => [newPost, ...prev]);
     setShowWriteModal(false);
@@ -555,6 +557,7 @@ export default function Home() {
         thumbnail_url: newMaterial.thumbnailUrl, category: newMaterial.category,
         year: newMaterial.year, month: newMaterial.month, file_url: url, file_name: url,
         product_name: newMaterial.productName, content: uploadContent || null,
+        uploaded_by: currentUser?.username,
       });
       setMaterials([newMaterial, ...materials]);
       setUploadLoading(false);
@@ -574,7 +577,7 @@ export default function Home() {
         thumbnail_url: newThumbnail, category: newMaterial.category,
         year: newMaterial.year, month: newMaterial.month,
         youtube_url: newMaterial.youtubeUrl, product_name: newMaterial.productName,
-        content: uploadContent || null,
+        content: uploadContent || null, uploaded_by: currentUser?.username,
       });
       setMaterials([newMaterial, ...materials]);
     } else {
@@ -597,6 +600,7 @@ export default function Home() {
           year: newMaterial.year, month: newMaterial.month,
           file_name: newMaterial.fileName, file_url: newMaterial.fileUrl,
           product_name: newMaterial.productName, content: uploadContent || null,
+          uploaded_by: currentUser?.username,
         });
         inserted.push(newMaterial);
       }
@@ -731,7 +735,7 @@ export default function Home() {
     if (userRole === 'ADMIN') {
       uploadVisible = true;
     } else if (userRole === 'BUSINESS') {
-      if (selectedCategory === '회사소식/홍보' || selectedCategory === '영업자료집' || (selectedCategory === '게시판' && selectedSubBoard === 'FREE')) {
+      if (selectedCategory === '영업자료집' || (selectedCategory === '게시판' && selectedSubBoard === 'FREE')) {
         uploadVisible = true;
       }
     } else if (userRole === 'COUNSELOR') {
@@ -2109,7 +2113,7 @@ export default function Home() {
                           );
                           return null;
                         })()}
-                        {(userRole === 'ADMIN' || (userRole === 'BUSINESS' && ['회사소식/홍보', '영업자료집', '게시판'].includes(mat.category))) && selectedCategory !== 'ALL' && (
+                        {(userRole === 'ADMIN' || (userRole === 'BUSINESS' && mat.uploadedBy === currentUser?.username)) && selectedCategory !== 'ALL' && (
                           <>
                             <button onClick={(e) => { e.stopPropagation(); openEditModal(mat); }} className="text-[11px] text-gray-400 hover:text-[#00b050] transition-colors opacity-0 group-hover:opacity-100">수정</button>
                             <button onClick={(e) => { e.stopPropagation(); handleDeleteMaterial(mat.id); }} className="text-[11px] text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">삭제</button>
