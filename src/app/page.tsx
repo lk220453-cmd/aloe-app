@@ -303,6 +303,8 @@ export default function Home() {
 
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null);
   const [showUpdateNews, setShowUpdateNews] = useState(false);
+  const [updateNewsMats, setUpdateNewsMats] = useState<Material[]>([]);
+  const [updateNewsLoading, setUpdateNewsLoading] = useState(false);
 
   // 글쓰기 모달 상태
   const [showWriteModal, setShowWriteModal] = useState(false);
@@ -1139,10 +1141,12 @@ export default function Home() {
               <button onClick={() => setShowUpdateNews(false)} className="text-gray-400 hover:text-gray-700 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">✕</button>
             </div>
             <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
-              {materials.length === 0 ? (
+              {updateNewsLoading ? (
+                <p className="text-center text-gray-400 py-10 text-[13px]">불러오는 중...</p>
+              ) : updateNewsMats.length === 0 ? (
                 <p className="text-center text-gray-400 py-10 text-[13px]">등록된 자료가 없습니다.</p>
               ) : (
-                materials.map(mat => {
+                updateNewsMats.map(mat => {
                   const subLabel = (() => {
                     if (mat.category === '게시판') {
                       if (mat.type === 'NOTICE') return '공지사항';
@@ -1546,7 +1550,21 @@ export default function Home() {
             {/* 회전형 배지 */}
             <div
               className="absolute -bottom-1 -right-1 w-[58px] h-[58px] rounded-full bg-[#1a3010] shadow-xl flex flex-col items-center justify-center cursor-pointer hover:bg-[#243d16] transition-colors"
-              onClick={() => setShowUpdateNews(true)}
+              onClick={async () => {
+                setShowUpdateNews(true);
+                setUpdateNewsLoading(true);
+                const { data } = await supabase.from('materials').select('*').order('created_at', { ascending: false });
+                if (data) {
+                  setUpdateNewsMats(data.map((m: any) => ({
+                    id: m.id, title: m.title, type: m.type, thumbnailUrl: m.thumbnail_url || '',
+                    category: m.category, year: m.year, month: m.month,
+                    fileName: m.file_name, fileUrl: m.file_url, productName: m.product_name,
+                    content: m.content, youtubeUrl: m.youtube_url, isPinned: m.is_pinned || false,
+                    uploadedBy: m.uploaded_by,
+                  })));
+                }
+                setUpdateNewsLoading(false);
+              }}
             >
               <span className="text-white text-[11px] leading-none">🔔</span>
               <span className="text-white/70 text-[8px] font-bold mt-0.5">업뎃소식</span>
