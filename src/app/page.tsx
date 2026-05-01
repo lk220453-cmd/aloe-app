@@ -302,6 +302,7 @@ export default function Home() {
   const [detailMat, setDetailMat] = useState<Material | null>(null);
 
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null);
+  const [showUpdateNews, setShowUpdateNews] = useState(false);
 
   // 글쓰기 모달 상태
   const [showWriteModal, setShowWriteModal] = useState(false);
@@ -1123,6 +1124,70 @@ export default function Home() {
       )}
       {/* 🔴 끝: 내 컴퓨터 파일 업로드 모달창 */}
 
+      {/* 🔔 업뎃소식 모달 */}
+      {showUpdateNews && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setShowUpdateNews(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col" style={{maxHeight: 'calc(100vh - 80px)'}} onClick={e => e.stopPropagation()}>
+            <div className="flex-shrink-0 flex justify-between items-center px-5 py-4 border-b bg-[#f5f8f0] rounded-t-2xl">
+              <h3 className="font-extrabold text-[16px] text-[#1a3010]">🔔 업뎃소식</h3>
+              <button onClick={() => setShowUpdateNews(false)} className="text-gray-400 hover:text-gray-700 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">✕</button>
+            </div>
+            <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+              {materials.length === 0 ? (
+                <p className="text-center text-gray-400 py-10 text-[13px]">등록된 자료가 없습니다.</p>
+              ) : (
+                materials.map(mat => {
+                  const subLabel = (() => {
+                    if (mat.category === '게시판') {
+                      if (mat.type === 'NOTICE') return '공지사항';
+                      if (mat.type === 'FREE') return '자유게시판';
+                      return mat.productName || '';
+                    }
+                    if (mat.category === '브랜드판촉') return `${mat.year}년 ${mat.month}월`;
+                    return mat.productName || '';
+                  })();
+                  return (
+                    <button
+                      key={mat.id}
+                      className="w-full text-left px-5 py-3 hover:bg-[#f5f8f0] transition-colors flex items-start gap-3"
+                      onClick={() => {
+                        setShowUpdateNews(false);
+                        isPinnedRef.current = true;
+                        pinnedCatRef.current = mat.category;
+                        setMegaMenuOpen(mat.category);
+                        handleCategoryChange(mat.category);
+                        if (mat.category === '게시판') {
+                          if (mat.type === 'NOTICE') setSelectedSubBoard('NOTICE');
+                          else if (mat.type === 'FREE') setSelectedSubBoard('FREE');
+                        } else if (['건식', '화장품', '기기', '회사소식/홍보', '영업자료집'].includes(mat.category)) {
+                          if (mat.productName) setSelectedProduct(mat.productName);
+                        } else if (mat.category === '브랜드판촉') {
+                          if (mat.year) setPromoYear(mat.year);
+                          if (mat.month) setPromoMonth(mat.month);
+                        }
+                        setTimeout(() => document.getElementById('category-nav')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                      }}
+                    >
+                      <div className="flex-shrink-0 mt-0.5">
+                        <span className="inline-block bg-[#c8d4b0] text-[#1a3010] text-[10px] font-bold px-1.5 py-0.5 rounded">
+                          {mat.category.replace('소식/홍보', '홍보')}
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        {subLabel && (
+                          <span className="text-[11px] text-[#7a9a52] font-semibold block leading-tight">{subLabel}</span>
+                        )}
+                        <span className="text-[13px] text-gray-800 font-medium leading-snug line-clamp-2">{mat.title}</span>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 📝 내용 수정 모달 */}
       {showEditModal && editMat && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
@@ -1461,12 +1526,10 @@ export default function Home() {
             {/* 회전형 배지 */}
             <div
               className="absolute -bottom-1 -right-1 w-[58px] h-[58px] rounded-full bg-[#1a3010] shadow-xl flex flex-col items-center justify-center cursor-pointer hover:bg-[#243d16] transition-colors"
-              onClick={() => {
-                document.getElementById('category-nav')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }}
+              onClick={() => setShowUpdateNews(true)}
             >
-              <span className="text-white text-[11px] leading-none">▶</span>
-              <span className="text-white/70 text-[8px] font-bold mt-0.5">자료열람</span>
+              <span className="text-white text-[11px] leading-none">🔔</span>
+              <span className="text-white/70 text-[8px] font-bold mt-0.5">업뎃소식</span>
             </div>
           </div>
 
