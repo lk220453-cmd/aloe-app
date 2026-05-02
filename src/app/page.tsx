@@ -236,6 +236,10 @@ export default function Home() {
         content: m.content, youtubeUrl: m.youtube_url, isPinned: m.is_pinned || false,
         uploadedBy: m.uploaded_by,
       })));
+      // 새 자료 감지: localStorage에 저장한 마지막 열람 ID와 비교
+      const lastSeenId = typeof window !== 'undefined' ? localStorage.getItem('updateNews_lastSeenId') : null;
+      const firstId = matsData[0]?.id;
+      if (firstId && firstId !== lastSeenId) setHasNewUpdate(true);
     }
   };
 
@@ -305,6 +309,7 @@ export default function Home() {
   const [showUpdateNews, setShowUpdateNews] = useState(false);
   const [updateNewsMats, setUpdateNewsMats] = useState<Material[]>([]);
   const [updateNewsLoading, setUpdateNewsLoading] = useState(false);
+  const [hasNewUpdate, setHasNewUpdate] = useState(false);
 
   // 글쓰기 모달 상태
   const [showWriteModal, setShowWriteModal] = useState(false);
@@ -1579,25 +1584,35 @@ export default function Home() {
             </div>
             {/* 회전형 배지 */}
             <div
-              className="absolute -bottom-1 -right-1 w-[58px] h-[58px] rounded-full bg-[#1a3010] shadow-xl flex flex-col items-center justify-center cursor-pointer hover:bg-[#243d16] transition-colors"
+              className={`absolute -bottom-1 -right-1 w-[58px] h-[58px] rounded-full bg-[#1a3010] shadow-xl flex flex-col items-center justify-center cursor-pointer hover:bg-[#243d16] transition-colors ${hasNewUpdate ? 'ring-2 ring-red-400 ring-offset-1' : ''}`}
               onClick={async () => {
                 setShowUpdateNews(true);
+                setHasNewUpdate(false);
                 setUpdateNewsLoading(true);
                 const { data } = await supabase.from('materials').select('*').order('created_at', { ascending: false, nullsFirst: true });
-                if (data) {
-                  setUpdateNewsMats(data.map((m: any) => ({
+                if (data && data.length > 0) {
+                  const mapped = data.map((m: any) => ({
                     id: m.id, title: m.title, type: m.type, thumbnailUrl: m.thumbnail_url || '',
                     category: m.category, year: m.year, month: m.month,
                     fileName: m.file_name, fileUrl: m.file_url, productName: m.product_name,
                     content: m.content, youtubeUrl: m.youtube_url, isPinned: m.is_pinned || false,
                     uploadedBy: m.uploaded_by,
-                  })));
+                  }));
+                  setUpdateNewsMats(mapped);
+                  // 마지막으로 본 자료 ID 저장
+                  localStorage.setItem('updateNews_lastSeenId', data[0].id);
                 }
                 setUpdateNewsLoading(false);
               }}
             >
-              <span className="text-white text-[11px] leading-none">🔔</span>
-              <span className="text-white/70 text-[8px] font-bold mt-0.5">업뎃소식</span>
+              <span className={`text-white leading-none transition-all duration-300 ${hasNewUpdate ? 'text-[14px] animate-bounce' : 'text-[11px]'}`}>🔔</span>
+              <span className={`text-[8px] font-bold mt-0.5 transition-all duration-300 ${hasNewUpdate ? 'text-yellow-300' : 'text-white/70'}`}>업뎃소식</span>
+              {hasNewUpdate && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-500"></span>
+                </span>
+              )}
             </div>
           </div>
 
