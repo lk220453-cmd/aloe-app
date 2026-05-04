@@ -223,6 +223,23 @@ export default function Home() {
     loadSubmenus();
   };
 
+  const loadPopup = async (role: UserRole) => {
+    const { data } = await supabase.from('announcements').select('*').eq('id', 1).maybeSingle();
+    if (!data || !data.is_active || (!data.title && !data.content && !data.image_url)) return;
+    const pd = { id: data.id, title: data.title || '', content: data.content || '', imageUrl: data.image_url || null, version: data.version || 1 };
+    setPopupData(pd);
+    if (role === 'ADMIN') {
+      setShowPopup(true);
+    } else {
+      const dismissed = localStorage.getItem('popupDismissedVersion');
+      if (dismissed !== String(pd.version)) setShowPopup(true);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser) loadPopup(currentUser.role);
+  }, [currentUser]);
+
   const [materials, setMaterials] = useState<Material[]>(initialMockMaterials);
   const [promoFolders, setPromoFolders] = useState<PromoFolder[]>(initialPromoFolders);
 
@@ -304,6 +321,17 @@ export default function Home() {
   // 상세보기 모달 상태
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailMat, setDetailMat] = useState<Material | null>(null);
+
+  // 공지 팝업 상태
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupData, setPopupData] = useState<{ id: number; title: string; content: string; imageUrl: string | null; version: number } | null>(null);
+  const [popupDontShow, setPopupDontShow] = useState(false);
+  const [popupEditing, setPopupEditing] = useState(false);
+  const [popupEditTitle, setPopupEditTitle] = useState('');
+  const [popupEditContent, setPopupEditContent] = useState('');
+  const [popupEditImageFile, setPopupEditImageFile] = useState<File | null>(null);
+  const [popupEditImagePreview, setPopupEditImagePreview] = useState<string | null>(null);
+  const popupImageRef = useRef<HTMLInputElement>(null);
 
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null);
   const [showUpdateNews, setShowUpdateNews] = useState(false);
@@ -1166,6 +1194,116 @@ export default function Home() {
         </div>
       )}
       {/* 🔴 끝: 내 컴퓨터 파일 업로드 모달창 */}
+
+      {/* 📢 공지 팝업 */}
+      {showPopup && popupData && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden" style={{maxHeight: 'calc(100vh - 60px)'}}>
+            {/* 헤더 */}
+            <div className="flex-shrink-0 flex justify-between items-center px-5 py-4 bg-[#1a3010]">
+              <h3 className="font-extrabold text-[16px] text-white">📢 {popupEditing ? '공지 편집' : '공지사항'}</h3>
+              {!popupEditing && (
+                <button onClick={() => {
+                  if (popupDontShow) localStorage.setItem('popupDismissedVersion', String(popupData.version));
+                  setShowPopup(false);
+                }} className="text-white/60 hover:text-white w-8 h-8 flex items-center justify-center font-bold text-lg">✕</button>
+              )}
+            </div>
+
+            {/* 본문 */}
+            <div className="flex-1 overflow-y-auto">
+              {popupEditing ? (
+                /* 관리자 편집 모드 */
+                <div className="p-5 space-y-4">
+                  <div>
+                    <label className="text-[12px] font-bold text-gray-500 mb-1 block">제목</label>
+                    <input value={popupEditTitle} onChange={e => setPopupEditTitle(e.target.value)}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#00b050]/40"
+                      placeholder="공지 제목" />
+                  </div>
+                  <div>
+                    <label className="text-[12px] font-bold text-gray-500 mb-1 block">내용</label>
+                    <textarea value={popupEditContent} onChange={e => setPopupEditContent(e.target.value)} rows={6}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#00b050]/40 resize-none"
+                      placeholder="공지 내용을 입력하세요..." />
+                  </div>
+                  <div>
+                    <label className="text-[12px] font-bold text-gray-500 mb-1 block">이미지 (선택)</label>
+                    <label className="flex items-center gap-2 border border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-[#00b050] hover:bg-green-50/30 transition-colors">
+                      <span className="text-gray-400">🖼️</span>
+                      <span className="text-[13px] text-gray-500 truncate">{popupEditImageFile ? popupEditImageFile.name : (popupData.imageUrl ? '현재 이미지 있음 (교체하려면 선택)' : '이미지 선택...')}</span>
+                      <input ref={popupImageRef} type="file" accept="image/*" className="hidden" onChange={e => {
+                        const f = e.target.files?.[0] || null;
+                        setPopupEditImageFile(f);
+                        if (f) setPopupEditImagePreview(URL.createObjectURL(f));
+                      }} />
+                    </label>
+                    {(popupEditImagePreview || popupData.imageUrl) && (
+                      <img src={popupEditImagePreview || popupData.imageUrl!} alt="미리보기" className="mt-2 rounded-xl w-full object-cover max-h-40" />
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* 일반 보기 모드 */
+                <div className="p-5 space-y-4">
+                  {popupData.title && <h4 className="font-extrabold text-[18px] text-[#1a3010] leading-snug">{popupData.title}</h4>}
+                  {popupData.imageUrl && <img src={popupData.imageUrl} alt="공지이미지" className="rounded-xl w-full object-cover" />}
+                  {popupData.content && <p className="text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap">{popupData.content}</p>}
+                </div>
+              )}
+            </div>
+
+            {/* 하단 버튼 */}
+            <div className="flex-shrink-0 px-5 pb-5 pt-3 border-t border-gray-100">
+              {popupEditing ? (
+                <div className="flex gap-2">
+                  <button onClick={() => { setPopupEditing(false); setPopupEditImageFile(null); setPopupEditImagePreview(null); }}
+                    className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition-colors text-[13px]">취소</button>
+                  <button onClick={async () => {
+                    let imageUrl = popupData.imageUrl;
+                    if (popupEditImageFile) {
+                      const up = await uploadFileToStorage(popupEditImageFile);
+                      if (up) imageUrl = up.fileUrl;
+                    }
+                    await supabase.from('announcements').upsert({ id: 1, title: popupEditTitle, content: popupEditContent, image_url: imageUrl, version: popupData.version, is_active: true }, { onConflict: 'id' });
+                    setPopupData(prev => prev ? { ...prev, title: popupEditTitle, content: popupEditContent, imageUrl } : null);
+                    setPopupEditing(false);
+                    setPopupEditImageFile(null);
+                    setPopupEditImagePreview(null);
+                  }} className="flex-1 py-3 rounded-xl bg-[#00b050] text-white font-bold hover:bg-[#009030] transition-colors text-[13px] shadow-md">저장</button>
+                </div>
+              ) : userRole === 'ADMIN' ? (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <button onClick={() => { setPopupEditTitle(popupData.title); setPopupEditContent(popupData.content); setPopupEditImagePreview(null); setPopupEditing(true); }}
+                      className="flex-1 py-2.5 rounded-xl bg-[#7a9a52] text-white font-bold hover:bg-[#5f7d3a] transition-colors text-[13px]">✏️ 공지 편집</button>
+                    <button onClick={async () => {
+                      if (!confirm('모든 사용자에게 이 공지를 다시 표시하겠습니까?')) return;
+                      const newVer = popupData.version + 1;
+                      await supabase.from('announcements').update({ version: newVer }).eq('id', 1);
+                      setPopupData(prev => prev ? { ...prev, version: newVer } : null);
+                      alert(`리셋 완료! (버전 ${newVer})\n모든 사용자에게 다시 표시됩니다.`);
+                    }} className="flex-1 py-2.5 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600 transition-colors text-[13px]">🔄 전체 리셋</button>
+                  </div>
+                  <button onClick={() => setShowPopup(false)} className="w-full py-2.5 rounded-xl border border-gray-200 text-gray-500 font-bold hover:bg-gray-50 transition-colors text-[13px]">닫기</button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={popupDontShow} onChange={e => setPopupDontShow(e.target.checked)}
+                      className="w-4 h-4 accent-[#00b050] cursor-pointer" />
+                    <span className="text-[13px] text-gray-500">다시 보지 않기</span>
+                  </label>
+                  <button onClick={() => {
+                    if (popupDontShow) localStorage.setItem('popupDismissedVersion', String(popupData.version));
+                    setShowPopup(false);
+                  }} className="w-full py-3 rounded-xl bg-[#1a3010] text-white font-bold hover:bg-[#243d16] transition-colors text-[13px]">확인</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 🔔 업뎃소식 모달 */}
       {showUpdateNews && (
