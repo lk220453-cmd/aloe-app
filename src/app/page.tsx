@@ -1228,18 +1228,32 @@ export default function Home() {
                       placeholder="공지 내용을 입력하세요..." />
                   </div>
                   <div>
-                    <label className="text-[12px] font-bold text-gray-500 mb-1 block">이미지 (선택)</label>
+                    <label className="text-[12px] font-bold text-gray-500 mb-1 block">이미지 / 파일 (선택)</label>
                     <label className="flex items-center gap-2 border border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-[#00b050] hover:bg-green-50/30 transition-colors">
-                      <span className="text-gray-400">🖼️</span>
-                      <span className="text-[13px] text-gray-500 truncate">{popupEditImageFile ? popupEditImageFile.name : (popupData.imageUrl ? '현재 이미지 있음 (교체하려면 선택)' : '이미지 선택...')}</span>
-                      <input ref={popupImageRef} type="file" accept="image/*" className="hidden" onChange={e => {
+                      <span className="text-gray-400">{popupEditImageFile ? (popupEditImageFile.type.startsWith('image/') ? '🖼️' : '📎') : (popupData.imageUrl ? '📁' : '📎')}</span>
+                      <span className="text-[13px] text-gray-500 truncate">
+                        {popupEditImageFile ? popupEditImageFile.name : (popupData.imageUrl ? `현재 파일 있음 (교체하려면 선택)` : '파일 선택...')}
+                      </span>
+                      <input ref={popupImageRef} type="file" className="hidden" onChange={e => {
                         const f = e.target.files?.[0] || null;
                         setPopupEditImageFile(f);
-                        if (f) setPopupEditImagePreview(URL.createObjectURL(f));
+                        setPopupEditImagePreview(f && f.type.startsWith('image/') ? URL.createObjectURL(f) : null);
                       }} />
                     </label>
-                    {(popupEditImagePreview || popupData.imageUrl) && (
-                      <img src={popupEditImagePreview || popupData.imageUrl!} alt="미리보기" className="mt-2 rounded-xl w-full object-cover max-h-40" />
+                    {/* 이미지 미리보기 */}
+                    {popupEditImagePreview && (
+                      <img src={popupEditImagePreview} alt="미리보기" className="mt-2 rounded-xl w-full object-cover max-h-40" />
+                    )}
+                    {/* 현재 파일 미리보기 (신규 파일 없을 때) */}
+                    {!popupEditImageFile && popupData.imageUrl && (() => {
+                      const ext = popupData.imageUrl.split('?')[0].split('.').pop()?.toLowerCase() || '';
+                      return ['jpg','jpeg','png','gif','webp','svg'].includes(ext)
+                        ? <img src={popupData.imageUrl} alt="현재이미지" className="mt-2 rounded-xl w-full object-cover max-h-40" />
+                        : <div className="mt-2 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2"><span>📄</span><span className="text-[12px] text-gray-600 truncate">{decodeURIComponent(popupData.imageUrl.split('/').pop()?.split('?')[0] || '파일')}</span></div>;
+                    })()}
+                    {popupData.imageUrl && (
+                      <button type="button" onClick={() => { setPopupData(prev => prev ? { ...prev, imageUrl: null } : null); setPopupEditImageFile(null); setPopupEditImagePreview(null); }}
+                        className="mt-1 text-[11px] text-red-400 hover:text-red-600">현재 파일 삭제</button>
                     )}
                   </div>
                 </div>
@@ -1247,7 +1261,26 @@ export default function Home() {
                 /* 일반 보기 모드 */
                 <div className="p-5 space-y-4">
                   {popupData.title && <h4 className="font-extrabold text-[18px] text-[#1a3010] leading-snug">{popupData.title}</h4>}
-                  {popupData.imageUrl && <img src={popupData.imageUrl} alt="공지이미지" className="rounded-xl w-full object-cover" />}
+                  {popupData.imageUrl && (() => {
+                    const url = popupData.imageUrl!;
+                    const ext = url.split('?')[0].split('.').pop()?.toLowerCase() || '';
+                    const isImg = ['jpg','jpeg','png','gif','webp','svg'].includes(ext);
+                    const fname = decodeURIComponent(url.split('/').pop()?.split('?')[0] || '첨부파일');
+                    if (isImg) return <img src={url} alt="공지이미지" className="rounded-xl w-full object-cover" />;
+                    return (
+                      <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                        <span className="text-2xl">📄</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-bold text-gray-700 truncate">{fname}</p>
+                          <p className="text-[11px] text-gray-400">{ext.toUpperCase()} 파일</p>
+                        </div>
+                        <div className="flex gap-2 flex-shrink-0">
+                          <button onClick={() => openFile(url)} className="text-[12px] bg-[#00b050] text-white px-3 py-1.5 rounded-lg font-bold hover:bg-[#009030]">열기</button>
+                          <button onClick={() => downloadFile(url, fname)} className="text-[12px] bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg font-bold hover:bg-gray-300">⬇ 다운</button>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   {popupData.content && <p className="text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap">{popupData.content}</p>}
                 </div>
               )}
