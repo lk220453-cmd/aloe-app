@@ -223,14 +223,14 @@ export default function Home() {
     loadSubmenus();
   };
 
+  const [showPopupMgmt, setShowPopupMgmt] = useState(false);
+
   const loadPopup = async (role: UserRole) => {
     const { data } = await supabase.from('announcements').select('*').eq('id', 1).maybeSingle();
-    if (!data || !data.is_active || (!data.title && !data.content && !data.image_url)) return;
-    const pd = { id: data.id, title: data.title || '', content: data.content || '', imageUrl: data.image_url || null, version: data.version || 1 };
-    setPopupData(pd);
-    if (role === 'ADMIN') {
-      setShowPopup(true);
-    } else {
+    const pd = data ? { id: data.id, title: data.title || '', content: data.content || '', imageUrl: data.image_url || null, version: data.version || 1 } : null;
+    if (pd) setPopupData(pd);
+    // 관리자는 자동 팝업 없음 (메뉴바 팝업창 관리로 접근)
+    if (role !== 'ADMIN' && pd && data?.is_active && (pd.title || pd.content || pd.imageUrl)) {
       const dismissed = localStorage.getItem('popupDismissedVersion');
       if (dismissed !== String(pd.version)) setShowPopup(true);
     }
@@ -851,6 +851,12 @@ export default function Home() {
             >
               📋 <span className="hidden sm:inline">서브메뉴 관리</span>
             </button>
+            <button
+              onClick={() => { setShowPopupMgmt(true); loadPopup('ADMIN'); }}
+              className="text-[11px] md:text-[12px] bg-[#7a9a52] text-white px-2 py-1 md:px-3 md:py-1.5 rounded-lg font-bold hover:bg-[#5f7d3a] transition-colors"
+            >
+              📢 <span className="hidden sm:inline">팝업창 관리</span>
+            </button>
           </>
         )}
         <button
@@ -1195,25 +1201,17 @@ export default function Home() {
       )}
       {/* 🔴 끝: 내 컴퓨터 파일 업로드 모달창 */}
 
-      {/* 📢 공지 팝업 */}
-      {showPopup && popupData && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden" style={{maxHeight: 'calc(100vh - 60px)'}}>
-            {/* 헤더 */}
+      {/* 📢 팝업창 관리 모달 (관리자 전용) */}
+      {showPopupMgmt && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[150] flex items-center justify-center p-4" onClick={() => { setShowPopupMgmt(false); setPopupEditing(false); setPopupEditImageFile(null); setPopupEditImagePreview(null); }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden" style={{maxHeight: 'calc(100vh - 60px)'}} onClick={e => e.stopPropagation()}>
             <div className="flex-shrink-0 flex justify-between items-center px-5 py-4 bg-[#1a3010]">
-              <h3 className="font-extrabold text-[16px] text-white">📢 {popupEditing ? '공지 편집' : '공지사항'}</h3>
-              {!popupEditing && (
-                <button onClick={() => {
-                  if (popupDontShow) localStorage.setItem('popupDismissedVersion', String(popupData.version));
-                  setShowPopup(false);
-                }} className="text-white/60 hover:text-white w-8 h-8 flex items-center justify-center font-bold text-lg">✕</button>
-              )}
+              <h3 className="font-extrabold text-[16px] text-white">📢 {popupEditing ? '공지 편집' : '팝업창 관리'}</h3>
+              <button onClick={() => { setShowPopupMgmt(false); setPopupEditing(false); setPopupEditImageFile(null); setPopupEditImagePreview(null); }} className="text-white/60 hover:text-white w-8 h-8 flex items-center justify-center font-bold text-lg">✕</button>
             </div>
 
-            {/* 본문 */}
             <div className="flex-1 overflow-y-auto">
               {popupEditing ? (
-                /* 관리자 편집 모드 */
                 <div className="p-5 space-y-4">
                   <div>
                     <label className="text-[12px] font-bold text-gray-500 mb-1 block">제목</label>
@@ -1230,109 +1228,127 @@ export default function Home() {
                   <div>
                     <label className="text-[12px] font-bold text-gray-500 mb-1 block">이미지 / 파일 (선택)</label>
                     <label className="flex items-center gap-2 border border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-[#00b050] hover:bg-green-50/30 transition-colors">
-                      <span className="text-gray-400">{popupEditImageFile ? (popupEditImageFile.type.startsWith('image/') ? '🖼️' : '📎') : (popupData.imageUrl ? '📁' : '📎')}</span>
-                      <span className="text-[13px] text-gray-500 truncate">
-                        {popupEditImageFile ? popupEditImageFile.name : (popupData.imageUrl ? `현재 파일 있음 (교체하려면 선택)` : '파일 선택...')}
-                      </span>
+                      <span className="text-gray-400">{popupEditImageFile ? (popupEditImageFile.type.startsWith('image/') ? '🖼️' : '📎') : (popupData?.imageUrl ? '📁' : '📎')}</span>
+                      <span className="text-[13px] text-gray-500 truncate">{popupEditImageFile ? popupEditImageFile.name : (popupData?.imageUrl ? '현재 파일 있음 (교체하려면 선택)' : '파일 선택...')}</span>
                       <input ref={popupImageRef} type="file" className="hidden" onChange={e => {
                         const f = e.target.files?.[0] || null;
                         setPopupEditImageFile(f);
                         setPopupEditImagePreview(f && f.type.startsWith('image/') ? URL.createObjectURL(f) : null);
                       }} />
                     </label>
-                    {/* 이미지 미리보기 */}
-                    {popupEditImagePreview && (
-                      <img src={popupEditImagePreview} alt="미리보기" className="mt-2 rounded-xl w-full object-cover max-h-40" />
-                    )}
-                    {/* 현재 파일 미리보기 (신규 파일 없을 때) */}
-                    {!popupEditImageFile && popupData.imageUrl && (() => {
-                      const ext = popupData.imageUrl.split('?')[0].split('.').pop()?.toLowerCase() || '';
+                    {popupEditImagePreview && <img src={popupEditImagePreview} alt="미리보기" className="mt-2 rounded-xl w-full object-cover max-h-40" />}
+                    {!popupEditImageFile && popupData?.imageUrl && (() => {
+                      const ext = popupData.imageUrl!.split('?')[0].split('.').pop()?.toLowerCase() || '';
                       return ['jpg','jpeg','png','gif','webp','svg'].includes(ext)
-                        ? <img src={popupData.imageUrl} alt="현재이미지" className="mt-2 rounded-xl w-full object-cover max-h-40" />
-                        : <div className="mt-2 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2"><span>📄</span><span className="text-[12px] text-gray-600 truncate">{decodeURIComponent(popupData.imageUrl.split('/').pop()?.split('?')[0] || '파일')}</span></div>;
+                        ? <img src={popupData.imageUrl!} alt="현재이미지" className="mt-2 rounded-xl w-full object-cover max-h-40" />
+                        : <div className="mt-2 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2"><span>📄</span><span className="text-[12px] text-gray-600 truncate">{decodeURIComponent(popupData.imageUrl!.split('/').pop()?.split('?')[0] || '파일')}</span></div>;
                     })()}
-                    {popupData.imageUrl && (
-                      <button type="button" onClick={() => { setPopupData(prev => prev ? { ...prev, imageUrl: null } : null); setPopupEditImageFile(null); setPopupEditImagePreview(null); }}
-                        className="mt-1 text-[11px] text-red-400 hover:text-red-600">현재 파일 삭제</button>
-                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="popupActive" defaultChecked onChange={async e => {
+                      await supabase.from('announcements').update({ is_active: e.target.checked }).eq('id', 1);
+                    }} className="w-4 h-4 accent-[#00b050]" />
+                    <label htmlFor="popupActive" className="text-[13px] text-gray-600 cursor-pointer">사업자에게 팝업 표시 활성화</label>
                   </div>
                 </div>
               ) : (
-                /* 일반 보기 모드 */
-                <div className="p-5 space-y-4">
-                  {popupData.title && <h4 className="font-extrabold text-[18px] text-[#1a3010] leading-snug">{popupData.title}</h4>}
-                  {popupData.imageUrl && (() => {
-                    const url = popupData.imageUrl!;
-                    const ext = url.split('?')[0].split('.').pop()?.toLowerCase() || '';
-                    const isImg = ['jpg','jpeg','png','gif','webp','svg'].includes(ext);
-                    const fname = decodeURIComponent(url.split('/').pop()?.split('?')[0] || '첨부파일');
-                    if (isImg) return <img src={url} alt="공지이미지" className="rounded-xl w-full object-cover" />;
-                    return (
-                      <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-                        <span className="text-2xl">📄</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-bold text-gray-700 truncate">{fname}</p>
-                          <p className="text-[11px] text-gray-400">{ext.toUpperCase()} 파일</p>
-                        </div>
-                        <div className="flex gap-2 flex-shrink-0">
-                          <button onClick={() => openFile(url)} className="text-[12px] bg-[#00b050] text-white px-3 py-1.5 rounded-lg font-bold hover:bg-[#009030]">열기</button>
-                          <button onClick={() => downloadFile(url, fname)} className="text-[12px] bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg font-bold hover:bg-gray-300">⬇ 다운</button>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                  {popupData.content && <p className="text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap">{popupData.content}</p>}
+                /* 현재 팝업 미리보기 */
+                <div className="p-5 space-y-3">
+                  <p className="text-[12px] text-gray-400 font-semibold">현재 팝업 미리보기</p>
+                  {popupData?.title || popupData?.content || popupData?.imageUrl ? (
+                    <>
+                      {popupData.title && <h4 className="font-extrabold text-[17px] text-[#1a3010]">{popupData.title}</h4>}
+                      {popupData.imageUrl && (() => {
+                        const ext = popupData.imageUrl!.split('?')[0].split('.').pop()?.toLowerCase() || '';
+                        return ['jpg','jpeg','png','gif','webp','svg'].includes(ext)
+                          ? <img src={popupData.imageUrl!} alt="공지이미지" className="rounded-xl w-full object-cover max-h-48" />
+                          : <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2"><span>📄</span><span className="text-[12px] text-gray-700 truncate">{decodeURIComponent(popupData.imageUrl!.split('/').pop()?.split('?')[0] || '파일')}</span></div>;
+                      })()}
+                      {popupData.content && <p className="text-[13px] text-gray-700 whitespace-pre-wrap leading-relaxed">{popupData.content}</p>}
+                      <p className="text-[11px] text-gray-400">버전: {popupData.version}</p>
+                    </>
+                  ) : (
+                    <p className="text-[13px] text-gray-400 py-4 text-center">등록된 공지가 없습니다.</p>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* 하단 버튼 */}
-            <div className="flex-shrink-0 px-5 pb-5 pt-3 border-t border-gray-100">
+            <div className="flex-shrink-0 px-5 pb-5 pt-3 border-t border-gray-100 space-y-2">
               {popupEditing ? (
                 <div className="flex gap-2">
                   <button onClick={() => { setPopupEditing(false); setPopupEditImageFile(null); setPopupEditImagePreview(null); }}
-                    className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition-colors text-[13px]">취소</button>
+                    className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 text-[13px]">취소</button>
                   <button onClick={async () => {
-                    let imageUrl = popupData.imageUrl;
+                    let imageUrl = popupData?.imageUrl ?? null;
                     if (popupEditImageFile) {
                       const up = await uploadFileToStorage(popupEditImageFile);
                       if (up) imageUrl = up.fileUrl;
                     }
-                    await supabase.from('announcements').upsert({ id: 1, title: popupEditTitle, content: popupEditContent, image_url: imageUrl, version: popupData.version, is_active: true }, { onConflict: 'id' });
-                    setPopupData(prev => prev ? { ...prev, title: popupEditTitle, content: popupEditContent, imageUrl } : null);
-                    setPopupEditing(false);
-                    setPopupEditImageFile(null);
-                    setPopupEditImagePreview(null);
-                  }} className="flex-1 py-3 rounded-xl bg-[#00b050] text-white font-bold hover:bg-[#009030] transition-colors text-[13px] shadow-md">저장</button>
-                </div>
-              ) : userRole === 'ADMIN' ? (
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <button onClick={() => { setPopupEditTitle(popupData.title); setPopupEditContent(popupData.content); setPopupEditImagePreview(null); setPopupEditing(true); }}
-                      className="flex-1 py-2.5 rounded-xl bg-[#7a9a52] text-white font-bold hover:bg-[#5f7d3a] transition-colors text-[13px]">✏️ 공지 편집</button>
-                    <button onClick={async () => {
-                      if (!confirm('모든 사용자에게 이 공지를 다시 표시하겠습니까?')) return;
-                      const newVer = popupData.version + 1;
-                      await supabase.from('announcements').update({ version: newVer }).eq('id', 1);
-                      setPopupData(prev => prev ? { ...prev, version: newVer } : null);
-                      alert(`리셋 완료! (버전 ${newVer})\n모든 사용자에게 다시 표시됩니다.`);
-                    }} className="flex-1 py-2.5 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600 transition-colors text-[13px]">🔄 전체 리셋</button>
-                  </div>
-                  <button onClick={() => setShowPopup(false)} className="w-full py-2.5 rounded-xl border border-gray-200 text-gray-500 font-bold hover:bg-gray-50 transition-colors text-[13px]">닫기</button>
+                    await supabase.from('announcements').upsert({ id: 1, title: popupEditTitle, content: popupEditContent, image_url: imageUrl, version: popupData?.version ?? 1, is_active: true }, { onConflict: 'id' });
+                    setPopupData(prev => prev ? { ...prev, title: popupEditTitle, content: popupEditContent, imageUrl } : { id: 1, title: popupEditTitle, content: popupEditContent, imageUrl, version: 1 });
+                    setPopupEditing(false); setPopupEditImageFile(null); setPopupEditImagePreview(null);
+                  }} className="flex-1 py-3 rounded-xl bg-[#00b050] text-white font-bold hover:bg-[#009030] text-[13px] shadow-md">저장</button>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={popupDontShow} onChange={e => setPopupDontShow(e.target.checked)}
-                      className="w-4 h-4 accent-[#00b050] cursor-pointer" />
-                    <span className="text-[13px] text-gray-500">다시 보지 않기</span>
-                  </label>
-                  <button onClick={() => {
-                    if (popupDontShow) localStorage.setItem('popupDismissedVersion', String(popupData.version));
-                    setShowPopup(false);
-                  }} className="w-full py-3 rounded-xl bg-[#1a3010] text-white font-bold hover:bg-[#243d16] transition-colors text-[13px]">확인</button>
-                </div>
+                <>
+                  <div className="flex gap-2">
+                    <button onClick={() => { setPopupEditTitle(popupData?.title ?? ''); setPopupEditContent(popupData?.content ?? ''); setPopupEditImagePreview(null); setPopupEditing(true); }}
+                      className="flex-1 py-2.5 rounded-xl bg-[#7a9a52] text-white font-bold hover:bg-[#5f7d3a] text-[13px]">✏️ 편집</button>
+                    <button onClick={async () => {
+                      if (!confirm('모든 사업자에게 팝업을 다시 표시하겠습니까?')) return;
+                      const newVer = (popupData?.version ?? 1) + 1;
+                      await supabase.from('announcements').update({ version: newVer }).eq('id', 1);
+                      setPopupData(prev => prev ? { ...prev, version: newVer } : null);
+                      alert(`리셋 완료! 버전 ${newVer} — 모든 사업자에게 다시 표시됩니다.`);
+                    }} className="flex-1 py-2.5 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600 text-[13px]">🔄 전체 리셋</button>
+                  </div>
+                  <button onClick={() => { setShowPopupMgmt(false); setPopupEditing(false); }}
+                    className="w-full py-2.5 rounded-xl border border-gray-200 text-gray-500 font-bold hover:bg-gray-50 text-[13px]">닫기</button>
+                </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 📢 공지 팝업 (사업자 전용) */}
+      {showPopup && popupData && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden" style={{maxHeight: 'calc(100vh - 60px)'}}>
+            <div className="flex-shrink-0 flex justify-between items-center px-5 py-4 bg-[#1a3010]">
+              <h3 className="font-extrabold text-[16px] text-white">📢 공지사항</h3>
+              <button onClick={() => { if (popupDontShow) localStorage.setItem('popupDismissedVersion', String(popupData.version)); setShowPopup(false); }}
+                className="text-white/60 hover:text-white w-8 h-8 flex items-center justify-center font-bold text-lg">✕</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {popupData.title && <h4 className="font-extrabold text-[18px] text-[#1a3010] leading-snug">{popupData.title}</h4>}
+              {popupData.imageUrl && (() => {
+                const url = popupData.imageUrl!;
+                const ext = url.split('?')[0].split('.').pop()?.toLowerCase() || '';
+                const fname = decodeURIComponent(url.split('/').pop()?.split('?')[0] || '첨부파일');
+                return ['jpg','jpeg','png','gif','webp','svg'].includes(ext)
+                  ? <img src={url} alt="공지이미지" className="rounded-xl w-full object-cover" />
+                  : (
+                    <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                      <span className="text-2xl">📄</span>
+                      <div className="flex-1 min-w-0"><p className="text-[13px] font-bold text-gray-700 truncate">{fname}</p><p className="text-[11px] text-gray-400">{ext.toUpperCase()} 파일</p></div>
+                      <div className="flex gap-2 flex-shrink-0">
+                        <button onClick={() => openFile(url)} className="text-[12px] bg-[#00b050] text-white px-3 py-1.5 rounded-lg font-bold hover:bg-[#009030]">열기</button>
+                        <button onClick={() => downloadFile(url, fname)} className="text-[12px] bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg font-bold hover:bg-gray-300">⬇ 다운</button>
+                      </div>
+                    </div>
+                  );
+              })()}
+              {popupData.content && <p className="text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap">{popupData.content}</p>}
+            </div>
+            <div className="flex-shrink-0 px-5 pb-5 pt-3 border-t border-gray-100 space-y-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={popupDontShow} onChange={e => setPopupDontShow(e.target.checked)} className="w-4 h-4 accent-[#00b050] cursor-pointer" />
+                <span className="text-[13px] text-gray-500">다시 보지 않기</span>
+              </label>
+              <button onClick={() => { if (popupDontShow) localStorage.setItem('popupDismissedVersion', String(popupData.version)); setShowPopup(false); }}
+                className="w-full py-3 rounded-xl bg-[#1a3010] text-white font-bold hover:bg-[#243d16] transition-colors text-[13px]">확인</button>
             </div>
           </div>
         </div>
