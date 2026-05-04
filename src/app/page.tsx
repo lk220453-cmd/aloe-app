@@ -225,12 +225,25 @@ export default function Home() {
 
   const [showPopupMgmt, setShowPopupMgmt] = useState(false);
 
+  const decodePopupAttachments = (imageUrl: string | null, rawAttachments: unknown): {url: string; name: string}[] => {
+    // 1순위: attachments 컬럼 (SQL 마이그레이션 적용 시)
+    if (Array.isArray(rawAttachments) && rawAttachments.length > 0) return rawAttachments as {url: string; name: string}[];
+    if (!imageUrl) return [];
+    // 2순위: image_url에 JSON 인코딩된 다중 파일 (__atts__[...])
+    if (imageUrl.startsWith('__atts__')) {
+      try { return JSON.parse(imageUrl.slice(8)); } catch { return []; }
+    }
+    // 3순위: 단일 파일 URL
+    return [{ url: imageUrl, name: decodeURIComponent(imageUrl.split('/').pop()?.split('?')[0] || '파일') }];
+  };
+
   const loadPopup = async (role: UserRole) => {
     const { data } = await supabase.from('announcements').select('*').eq('id', 1).maybeSingle();
-    const pd = data ? { id: data.id, title: data.title || '', content: data.content || '', imageUrl: data.image_url || null, version: data.version || 1 } : null;
+    const attachments = data ? decodePopupAttachments(data.image_url, data.attachments) : [];
+    const pd = data ? { id: data.id, title: data.title || '', content: data.content || '', imageUrl: data.image_url || null, version: data.version || 1, attachments } : null;
     if (pd) setPopupData(pd);
     // 관리자는 자동 팝업 없음 (메뉴바 팝업창 관리로 접근)
-    if (role !== 'ADMIN' && pd && data?.is_active && (pd.title || pd.content || pd.imageUrl)) {
+    if (role !== 'ADMIN' && pd && data?.is_active && (pd.title || pd.content || pd.attachments.length > 0)) {
       const dismissed = localStorage.getItem('popupDismissedVersion');
       if (dismissed !== String(pd.version)) setShowPopup(true);
     }
@@ -324,14 +337,14 @@ export default function Home() {
 
   // 공지 팝업 상태
   const [showPopup, setShowPopup] = useState(false);
-  const [popupData, setPopupData] = useState<{ id: number; title: string; content: string; imageUrl: string | null; version: number } | null>(null);
+  const [popupData, setPopupData] = useState<{ id: number; title: string; content: string; imageUrl: string | null; version: number; attachments: {url: string; name: string}[] } | null>(null);
   const [popupDontShow, setPopupDontShow] = useState(false);
   const [popupEditing, setPopupEditing] = useState(false);
   const [popupEditTitle, setPopupEditTitle] = useState('');
   const [popupEditContent, setPopupEditContent] = useState('');
-  const [popupEditImageFile, setPopupEditImageFile] = useState<File | null>(null);
-  const [popupEditImagePreview, setPopupEditImagePreview] = useState<string | null>(null);
-  const popupImageRef = useRef<HTMLInputElement>(null);
+  const [editAttachments, setEditAttachments] = useState<{url: string; name: string}[]>([]);
+  const [newAttachmentFiles, setNewAttachmentFiles] = useState<File[]>([]);
+  const popupAddFileRef = useRef<HTMLInputElement>(null);
 
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null);
   const [showUpdateNews, setShowUpdateNews] = useState(false);
@@ -1203,11 +1216,11 @@ export default function Home() {
 
       {/* 📢 팝업창 관리 모달 (관리자 전용) */}
       {showPopupMgmt && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[150] flex items-center justify-center p-4" onClick={() => { setShowPopupMgmt(false); setPopupEditing(false); setPopupEditImageFile(null); setPopupEditImagePreview(null); }}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[150] flex items-center justify-center p-4" onClick={() => { setShowPopupMgmt(false); setPopupEditing(false); setNewAttachmentFiles([]); }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden" style={{maxHeight: 'calc(100vh - 60px)'}} onClick={e => e.stopPropagation()}>
             <div className="flex-shrink-0 flex justify-between items-center px-5 py-4 bg-[#1a3010]">
               <h3 className="font-extrabold text-[16px] text-white">📢 {popupEditing ? '공지 편집' : '팝업창 관리'}</h3>
-              <button onClick={() => { setShowPopupMgmt(false); setPopupEditing(false); setPopupEditImageFile(null); setPopupEditImagePreview(null); }} className="text-white/60 hover:text-white w-8 h-8 flex items-center justify-center font-bold text-lg">✕</button>
+              <button onClick={() => { setShowPopupMgmt(false); setPopupEditing(false); setNewAttachmentFiles([]); }} className="text-white/60 hover:text-white w-8 h-8 flex items-center justify-center font-bold text-lg">✕</button>
             </div>
 
             <div className="flex-1 overflow-y-auto">
@@ -1226,23 +1239,47 @@ export default function Home() {
                       placeholder="공지 내용을 입력하세요..." />
                   </div>
                   <div>
-                    <label className="text-[12px] font-bold text-gray-500 mb-1 block">이미지 / 파일 (선택)</label>
+                    <label className="text-[12px] font-bold text-gray-500 mb-2 block">첨부파일</label>
+                    {editAttachments.length > 0 && (
+                      <div className="space-y-1.5 mb-2">
+                        {editAttachments.map((att, i) => {
+                          const ext = att.url.split('?')[0].split('.').pop()?.toLowerCase() || '';
+                          const isImg = ['jpg','jpeg','png','gif','webp','svg'].includes(ext);
+                          return (
+                            <div key={i} className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
+                              <span className="text-[15px]">{isImg ? '🖼️' : '📎'}</span>
+                              <span className="flex-1 text-[12px] text-gray-600 truncate">{att.name}</span>
+                              <button type="button" onClick={() => setEditAttachments(prev => prev.filter((_, j) => j !== i))}
+                                className="text-red-400 hover:text-red-600 font-bold text-[16px] flex-shrink-0 leading-none">✕</button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {newAttachmentFiles.length > 0 && (
+                      <div className="space-y-1.5 mb-2">
+                        {newAttachmentFiles.map((f, i) => (
+                          <div key={i} className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl px-3 py-2">
+                            <span className="text-[15px]">{f.type.startsWith('image/') ? '🖼️' : '📎'}</span>
+                            <span className="flex-1 text-[12px] text-blue-700 truncate">{f.name} <span className="text-[10px] text-blue-400">(업로드 대기)</span></span>
+                            <button type="button" onClick={() => setNewAttachmentFiles(prev => prev.filter((_, j) => j !== i))}
+                              className="text-red-400 hover:text-red-600 font-bold text-[16px] flex-shrink-0 leading-none">✕</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <label className="flex items-center gap-2 border border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-[#00b050] hover:bg-green-50/30 transition-colors">
-                      <span className="text-gray-400">{popupEditImageFile ? (popupEditImageFile.type.startsWith('image/') ? '🖼️' : '📎') : (popupData?.imageUrl ? '📁' : '📎')}</span>
-                      <span className="text-[13px] text-gray-500 truncate">{popupEditImageFile ? popupEditImageFile.name : (popupData?.imageUrl ? '현재 파일 있음 (교체하려면 선택)' : '파일 선택...')}</span>
-                      <input ref={popupImageRef} type="file" className="hidden" onChange={e => {
+                      <span className="text-gray-400 text-[16px]">➕</span>
+                      <span className="text-[13px] text-gray-500">파일 추가...</span>
+                      <input ref={popupAddFileRef} type="file" className="hidden" onChange={e => {
                         const f = e.target.files?.[0] || null;
-                        setPopupEditImageFile(f);
-                        setPopupEditImagePreview(f && f.type.startsWith('image/') ? URL.createObjectURL(f) : null);
+                        if (f) setNewAttachmentFiles(prev => [...prev, f]);
+                        if (popupAddFileRef.current) popupAddFileRef.current.value = '';
                       }} />
                     </label>
-                    {popupEditImagePreview && <img src={popupEditImagePreview} alt="미리보기" className="mt-2 rounded-xl w-full object-cover max-h-40" />}
-                    {!popupEditImageFile && popupData?.imageUrl && (() => {
-                      const ext = popupData.imageUrl!.split('?')[0].split('.').pop()?.toLowerCase() || '';
-                      return ['jpg','jpeg','png','gif','webp','svg'].includes(ext)
-                        ? <img src={popupData.imageUrl!} alt="현재이미지" className="mt-2 rounded-xl w-full object-cover max-h-40" />
-                        : <div className="mt-2 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2"><span>📄</span><span className="text-[12px] text-gray-600 truncate">{decodeURIComponent(popupData.imageUrl!.split('/').pop()?.split('?')[0] || '파일')}</span></div>;
-                    })()}
+                    {newAttachmentFiles.filter(f => f.type.startsWith('image/')).map((f, i) => (
+                      <img key={i} src={URL.createObjectURL(f)} alt="미리보기" className="mt-2 rounded-xl w-full object-cover max-h-40" />
+                    ))}
                   </div>
                   <div className="flex items-center gap-2">
                     <input type="checkbox" id="popupActive" defaultChecked onChange={async e => {
@@ -1255,17 +1292,17 @@ export default function Home() {
                 /* 현재 팝업 미리보기 */
                 <div className="p-5 space-y-3">
                   <p className="text-[12px] text-gray-400 font-semibold">현재 팝업 미리보기</p>
-                  {popupData?.title || popupData?.content || popupData?.imageUrl ? (
+                  {popupData?.title || popupData?.content || (popupData?.attachments?.length ?? 0) > 0 ? (
                     <>
-                      {popupData.title && <h4 className="font-extrabold text-[17px] text-[#1a3010]">{popupData.title}</h4>}
-                      {popupData.imageUrl && (() => {
-                        const ext = popupData.imageUrl!.split('?')[0].split('.').pop()?.toLowerCase() || '';
+                      {popupData!.title && <h4 className="font-extrabold text-[17px] text-[#1a3010]">{popupData!.title}</h4>}
+                      {(popupData!.attachments ?? []).map((att, i) => {
+                        const ext = att.url.split('?')[0].split('.').pop()?.toLowerCase() || '';
                         return ['jpg','jpeg','png','gif','webp','svg'].includes(ext)
-                          ? <img src={popupData.imageUrl!} alt="공지이미지" className="rounded-xl w-full object-cover max-h-48" />
-                          : <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2"><span>📄</span><span className="text-[12px] text-gray-700 truncate">{decodeURIComponent(popupData.imageUrl!.split('/').pop()?.split('?')[0] || '파일')}</span></div>;
-                      })()}
-                      {popupData.content && <p className="text-[13px] text-gray-700 whitespace-pre-wrap leading-relaxed">{popupData.content}</p>}
-                      <p className="text-[11px] text-gray-400">버전: {popupData.version}</p>
+                          ? <img key={i} src={att.url} alt="공지이미지" className="rounded-xl w-full object-cover max-h-48" />
+                          : <div key={i} className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2"><span>📄</span><span className="text-[12px] text-gray-700 truncate">{att.name}</span></div>;
+                      })}
+                      {popupData!.content && <p className="text-[13px] text-gray-700 whitespace-pre-wrap leading-relaxed">{popupData!.content}</p>}
+                      <p className="text-[11px] text-gray-400">버전: {popupData!.version}</p>
                     </>
                   ) : (
                     <p className="text-[13px] text-gray-400 py-4 text-center">등록된 공지가 없습니다.</p>
@@ -1277,23 +1314,49 @@ export default function Home() {
             <div className="flex-shrink-0 px-5 pb-5 pt-3 border-t border-gray-100 space-y-2">
               {popupEditing ? (
                 <div className="flex gap-2">
-                  <button onClick={() => { setPopupEditing(false); setPopupEditImageFile(null); setPopupEditImagePreview(null); }}
+                  <button onClick={() => { setPopupEditing(false); setNewAttachmentFiles([]); }}
                     className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 text-[13px]">취소</button>
                   <button onClick={async () => {
-                    let imageUrl = popupData?.imageUrl ?? null;
-                    if (popupEditImageFile) {
-                      const up = await uploadFileToStorage(popupEditImageFile);
-                      if (up) imageUrl = up.fileUrl;
+                    const uploadedNew: {url: string; name: string}[] = [];
+                    for (const f of newAttachmentFiles) {
+                      const up = await uploadFileToStorage(f);
+                      if (up) uploadedNew.push({ url: up.fileUrl, name: f.name });
                     }
-                    await supabase.from('announcements').upsert({ id: 1, title: popupEditTitle, content: popupEditContent, image_url: imageUrl, version: popupData?.version ?? 1, is_active: true }, { onConflict: 'id' });
-                    setPopupData(prev => prev ? { ...prev, title: popupEditTitle, content: popupEditContent, imageUrl } : { id: 1, title: popupEditTitle, content: popupEditContent, imageUrl, version: 1 });
-                    setPopupEditing(false); setPopupEditImageFile(null); setPopupEditImagePreview(null);
+                    const finalAttachments = [...editAttachments, ...uploadedNew];
+                    const imageUrl = finalAttachments.length > 0 ? finalAttachments[0].url : null;
+                    // attachments 컬럼 포함해서 먼저 시도
+                    let savedOk = false;
+                    const { error } = await supabase.from('announcements').upsert(
+                      { id: 1, title: popupEditTitle, content: popupEditContent, image_url: imageUrl, attachments: finalAttachments, version: popupData?.version ?? 1, is_active: true },
+                      { onConflict: 'id' }
+                    );
+                    if (!error) {
+                      savedOk = true;
+                    } else if (error.message.toLowerCase().includes('attachments')) {
+                      // attachments 컬럼 없음 → image_url에 JSON으로 인코딩하여 폴백
+                      const encodedUrl = finalAttachments.length === 1
+                        ? finalAttachments[0].url
+                        : '__atts__' + JSON.stringify(finalAttachments);
+                      const { error: e2 } = await supabase.from('announcements').upsert(
+                        { id: 1, title: popupEditTitle, content: popupEditContent, image_url: encodedUrl, version: popupData?.version ?? 1, is_active: true },
+                        { onConflict: 'id' }
+                      );
+                      if (e2) { alert(`저장 오류: ${e2.message}`); return; }
+                      savedOk = true;
+                    } else {
+                      alert(`저장 오류: ${error.message}`); return;
+                    }
+                    if (!savedOk) return;
+                    setPopupData(prev => prev
+                      ? { ...prev, title: popupEditTitle, content: popupEditContent, imageUrl, attachments: finalAttachments }
+                      : { id: 1, title: popupEditTitle, content: popupEditContent, imageUrl, version: 1, attachments: finalAttachments });
+                    setPopupEditing(false); setNewAttachmentFiles([]);
                   }} className="flex-1 py-3 rounded-xl bg-[#00b050] text-white font-bold hover:bg-[#009030] text-[13px] shadow-md">저장</button>
                 </div>
               ) : (
                 <>
                   <div className="flex gap-2">
-                    <button onClick={() => { setPopupEditTitle(popupData?.title ?? ''); setPopupEditContent(popupData?.content ?? ''); setPopupEditImagePreview(null); setPopupEditing(true); }}
+                    <button onClick={() => { setPopupEditTitle(popupData?.title ?? ''); setPopupEditContent(popupData?.content ?? ''); setEditAttachments(popupData?.attachments ?? []); setNewAttachmentFiles([]); setPopupEditing(true); }}
                       className="flex-1 py-2.5 rounded-xl bg-[#7a9a52] text-white font-bold hover:bg-[#5f7d3a] text-[13px]">✏️ 편집</button>
                     <button onClick={async () => {
                       if (!confirm('모든 사업자에게 팝업을 다시 표시하겠습니까?')) return;
@@ -1323,23 +1386,21 @@ export default function Home() {
             </div>
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
               {popupData.title && <h4 className="font-extrabold text-[18px] text-[#1a3010] leading-snug">{popupData.title}</h4>}
-              {popupData.imageUrl && (() => {
-                const url = popupData.imageUrl!;
-                const ext = url.split('?')[0].split('.').pop()?.toLowerCase() || '';
-                const fname = decodeURIComponent(url.split('/').pop()?.split('?')[0] || '첨부파일');
+              {(popupData.attachments ?? []).map((att, i) => {
+                const ext = att.url.split('?')[0].split('.').pop()?.toLowerCase() || '';
                 return ['jpg','jpeg','png','gif','webp','svg'].includes(ext)
-                  ? <img src={url} alt="공지이미지" className="rounded-xl w-full object-cover" />
+                  ? <img key={i} src={att.url} alt="공지이미지" className="rounded-xl w-full object-cover" />
                   : (
-                    <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                    <div key={i} className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
                       <span className="text-2xl">📄</span>
-                      <div className="flex-1 min-w-0"><p className="text-[13px] font-bold text-gray-700 truncate">{fname}</p><p className="text-[11px] text-gray-400">{ext.toUpperCase()} 파일</p></div>
+                      <div className="flex-1 min-w-0"><p className="text-[13px] font-bold text-gray-700 truncate">{att.name}</p><p className="text-[11px] text-gray-400">{ext.toUpperCase()} 파일</p></div>
                       <div className="flex gap-2 flex-shrink-0">
-                        <button onClick={() => openFile(url)} className="text-[12px] bg-[#00b050] text-white px-3 py-1.5 rounded-lg font-bold hover:bg-[#009030]">열기</button>
-                        <button onClick={() => downloadFile(url, fname)} className="text-[12px] bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg font-bold hover:bg-gray-300">⬇ 다운</button>
+                        <button onClick={() => openFile(att.url)} className="text-[12px] bg-[#00b050] text-white px-3 py-1.5 rounded-lg font-bold hover:bg-[#009030]">열기</button>
+                        <button onClick={() => downloadFile(att.url, att.name)} className="text-[12px] bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg font-bold hover:bg-gray-300">⬇ 다운</button>
                       </div>
                     </div>
                   );
-              })()}
+              })}
               {popupData.content && <p className="text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap">{popupData.content}</p>}
             </div>
             <div className="flex-shrink-0 px-5 pb-5 pt-3 border-t border-gray-100 space-y-3">
