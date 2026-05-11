@@ -357,6 +357,29 @@ export default function Home() {
   const [popups, setPopups] = useState<PopupItem[]>([]);
   const [closedPopupIds, setClosedPopupIds] = useState<Set<number>>(new Set());
   const [dontShowPopupIds, setDontShowPopupIds] = useState<Set<number>>(new Set());
+  const [popupPositions, setPopupPositions] = useState<Record<number, {x: number; y: number}>>({});
+  const popupDragRef = useRef<{id: number; startX: number; startY: number; origX: number; origY: number} | null>(null);
+  useEffect(() => {
+    const onMove = (e: MouseEvent | TouchEvent) => {
+      if (!popupDragRef.current) return;
+      e.preventDefault();
+      const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
+      const { id, startX, startY, origX, origY } = popupDragRef.current;
+      setPopupPositions(prev => ({ ...prev, [id]: { x: origX + clientX - startX, y: origY + clientY - startY } }));
+    };
+    const onUp = () => { popupDragRef.current = null; };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onUp);
+    return () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onUp);
+    };
+  }, []);
   const [editingPopup, setEditingPopup] = useState<PopupItem | null>(null);
   const [isNewPopup, setIsNewPopup] = useState(false);
   const [popupEditTitle, setPopupEditTitle] = useState('');
@@ -1448,7 +1471,8 @@ export default function Home() {
           <>
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[149]" />
             {visiblePopups.map((popup, idx) => {
-              const offset = idx * 24;
+              const initOffset = idx * 24;
+              const pos = popupPositions[popup.id] ?? { x: initOffset, y: initOffset };
               const handleClose = () => {
                 if (dontShowPopupIds.has(popup.id)) {
                   const stored: string[] = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('popupsDismissed') || '[]') : [];
@@ -1456,14 +1480,27 @@ export default function Home() {
                 }
                 setClosedPopupIds(prev => new Set([...prev, popup.id]));
               };
+              const startDrag = (clientX: number, clientY: number) => {
+                popupDragRef.current = { id: popup.id, startX: clientX, startY: clientY, origX: pos.x, origY: pos.y };
+              };
               return (
-                <div key={popup.id} className="fixed inset-0 z-[150] flex items-center justify-center p-4 pointer-events-none">
-                  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden pointer-events-auto"
-                    style={{maxHeight: 'calc(100vh - 60px)', marginTop: offset, marginLeft: offset}}>
-                    <div className="flex-shrink-0 flex justify-between items-center px-5 py-4 bg-[#1a3010]">
-                      <h3 className="font-extrabold text-[16px] text-white">📢 공지사항</h3>
-                      <button onClick={handleClose} className="text-white/60 hover:text-white w-8 h-8 flex items-center justify-center font-bold text-lg">✕</button>
-                    </div>
+                <div key={popup.id} className="fixed z-[150] pointer-events-auto"
+                  style={{
+                    top: '50%', left: '50%',
+                    transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))`,
+                    width: 'min(448px, calc(100vw - 32px))',
+                    maxHeight: 'calc(100vh - 60px)',
+                    display: 'flex', flexDirection: 'column',
+                    borderRadius: '1rem', overflow: 'hidden',
+                    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)',
+                    background: 'white',
+                  }}>
+                  <div className="flex-shrink-0 flex justify-between items-center px-5 py-4 bg-[#1a3010] cursor-grab active:cursor-grabbing select-none"
+                    onMouseDown={e => { e.preventDefault(); startDrag(e.clientX, e.clientY); }}
+                    onTouchStart={e => { startDrag(e.touches[0].clientX, e.touches[0].clientY); }}>
+                    <h3 className="font-extrabold text-[16px] text-white">📢 공지사항</h3>
+                    <button onClick={handleClose} className="text-white/60 hover:text-white w-8 h-8 flex items-center justify-center font-bold text-lg">✕</button>
+                  </div>
                     <div className="flex-1 overflow-y-auto p-5 space-y-4">
                       {popup.title && <h4 className="font-extrabold text-[18px] text-[#1a3010] leading-snug">{popup.title}</h4>}
                       {popup.attachments.map((att, i) => {
@@ -1496,7 +1533,6 @@ export default function Home() {
                       <button onClick={handleClose} className="w-full py-3 rounded-xl bg-[#1a3010] text-white font-bold hover:bg-[#243d16] transition-colors text-[13px]">확인</button>
                     </div>
                   </div>
-                </div>
               );
             })}
           </>
