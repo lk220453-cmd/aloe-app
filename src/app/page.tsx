@@ -355,7 +355,8 @@ export default function Home() {
   // 공지 팝업 상태
   const [showPopup, setShowPopup] = useState(false);
   const [popups, setPopups] = useState<PopupItem[]>([]);
-  const [popupDontShow, setPopupDontShow] = useState(false);
+  const [closedPopupIds, setClosedPopupIds] = useState<Set<number>>(new Set());
+  const [dontShowPopupIds, setDontShowPopupIds] = useState<Set<number>>(new Set());
   const [editingPopup, setEditingPopup] = useState<PopupItem | null>(null);
   const [isNewPopup, setIsNewPopup] = useState(false);
   const [popupEditTitle, setPopupEditTitle] = useState('');
@@ -1438,58 +1439,67 @@ export default function Home() {
         </div>
       )}
 
-      {/* 📢 공지 팝업 (사업자 전용 — 활성 팝업 전체 표시) */}
+      {/* 📢 공지 팝업 (사업자 전용 — 활성 팝업 각각 별도 창) */}
       {showPopup && (() => {
         const dismissed = new Set<string>(typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('popupsDismissed') || '[]') : []);
-        const visiblePopups = popups.filter(p => p.isActive && !dismissed.has(`${p.id}_v${p.version}`));
+        const visiblePopups = popups.filter(p => p.isActive && !dismissed.has(`${p.id}_v${p.version}`) && !closedPopupIds.has(p.id));
         if (visiblePopups.length === 0) return null;
-        const handleClose = () => {
-          if (popupDontShow) {
-            const stored: string[] = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('popupsDismissed') || '[]') : [];
-            const keys = visiblePopups.map(p => `${p.id}_v${p.version}`);
-            localStorage.setItem('popupsDismissed', JSON.stringify([...new Set([...stored, ...keys])]));
-          }
-          setShowPopup(false);
-        };
         return (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden" style={{maxHeight: 'calc(100vh - 60px)'}}>
-              <div className="flex-shrink-0 flex justify-between items-center px-5 py-4 bg-[#1a3010]">
-                <h3 className="font-extrabold text-[16px] text-white">📢 공지사항</h3>
-                <button onClick={handleClose} className="text-white/60 hover:text-white w-8 h-8 flex items-center justify-center font-bold text-lg">✕</button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                {visiblePopups.map((popup, idx) => (
-                  <div key={popup.id} className={idx > 0 ? 'pt-6 border-t-2 border-dashed border-gray-200' : ''}>
-                    {popup.title && <h4 className="font-extrabold text-[18px] text-[#1a3010] leading-snug mb-3">{popup.title}</h4>}
-                    {popup.attachments.map((att, i) => {
-                      const ext = att.url.split('?')[0].split('.').pop()?.toLowerCase() || '';
-                      return ['jpg','jpeg','png','gif','webp','svg'].includes(ext)
-                        ? <img key={i} src={att.url} alt="공지이미지" className="rounded-xl w-full object-cover mb-3" />
-                        : (
-                          <div key={i} className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-2">
-                            <span className="text-2xl">📄</span>
-                            <div className="flex-1 min-w-0"><p className="text-[13px] font-bold text-gray-700 truncate">{att.name}</p><p className="text-[11px] text-gray-400">{ext.toUpperCase()} 파일</p></div>
-                            <div className="flex gap-2 flex-shrink-0">
-                              <button onClick={() => openFile(att.url)} className="text-[12px] bg-[#00b050] text-white px-3 py-1.5 rounded-lg font-bold hover:bg-[#009030]">열기</button>
-                              <button onClick={() => downloadFile(att.url, att.name)} className="text-[12px] bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg font-bold hover:bg-gray-300">⬇ 다운</button>
+          <>
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[149]" />
+            {visiblePopups.map((popup, idx) => {
+              const offset = idx * 24;
+              const handleClose = () => {
+                if (dontShowPopupIds.has(popup.id)) {
+                  const stored: string[] = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('popupsDismissed') || '[]') : [];
+                  localStorage.setItem('popupsDismissed', JSON.stringify([...new Set([...stored, `${popup.id}_v${popup.version}`])]));
+                }
+                setClosedPopupIds(prev => new Set([...prev, popup.id]));
+              };
+              return (
+                <div key={popup.id} className="fixed inset-0 z-[150] flex items-center justify-center p-4 pointer-events-none">
+                  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden pointer-events-auto"
+                    style={{maxHeight: 'calc(100vh - 60px)', marginTop: offset, marginLeft: offset}}>
+                    <div className="flex-shrink-0 flex justify-between items-center px-5 py-4 bg-[#1a3010]">
+                      <h3 className="font-extrabold text-[16px] text-white">📢 공지사항</h3>
+                      <button onClick={handleClose} className="text-white/60 hover:text-white w-8 h-8 flex items-center justify-center font-bold text-lg">✕</button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                      {popup.title && <h4 className="font-extrabold text-[18px] text-[#1a3010] leading-snug">{popup.title}</h4>}
+                      {popup.attachments.map((att, i) => {
+                        const ext = att.url.split('?')[0].split('.').pop()?.toLowerCase() || '';
+                        return ['jpg','jpeg','png','gif','webp','svg'].includes(ext)
+                          ? <img key={i} src={att.url} alt="공지이미지" className="rounded-xl w-full object-cover" />
+                          : (
+                            <div key={i} className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                              <span className="text-2xl">📄</span>
+                              <div className="flex-1 min-w-0"><p className="text-[13px] font-bold text-gray-700 truncate">{att.name}</p><p className="text-[11px] text-gray-400">{ext.toUpperCase()} 파일</p></div>
+                              <div className="flex gap-2 flex-shrink-0">
+                                <button onClick={() => openFile(att.url)} className="text-[12px] bg-[#00b050] text-white px-3 py-1.5 rounded-lg font-bold hover:bg-[#009030]">열기</button>
+                                <button onClick={() => downloadFile(att.url, att.name)} className="text-[12px] bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg font-bold hover:bg-gray-300">⬇ 다운</button>
+                              </div>
                             </div>
-                          </div>
-                        );
-                    })}
-                    {popup.content && <p className="text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap">{popup.content}</p>}
+                          );
+                      })}
+                      {popup.content && <p className="text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap">{popup.content}</p>}
+                    </div>
+                    <div className="flex-shrink-0 px-5 pb-5 pt-3 border-t border-gray-100 space-y-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={dontShowPopupIds.has(popup.id)}
+                          onChange={e => setDontShowPopupIds(prev => {
+                            const next = new Set(prev);
+                            e.target.checked ? next.add(popup.id) : next.delete(popup.id);
+                            return next;
+                          })} className="w-4 h-4 accent-[#00b050] cursor-pointer" />
+                        <span className="text-[13px] text-gray-500">다시 보지 않기</span>
+                      </label>
+                      <button onClick={handleClose} className="w-full py-3 rounded-xl bg-[#1a3010] text-white font-bold hover:bg-[#243d16] transition-colors text-[13px]">확인</button>
+                    </div>
                   </div>
-                ))}
-              </div>
-              <div className="flex-shrink-0 px-5 pb-5 pt-3 border-t border-gray-100 space-y-3">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={popupDontShow} onChange={e => setPopupDontShow(e.target.checked)} className="w-4 h-4 accent-[#00b050] cursor-pointer" />
-                  <span className="text-[13px] text-gray-500">다시 보지 않기</span>
-                </label>
-                <button onClick={handleClose} className="w-full py-3 rounded-xl bg-[#1a3010] text-white font-bold hover:bg-[#243d16] transition-colors text-[13px]">확인</button>
-              </div>
-            </div>
-          </div>
+                </div>
+              );
+            })}
+          </>
         );
       })()}
 
