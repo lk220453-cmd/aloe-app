@@ -261,7 +261,7 @@ export default function Home() {
     setPopups(mapped);
     if (role !== 'ADMIN') {
       const dismissed = new Set<string>(JSON.parse(localStorage.getItem('popupsDismissed') || '[]'));
-      const visible = mapped.filter(p => p.isActive && !dismissed.has(`${p.id}_v${p.version}`) && (p.title || p.content || p.attachments.length > 0));
+      const visible = mapped.filter(p => p.isActive && !dismissed.has(`${p.id}_v${p.version}`));
       if (visible.length > 0) setShowPopup(true);
     }
   };
@@ -1273,6 +1273,13 @@ export default function Home() {
                       {popup.content && <p className="text-[12px] text-gray-500 line-clamp-2 whitespace-pre-wrap">{popup.content}</p>}
                       {popup.attachments.length > 0 && <p className="text-[11px] text-gray-400">📎 첨부파일 {popup.attachments.length}개</p>}
                       <div className="flex gap-1.5 pt-1">
+                        <button onClick={async () => {
+                          const newActive = !popup.isActive;
+                          await supabase.from('announcements').update({ is_active: newActive }).eq('id', popup.id);
+                          setPopups(prev => prev.map(p => p.id === popup.id ? { ...p, isActive: newActive } : p));
+                        }} className={`px-3 py-2 rounded-xl text-[12px] font-bold border ${popup.isActive ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100' : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'}`}>
+                          {popup.isActive ? '✅ 활성' : '⬜ 비활성'}
+                        </button>
                         <button onClick={() => {
                           setEditingPopup(popup); setIsNewPopup(false);
                           setPopupEditTitle(popup.title); setPopupEditContent(popup.content);
@@ -1283,7 +1290,7 @@ export default function Home() {
                           if (!confirm('이 팝업을 삭제하겠습니까?')) return;
                           await supabase.from('announcements').delete().eq('id', popup.id);
                           setPopups(prev => prev.filter(p => p.id !== popup.id));
-                        }} className="flex-1 py-2 rounded-xl bg-red-50 text-red-500 text-[12px] font-bold hover:bg-red-100 border border-red-200">🗑️ 삭제</button>
+                        }} className="px-3 py-2 rounded-xl bg-red-50 text-red-500 text-[12px] font-bold hover:bg-red-100 border border-red-200">🗑️</button>
                         <button onClick={async () => {
                           if (!confirm('모든 사업자에게 이 팝업을 다시 표시하겠습니까?')) return;
                           const nv = popup.version + 1;
@@ -1434,7 +1441,7 @@ export default function Home() {
       {/* 📢 공지 팝업 (사업자 전용 — 활성 팝업 전체 표시) */}
       {showPopup && (() => {
         const dismissed = new Set<string>(typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('popupsDismissed') || '[]') : []);
-        const visiblePopups = popups.filter(p => p.isActive && !dismissed.has(`${p.id}_v${p.version}`) && (p.title || p.content || p.attachments.length > 0));
+        const visiblePopups = popups.filter(p => p.isActive && !dismissed.has(`${p.id}_v${p.version}`));
         if (visiblePopups.length === 0) return null;
         const handleClose = () => {
           if (popupDontShow) {
