@@ -413,7 +413,6 @@ export default function Home() {
   const [uploadProduct, setUploadProduct] = useState('스피그린');
   const [uploadMode, setUploadMode] = useState<'file' | 'youtube' | 'weblink'>('file');
   const [uploadYoutubeUrl, setUploadYoutubeUrl] = useState('');
-  const [uploadWebUrl, setUploadWebUrl] = useState('');
   const [uploadWebLinks, setUploadWebLinks] = useState<{title: string; url: string}[]>([{title: '', url: ''}]);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadError, setUploadError] = useState('');
@@ -512,7 +511,6 @@ export default function Home() {
     setUploadTypeState('DOCUMENT');
     setUploadMode('file');
     setUploadYoutubeUrl('');
-    setUploadWebUrl('');
     setUploadWebLinks([{title: '', url: ''}]);
     if (selectedCategory !== '브랜드판촉' && selectedCategory !== 'ALL' && selectedCategory !== 'NONE') {
       if (selectedCategory === '게시판') {
@@ -636,7 +634,7 @@ export default function Home() {
     if (uploadMode === 'youtube') {
       if (!uploadTitle || !uploadYoutubeUrl.trim()) return;
     } else if (uploadMode === 'weblink') {
-      if (!uploadTitle || !uploadWebUrl.trim()) return;
+      if (uploadWebLinks.every(l => !l.url.trim() || !l.title.trim())) return;
     } else {
       if (uploadFiles.length === 0) return;
       if (uploadFiles.length === 1 && !uploadTitle) return;
