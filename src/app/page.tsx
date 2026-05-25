@@ -414,6 +414,7 @@ export default function Home() {
   const [uploadMode, setUploadMode] = useState<'file' | 'youtube' | 'weblink'>('file');
   const [uploadYoutubeUrl, setUploadYoutubeUrl] = useState('');
   const [uploadWebUrl, setUploadWebUrl] = useState('');
+  const [uploadWebLinks, setUploadWebLinks] = useState<{title: string; url: string}[]>([{title: '', url: ''}]);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -512,6 +513,7 @@ export default function Home() {
     setUploadMode('file');
     setUploadYoutubeUrl('');
     setUploadWebUrl('');
+    setUploadWebLinks([{title: '', url: ''}]);
     if (selectedCategory !== '브랜드판촉' && selectedCategory !== 'ALL' && selectedCategory !== 'NONE') {
       if (selectedCategory === '게시판') {
          setUploadProduct(selectedSubBoard !== 'ALL' ? selectedSubBoard : '기타');
@@ -665,23 +667,28 @@ export default function Home() {
     };
 
     if (uploadMode === 'weblink') {
-      const url = uploadWebUrl.trim();
-      const newMaterial: Material = {
-        id: 'm' + Date.now().toString(), title: uploadTitle, type: uploadTypeState,
-        thumbnailUrl: 'https://picsum.photos/seed/' + Math.floor(Math.random() * 100) + '/400/225',
-        category: selectedCategory, year: promoYear, month: promoMonth, fileUrl: url, fileName: url,
-        productName: (selectedCategory !== '브랜드판촉') ? uploadProduct : undefined,
-        uploadedBy: currentUser?.username,
-      };
-      const ok = await doInsert({
-        id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
-        thumbnail_url: newMaterial.thumbnailUrl, category: newMaterial.category,
-        year: newMaterial.year, month: newMaterial.month, file_url: url, file_name: url,
-        product_name: newMaterial.productName, content: uploadContent || null,
-        uploaded_by: currentUser?.username,
-      });
-      if (!ok) { setUploadLoading(false); return; }
-      setMaterials([newMaterial, ...materials]);
+      const validLinks = uploadWebLinks.filter(l => l.url.trim() && l.title.trim());
+      if (validLinks.length === 0) { setUploadLoading(false); return; }
+      const inserted: Material[] = [];
+      for (const link of validLinks) {
+        const url = link.url.trim();
+        const newMaterial: Material = {
+          id: 'm' + Date.now().toString() + Math.random(), title: link.title.trim(), type: uploadTypeState,
+          thumbnailUrl: 'https://picsum.photos/seed/' + Math.floor(Math.random() * 100) + '/400/225',
+          category: selectedCategory, year: promoYear, month: promoMonth, fileUrl: url, fileName: url,
+          productName: (selectedCategory !== '브랜드판촉') ? uploadProduct : undefined,
+          uploadedBy: currentUser?.username,
+        };
+        const ok = await doInsert({
+          id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
+          thumbnail_url: newMaterial.thumbnailUrl, category: newMaterial.category,
+          year: newMaterial.year, month: newMaterial.month, file_url: url, file_name: url,
+          product_name: newMaterial.productName, content: uploadContent || null,
+          uploaded_by: currentUser?.username,
+        });
+        if (ok) inserted.push(newMaterial);
+      }
+      setMaterials([...inserted.reverse(), ...materials]);
       setUploadLoading(false);
       setShowUploadModal(false);
       loadMaterials();
@@ -1108,17 +1115,39 @@ export default function Home() {
                 </div>
 
                 {uploadMode === 'weblink' ? (
-                  <div>
-                    <input
-                      type="url"
-                      value={uploadWebUrl}
-                      onChange={e => setUploadWebUrl(e.target.value)}
-                      placeholder="https://drive.google.com/file/d/... 또는 일반 웹 주소"
-                      className="w-full p-3.5 text-[14px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition-all"
-                    />
-                    {uploadWebUrl && (
-                      <p className="mt-2 text-[12px] text-blue-500 font-bold">🔗 {uploadWebUrl}</p>
-                    )}
+                  <div className="space-y-3">
+                    {uploadWebLinks.map((link, idx) => (
+                      <div key={idx} className="flex gap-2 items-start">
+                        <div className="flex-1 space-y-1.5">
+                          <input
+                            type="text"
+                            value={link.title}
+                            onChange={e => setUploadWebLinks(prev => prev.map((l, i) => i === idx ? {...l, title: e.target.value} : l))}
+                            placeholder={`제목 ${idx + 1}`}
+                            className="w-full p-2.5 text-[13px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition-all"
+                          />
+                          <input
+                            type="url"
+                            value={link.url}
+                            onChange={e => setUploadWebLinks(prev => prev.map((l, i) => i === idx ? {...l, url: e.target.value} : l))}
+                            placeholder="https://drive.google.com/file/d/..."
+                            className="w-full p-2.5 text-[13px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition-all"
+                          />
+                        </div>
+                        {uploadWebLinks.length > 1 && (
+                          <button
+                            onClick={() => setUploadWebLinks(prev => prev.filter((_, i) => i !== idx))}
+                            className="mt-1 text-gray-400 hover:text-red-500 w-7 h-7 rounded-full flex items-center justify-center font-bold transition-colors"
+                          >✕</button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => setUploadWebLinks(prev => [...prev, {title: '', url: ''}])}
+                      className="w-full py-2 border-2 border-dashed border-blue-200 rounded-xl text-[13px] text-blue-400 font-bold hover:border-blue-400 hover:text-blue-600 transition-colors"
+                    >
+                      + 링크 추가
+                    </button>
                   </div>
                 ) : uploadMode === 'youtube' ? (
                   <div>
@@ -1244,10 +1273,10 @@ export default function Home() {
               </button>
               <button
                 onClick={executeUpload}
-                disabled={uploadLoading || (uploadMode === 'youtube' ? (!uploadTitle || !getYouTubeId(uploadYoutubeUrl)) : uploadMode === 'weblink' ? (!uploadTitle || !uploadWebUrl.trim()) : (uploadFiles.length === 0 || (uploadFiles.length === 1 && !uploadTitle)))}
+                disabled={uploadLoading || (uploadMode === 'youtube' ? (!uploadTitle || !getYouTubeId(uploadYoutubeUrl)) : uploadMode === 'weblink' ? uploadWebLinks.every(l => !l.url.trim() || !l.title.trim()) : (uploadFiles.length === 0 || (uploadFiles.length === 1 && !uploadTitle)))}
                 className="px-8 py-2.5 rounded-xl font-extrabold bg-[#00b050] text-white shadow-md shadow-green-500/20 hover:bg-[#009030] disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transition-all transform active:scale-95"
               >
-                {uploadLoading ? '업로드 중...' : uploadMode === 'youtube' ? 'YouTube 링크 등록' : uploadMode === 'weblink' ? '웹 링크 등록' : '파일 업로드 완료'}
+                {uploadLoading ? '등록 중...' : uploadMode === 'youtube' ? 'YouTube 링크 등록' : uploadMode === 'weblink' ? `웹 링크 ${uploadWebLinks.filter(l => l.url.trim() && l.title.trim()).length}개 등록` : '파일 업로드 완료'}
               </button>
             </div>
           </div>
