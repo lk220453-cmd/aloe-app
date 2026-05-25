@@ -1099,14 +1099,12 @@ export default function Home() {
                   >
                     ▶ YouTube
                   </button>
-                  {(selectedCategory === '회사소식/홍보' || selectedCategory === '영업자료집') && (
-                    <button
-                      onClick={() => setUploadMode('weblink')}
-                      className={`flex-1 py-2.5 text-[13px] font-bold transition-colors ${uploadMode === 'weblink' ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
-                    >
-                      🔗 웹 링크
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setUploadMode('weblink')}
+                    className={`flex-1 py-2.5 text-[13px] font-bold transition-colors ${uploadMode === 'weblink' ? 'bg-blue-500 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                  >
+                    🔗 웹 링크
+                  </button>
                 </div>
 
                 {uploadMode === 'weblink' ? (
@@ -1115,7 +1113,7 @@ export default function Home() {
                       type="url"
                       value={uploadWebUrl}
                       onChange={e => setUploadWebUrl(e.target.value)}
-                      placeholder="https://example.com/영상링크 또는 웹페이지 주소"
+                      placeholder="https://drive.google.com/file/d/... 또는 일반 웹 주소"
                       className="w-full p-3.5 text-[14px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition-all"
                     />
                     {uploadWebUrl && (
