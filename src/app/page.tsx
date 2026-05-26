@@ -1448,8 +1448,6 @@ export default function Home() {
                         };
                         if (withAtts) payload.attachments = finalAttachments;
                         if (isNewPopup) {
-                          const { data: mx } = await supabase.from('announcements').select('id').order('id', { ascending: false }).limit(1);
-                          payload.id = mx && mx.length > 0 ? mx[0].id + 1 : 2;
                           return supabase.from('announcements').insert(payload).select().single();
                         } else {
                           return supabase.from('announcements').update(payload).eq('id', theId).select().single();
