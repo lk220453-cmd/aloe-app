@@ -1740,21 +1740,31 @@ export default function Home() {
                 </div>
               )}
               {/* 첨부파일 */}
-              {detailMat.fileUrl && detailMat.fileName && (
-                <div>
-                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">첨부파일</p>
-                  <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
-                    <span className="text-2xl">📎</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-bold text-[#1a3010] truncate">{detailMat.fileName}</p>
+              {detailMat.fileUrl && detailMat.fileName && (() => {
+                const isWebLink = detailMat.fileUrl === detailMat.fileName && !detailMat.youtubeUrl;
+                return (
+                  <div>
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">{isWebLink ? '링크' : '첨부파일'}</p>
+                    <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+                      <span className="text-2xl">{isWebLink ? '🔗' : '📎'}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14px] font-bold text-[#1a3010] truncate">
+                          {isWebLink ? detailMat.title : detailMat.fileName}
+                        </p>
+                        {isWebLink && (
+                          <p className="text-[11px] text-gray-400 truncate mt-0.5">{detailMat.fileUrl}</p>
+                        )}
+                      </div>
+                      <button onClick={() => openFile(detailMat.fileUrl!)}
+                        className="text-[12px] font-bold text-[#00b050] hover:underline px-2 py-1 rounded-lg hover:bg-green-100">🔍 열람</button>
+                      {!isWebLink && (
+                        <button onClick={() => downloadFile(detailMat.fileUrl!, detailMat.fileName!)}
+                          className="text-[12px] font-bold text-blue-600 hover:underline px-2 py-1 rounded-lg hover:bg-blue-50">⬇ 다운</button>
+                      )}
                     </div>
-                    <button onClick={() => openFile(detailMat.fileUrl!)}
-                      className="text-[12px] font-bold text-[#00b050] hover:underline px-2 py-1 rounded-lg hover:bg-green-100">🔍 열람</button>
-                    <button onClick={() => downloadFile(detailMat.fileUrl!, detailMat.fileName!)}
-                      className="text-[12px] font-bold text-blue-600 hover:underline px-2 py-1 rounded-lg hover:bg-blue-50">⬇ 다운</button>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
             <div className="px-6 pb-6 flex-shrink-0">
               <button onClick={() => setShowDetailModal(false)}
@@ -2629,7 +2639,7 @@ export default function Home() {
                       <div className="flex-1 flex items-center gap-3 ml-4 min-w-0">
                         <span className="text-lg flex-shrink-0">{mat.youtubeUrl ? '▶' : mat.type === 'VIDEO' ? '🎬' : '📄'}</span>
                         <span className="text-[14px] font-medium text-gray-800 group-hover:text-[#00723a] transition-colors truncate">
-                          {mat.fileName ? `[${mat.fileName}] ` : ''}{mat.title}
+                          {mat.title}
                         </span>
                         {mat.youtubeUrl && <span className="flex-shrink-0 text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded">YouTube</span>}
                         {mat.category === '게시판' && mat.type === 'NOTICE' && (
