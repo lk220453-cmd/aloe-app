@@ -2124,7 +2124,7 @@ export default function Home() {
               {/* 게시판 전용 글쓰기 버튼 */}
               {selectedCategory === '게시판' && (
                 <button
-                  onClick={() => { setWriteTitle(''); setWriteContent(''); setWriteFile(null); setWriteType('FREE'); setShowWriteModal(true); }}
+                  onClick={() => { setWriteTitle(''); setWriteContent(''); setWriteFiles([]); setWriteType('FREE'); setShowWriteModal(true); }}
                   className="bg-white border-2 border-[#00b050] text-[#00b050] px-5 py-3.5 rounded-xl font-bold hover:bg-green-50 active:scale-95 transition-all whitespace-nowrap flex items-center gap-2"
                 >
                   <span>✏️</span><span>글쓰기</span>
@@ -2558,7 +2558,7 @@ export default function Home() {
                           {userRole === 'ADMIN' || userRole === 'BUSINESS' && (
                             <button
                               title="글쓰기"
-                              onClick={() => { setPromoMonth(folder.month); setPromoYear(year); setWriteTitle(''); setWriteContent(''); setWriteFile(null); setShowWriteModal(true); }}
+                              onClick={() => { setPromoMonth(folder.month); setPromoYear(year); setWriteTitle(''); setWriteContent(''); setWriteFiles([]); setShowWriteModal(true); }}
                               className={`px-2 py-2 text-[11px] border-y transition-colors ${isSelected ? 'bg-[#009030] border-[#009030] text-white' : 'bg-gray-50 border-gray-100 text-gray-400 hover:text-[#00b050]'}`}
                             >✏️</button>
                           )}
