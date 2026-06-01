@@ -1650,12 +1650,11 @@ export default function Home() {
                       {userRole === 'ADMIN' && (
                         <button
                           className="flex-shrink-0 px-3 py-3 text-gray-300 hover:text-red-500 transition-colors"
-                          onClick={() => {
-                            if (!confirm('업뎃소식에서 숨깁니다.\n✅ 자료 원본은 삭제되지 않습니다.')) return;
-                            const dismissed = JSON.parse(localStorage.getItem('updateNews_dismissed') || '[]');
-                            dismissed.push(mat.id);
-                            localStorage.setItem('updateNews_dismissed', JSON.stringify(dismissed));
+                          onClick={async () => {
+                            if (!confirm('이 자료를 삭제하겠습니까?\n✅ 업로드된 파일 원본은 유지됩니다.')) return;
+                            await supabase.from('materials').delete().eq('id', mat.id);
                             setUpdateNewsMats(prev => prev.filter(m => m.id !== mat.id));
+                            setMaterials(prev => prev.filter(m => m.id !== mat.id));
                             setNewsSelectedIds(prev => { const next = new Set(prev); next.delete(mat.id); return next; });
                           }}
                         >🗑️</button>
@@ -1668,18 +1667,18 @@ export default function Home() {
             {/* 일괄 삭제 푸터 */}
             {userRole === 'ADMIN' && newsSelectedIds.size > 0 && (
               <div className="flex-shrink-0 px-5 py-3 border-t bg-red-50 rounded-b-2xl flex items-center justify-between">
-                <span className="text-[13px] text-red-600 font-bold">{newsSelectedIds.size}개 선택됨 · 자료 원본은 유지됩니다</span>
+                <span className="text-[13px] text-red-600 font-bold">{newsSelectedIds.size}개 선택됨 · 파일 원본은 유지됩니다</span>
                 <button
-                  onClick={() => {
-                    if (!confirm(`선택한 ${newsSelectedIds.size}개를 업뎃소식에서 숨기겠습니까?\n✅ 자료 원본은 삭제되지 않습니다.`)) return;
-                    const dismissed = JSON.parse(localStorage.getItem('updateNews_dismissed') || '[]');
-                    newsSelectedIds.forEach(id => dismissed.push(id));
-                    localStorage.setItem('updateNews_dismissed', JSON.stringify(dismissed));
+                  onClick={async () => {
+                    if (!confirm(`선택한 ${newsSelectedIds.size}개를 삭제하겠습니까?\n✅ 업로드된 파일 원본은 유지됩니다.`)) return;
+                    const ids = Array.from(newsSelectedIds);
+                    await Promise.all(ids.map(id => supabase.from('materials').delete().eq('id', id)));
                     setUpdateNewsMats(prev => prev.filter(m => !newsSelectedIds.has(m.id)));
+                    setMaterials(prev => prev.filter(m => !newsSelectedIds.has(m.id)));
                     setNewsSelectedIds(new Set());
                   }}
                   className="px-4 py-2 bg-red-500 text-white text-[13px] font-bold rounded-xl hover:bg-red-600 transition-colors"
-                >선택 숨기기</button>
+                >선택 삭제</button>
               </div>
             )}
           </div>
