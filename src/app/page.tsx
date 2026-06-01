@@ -1910,7 +1910,7 @@ export default function Home() {
 
               {/* 첨부파일 */}
               <div>
-                <label className="text-[12px] font-bold text-gray-500 mb-1 block">첨부파일 <span className="font-normal text-gray-400">(여러 개 선택 가능)</span></label>
+                <p className="text-[12px] font-bold text-gray-500 mb-1">첨부파일 <span className="font-normal text-gray-400">(여러 개 가능)</span></p>
                 {writeFiles.length > 0 && (
                   <div className="mb-2 space-y-1.5">
                     {writeFiles.map((f, i) => (
@@ -1918,20 +1918,33 @@ export default function Home() {
                         <span className="text-[13px]">📎</span>
                         <span className="flex-1 text-[12px] text-gray-700 truncate">{f.name}</span>
                         <span className="text-[11px] text-gray-400">{(f.size/1024/1024).toFixed(1)}MB</span>
-                        <button type="button" onClick={() => setWriteFiles(prev => prev.filter((_, idx) => idx !== i))}
-                          className="text-gray-400 hover:text-red-500 font-bold text-[14px] leading-none">✕</button>
+                        <button type="button"
+                          onClick={e => { e.stopPropagation(); setWriteFiles(prev => prev.filter((_, idx) => idx !== i)); }}
+                          className="text-gray-400 hover:text-red-500 font-bold text-[14px] leading-none px-1">✕</button>
                       </div>
                     ))}
                   </div>
                 )}
-                <label className="flex items-center gap-2 border border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-[#00b050] hover:bg-green-50/30 transition-colors">
+                <input
+                  ref={writeFileRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={e => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      setWriteFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                    }
+                    e.target.value = '';
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => writeFileRef.current?.click()}
+                  className="w-full flex items-center gap-2 border-2 border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-[#00b050] hover:bg-green-50/30 transition-colors"
+                >
                   <span className="text-gray-400 text-lg">📎</span>
-                  <span className="text-[13px] text-gray-500">파일 추가...</span>
-                  <input ref={writeFileRef} type="file" multiple className="hidden" onChange={e => {
-                    if (e.target.files) setWriteFiles(prev => [...prev, ...Array.from(e.target.files!)]);
-                    if (writeFileRef.current) writeFileRef.current.value = '';
-                  }} />
-                </label>
+                  <span className="text-[13px] text-gray-500">파일 선택...</span>
+                </button>
               </div>
             </div>
 
