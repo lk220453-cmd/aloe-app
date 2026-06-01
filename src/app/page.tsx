@@ -1924,22 +1924,23 @@ export default function Home() {
                     ))}
                   </div>
                 )}
-                <div className="relative w-full">
-                  <div className="w-full flex items-center gap-2 border-2 border-dashed border-gray-300 rounded-xl px-4 py-3 hover:border-[#00b050] hover:bg-green-50/30 transition-colors pointer-events-none">
-                    <span className="text-gray-400 text-lg">📎</span>
-                    <span className="text-[13px] text-gray-500">파일 선택 (여러 개 가능)</span>
-                  </div>
-                  <input
-                    type="file"
-                    multiple
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    onChange={e => {
-                      if (e.target.files && e.target.files.length > 0) {
-                        setWriteFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                <div
+                  className="w-full flex items-center gap-2 border-2 border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-[#00b050] hover:bg-green-50/30 transition-colors"
+                  onClick={() => {
+                    const inp = document.createElement('input');
+                    inp.type = 'file';
+                    inp.multiple = true;
+                    inp.onchange = (e) => {
+                      const files = (e.target as HTMLInputElement).files;
+                      if (files && files.length > 0) {
+                        setWriteFiles(prev => [...prev, ...Array.from(files)]);
                       }
-                      e.target.value = '';
-                    }}
-                  />
+                    };
+                    inp.click();
+                  }}
+                >
+                  <span className="text-gray-400 text-lg">📎</span>
+                  <span className="text-[13px] text-gray-500">파일 선택 (여러 개 가능)</span>
                 </div>
               </div>
             </div>
