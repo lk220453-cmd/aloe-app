@@ -403,7 +403,7 @@ export default function Home() {
   const [writeType, setWriteType] = useState<string>('FREE');
   const [writeCustomerName, setWriteCustomerName] = useState('');
   const writeFileRef = useRef<HTMLInputElement>(null);
-  const [writeFile, setWriteFile] = useState<File | null>(null);
+  const [writeFiles, setWriteFiles] = useState<File[]>([]);
 
   // 업로드 모달 상태 관리
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -587,45 +587,56 @@ export default function Home() {
   const executeWrite = async () => {
     if (!writeTitle.trim()) return;
     const now = new Date();
-    let fileName: string | undefined;
-    let fileUrl: string | undefined;
-    if (writeFile) {
-      const uploaded = await uploadFileToStorage(writeFile);
-      if (uploaded) { fileName = uploaded.fileName; fileUrl = uploaded.fileUrl; }
-    }
-    const newPost: Material = {
-      id: 'm' + Date.now(),
-      title: writeTitle.trim(),
-      type: selectedCategory === '게시판' ? (['NOTICE', 'FREE'].includes(writeType) ? writeType as MaterialType : 'DOCUMENT') : 'DOCUMENT',
-      thumbnailUrl: '',
-      category: selectedCategory,
-      year: promoYear || String(now.getFullYear()),
-      month: promoMonth || String(now.getMonth() + 1),
-      content: writeContent,
-      fileName, fileUrl,
-      productName: writeType === 'FREE' && writeCustomerName.trim()
-        ? writeCustomerName.trim()
-        : (selectedCategory === '게시판' && !['NOTICE', 'FREE'].includes(writeType) ? writeType : undefined),
+    const postType: MaterialType = selectedCategory === '게시판' ? (['NOTICE', 'FREE'].includes(writeType) ? writeType as MaterialType : 'DOCUMENT') : 'DOCUMENT';
+    const productName = writeType === 'FREE' && writeCustomerName.trim()
+      ? writeCustomerName.trim()
+      : (selectedCategory === '게시판' && !['NOTICE', 'FREE'].includes(writeType) ? writeType : undefined);
+
+    const doInsert = async (payload: Record<string, unknown>) => {
+      const { error } = await supabase.from('materials').insert(payload);
+      if (error && error.message.includes('uploaded_by')) {
+        const { uploaded_by: _o, ...rest } = payload as any;
+        await supabase.from('materials').insert(rest);
+      } else if (error) {
+        alert(`저장 오류: ${error.message}`);
+      }
     };
-    const payload: Record<string, unknown> = {
-      id: newPost.id, title: newPost.title, type: newPost.type, thumbnail_url: '',
-      category: newPost.category, year: newPost.year, month: newPost.month,
-      content: newPost.content, file_name: fileName, file_url: fileUrl,
-      product_name: newPost.productName, uploaded_by: currentUser?.username,
-    };
-    const { error: insErr } = await supabase.from('materials').insert(payload);
-    if (insErr && insErr.message.includes('uploaded_by')) {
-      const { uploaded_by: _o, ...rest } = payload as any;
-      await supabase.from('materials').insert(rest);
-    } else if (insErr) {
-      alert(`저장 오류: ${insErr.message}`);
-      return;
+
+    const filesToUpload = writeFiles.length > 0 ? writeFiles : [null];
+    const inserted: Material[] = [];
+
+    for (let i = 0; i < filesToUpload.length; i++) {
+      const file = filesToUpload[i];
+      let fileName: string | undefined;
+      let fileUrl: string | undefined;
+      if (file) {
+        const uploaded = await uploadFileToStorage(file);
+        if (uploaded) { fileName = uploaded.fileName; fileUrl = uploaded.fileUrl; }
+      }
+      const title = writeFiles.length > 1 ? `${writeTitle.trim()} (${i + 1}/${writeFiles.length})` : writeTitle.trim();
+      const newPost: Material = {
+        id: 'm' + Date.now() + Math.random(),
+        title, type: postType, thumbnailUrl: '',
+        category: selectedCategory,
+        year: promoYear || String(now.getFullYear()),
+        month: promoMonth || String(now.getMonth() + 1),
+        content: i === 0 ? writeContent : '',
+        fileName, fileUrl, productName,
+      };
+      await doInsert({
+        id: newPost.id, title: newPost.title, type: newPost.type, thumbnail_url: '',
+        category: newPost.category, year: newPost.year, month: newPost.month,
+        content: newPost.content, file_name: fileName, file_url: fileUrl,
+        product_name: productName, uploaded_by: currentUser?.username,
+      });
+      inserted.push(newPost);
     }
-    setMaterials(prev => [newPost, ...prev]);
+
+    setMaterials(prev => [...inserted.reverse(), ...prev]);
     setShowWriteModal(false);
     setWriteTitle('');
     setWriteContent('');
-    setWriteFile(null);
+    setWriteFiles([]);
     setWriteType('FREE');
     setWriteCustomerName('');
     loadMaterials();
@@ -1899,11 +1910,27 @@ export default function Home() {
 
               {/* 첨부파일 */}
               <div>
-                <label className="text-[12px] font-bold text-gray-500 mb-1 block">첨부파일 (선택)</label>
+                <label className="text-[12px] font-bold text-gray-500 mb-1 block">첨부파일 <span className="font-normal text-gray-400">(여러 개 선택 가능)</span></label>
+                {writeFiles.length > 0 && (
+                  <div className="mb-2 space-y-1.5">
+                    {writeFiles.map((f, i) => (
+                      <div key={i} className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-xl">
+                        <span className="text-[13px]">📎</span>
+                        <span className="flex-1 text-[12px] text-gray-700 truncate">{f.name}</span>
+                        <span className="text-[11px] text-gray-400">{(f.size/1024/1024).toFixed(1)}MB</span>
+                        <button type="button" onClick={() => setWriteFiles(prev => prev.filter((_, idx) => idx !== i))}
+                          className="text-gray-400 hover:text-red-500 font-bold text-[14px] leading-none">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <label className="flex items-center gap-2 border border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-[#00b050] hover:bg-green-50/30 transition-colors">
                   <span className="text-gray-400 text-lg">📎</span>
-                  <span className="text-[13px] text-gray-500 truncate">{writeFile ? writeFile.name : '파일 선택...'}</span>
-                  <input ref={writeFileRef} type="file" className="hidden" onChange={e => setWriteFile(e.target.files?.[0] || null)} />
+                  <span className="text-[13px] text-gray-500">파일 추가...</span>
+                  <input ref={writeFileRef} type="file" multiple className="hidden" onChange={e => {
+                    if (e.target.files) setWriteFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                    if (writeFileRef.current) writeFileRef.current.value = '';
+                  }} />
                 </label>
               </div>
             </div>
