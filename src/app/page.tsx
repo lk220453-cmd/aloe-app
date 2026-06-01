@@ -1843,7 +1843,7 @@ export default function Home() {
       {/* ✏️ 글쓰기 모달 (게시판 / 브랜드판촉) */}
       {showWriteModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style={{maxHeight: 'calc(100vh - 64px)'}}>
             {/* 헤더 */}
             <div className="flex items-center justify-between px-6 py-4 border-b">
               <h3 className="font-extrabold text-[17px] text-gray-800">
@@ -1852,7 +1852,7 @@ export default function Home() {
               <button onClick={() => setShowWriteModal(false)} className="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
               {/* 게시판 타입 선택 */}
               {selectedCategory === '게시판' && (
                 <div className="flex gap-2 flex-wrap">
@@ -1936,7 +1936,7 @@ export default function Home() {
             </div>
 
             {/* 하단 버튼 */}
-            <div className="flex gap-3 px-6 pb-6">
+            <div className="flex gap-3 px-6 pb-6 flex-shrink-0 border-t pt-4">
               <button onClick={() => setShowWriteModal(false)} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition-colors">취소</button>
               <button
                 onClick={executeWrite}
@@ -2078,14 +2078,16 @@ export default function Home() {
                 setUpdateNewsLoading(true);
                 const { data } = await supabase.from('materials').select('*').order('created_at', { ascending: false, nullsFirst: true });
                 if (data && data.length > 0) {
-                  const mapped = data.map((m: any) => ({
-                    id: m.id, title: m.title, type: m.type, thumbnailUrl: m.thumbnail_url || '',
-                    category: m.category, year: m.year, month: m.month,
-                    fileName: m.file_name, fileUrl: m.file_url, productName: m.product_name,
-                    content: m.content, youtubeUrl: m.youtube_url, isPinned: m.is_pinned || false,
-                    uploadedBy: m.uploaded_by,
-                  }));
-                  setUpdateNewsMats(mapped.filter((m: any) => !m.news_hidden));
+                  const mapped = data
+                    .filter((m: any) => !m.news_hidden)
+                    .map((m: any) => ({
+                      id: m.id, title: m.title, type: m.type, thumbnailUrl: m.thumbnail_url || '',
+                      category: m.category, year: m.year, month: m.month,
+                      fileName: m.file_name, fileUrl: m.file_url, productName: m.product_name,
+                      content: m.content, youtubeUrl: m.youtube_url, isPinned: m.is_pinned || false,
+                      uploadedBy: m.uploaded_by,
+                    }));
+                  setUpdateNewsMats(mapped);
                   // 마지막으로 본 자료 ID 저장
                   localStorage.setItem('updateNews_lastSeenId', data[0].id);
                 }
