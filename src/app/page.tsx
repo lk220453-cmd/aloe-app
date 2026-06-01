@@ -1623,11 +1623,12 @@ export default function Home() {
                       {userRole === 'ADMIN' && (
                         <button
                           className="flex-shrink-0 px-3 py-3 text-gray-300 hover:text-red-500 transition-colors"
-                          onClick={async () => {
-                            if (!confirm('이 자료를 삭제하겠습니까?')) return;
-                            await supabase.from('materials').delete().eq('id', mat.id);
+                          onClick={() => {
+                            if (!confirm('업뎃소식에서 이 항목을 숨기겠습니까?\n(자료 자체는 삭제되지 않습니다)')) return;
+                            const dismissed = JSON.parse(localStorage.getItem('updateNews_dismissed') || '[]');
+                            dismissed.push(mat.id);
+                            localStorage.setItem('updateNews_dismissed', JSON.stringify(dismissed));
                             setUpdateNewsMats(prev => prev.filter(m => m.id !== mat.id));
-                            setMaterials(prev => prev.filter(m => m.id !== mat.id));
                           }}
                         >🗑️</button>
                       )}
@@ -2015,7 +2016,8 @@ export default function Home() {
                     content: m.content, youtubeUrl: m.youtube_url, isPinned: m.is_pinned || false,
                     uploadedBy: m.uploaded_by,
                   }));
-                  setUpdateNewsMats(mapped);
+                  const dismissed = new Set(JSON.parse(localStorage.getItem('updateNews_dismissed') || '[]'));
+                  setUpdateNewsMats(mapped.filter((m: Material) => !dismissed.has(m.id)));
                   // 마지막으로 본 자료 ID 저장
                   localStorage.setItem('updateNews_lastSeenId', data[0].id);
                 }
