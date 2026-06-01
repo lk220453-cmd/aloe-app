@@ -1587,39 +1587,51 @@ export default function Home() {
                     return mat.productName || '';
                   })();
                   return (
-                    <button
-                      key={mat.id}
-                      className="w-full text-left px-5 py-3 hover:bg-[#f5f8f0] transition-colors flex items-start gap-3"
-                      onClick={() => {
-                        setShowUpdateNews(false);
-                        isPinnedRef.current = true;
-                        pinnedCatRef.current = mat.category;
-                        setMegaMenuOpen(mat.category);
-                        handleCategoryChange(mat.category);
-                        if (mat.category === '게시판') {
-                          if (mat.type === 'NOTICE') setSelectedSubBoard('NOTICE');
-                          else if (mat.type === 'FREE') setSelectedSubBoard('FREE');
-                        } else if (['건식', '화장품', '기기', '회사소식/홍보', '영업자료집'].includes(mat.category)) {
-                          if (mat.productName) setSelectedProduct(mat.productName);
-                        } else if (mat.category === '브랜드판촉') {
-                          if (mat.year) setPromoYear(mat.year);
-                          if (mat.month) setPromoMonth(mat.month);
-                        }
-                        setTimeout(() => document.getElementById('category-nav')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-                      }}
-                    >
-                      <div className="flex-shrink-0 mt-0.5">
-                        <span className="inline-block bg-[#c8d4b0] text-[#1a3010] text-[10px] font-bold px-1.5 py-0.5 rounded">
-                          {mat.category.replace('소식/홍보', '홍보')}
-                        </span>
-                      </div>
-                      <div className="min-w-0">
-                        {subLabel && (
-                          <span className="text-[11px] text-[#7a9a52] font-semibold block leading-tight">{subLabel}</span>
-                        )}
-                        <span className="text-[13px] text-gray-800 font-medium leading-snug line-clamp-2">{mat.title}</span>
-                      </div>
-                    </button>
+                    <div key={mat.id} className="flex items-start hover:bg-[#f5f8f0] transition-colors">
+                      <button
+                        className="flex-1 text-left px-5 py-3 flex items-start gap-3 min-w-0"
+                        onClick={() => {
+                          setShowUpdateNews(false);
+                          isPinnedRef.current = true;
+                          pinnedCatRef.current = mat.category;
+                          setMegaMenuOpen(mat.category);
+                          handleCategoryChange(mat.category);
+                          if (mat.category === '게시판') {
+                            if (mat.type === 'NOTICE') setSelectedSubBoard('NOTICE');
+                            else if (mat.type === 'FREE') setSelectedSubBoard('FREE');
+                          } else if (['건식', '화장품', '기기', '회사소식/홍보', '영업자료집'].includes(mat.category)) {
+                            if (mat.productName) setSelectedProduct(mat.productName);
+                          } else if (mat.category === '브랜드판촉') {
+                            if (mat.year) setPromoYear(mat.year);
+                            if (mat.month) setPromoMonth(mat.month);
+                          }
+                          setTimeout(() => document.getElementById('category-nav')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                        }}
+                      >
+                        <div className="flex-shrink-0 mt-0.5">
+                          <span className="inline-block bg-[#c8d4b0] text-[#1a3010] text-[10px] font-bold px-1.5 py-0.5 rounded">
+                            {mat.category.replace('소식/홍보', '홍보')}
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          {subLabel && (
+                            <span className="text-[11px] text-[#7a9a52] font-semibold block leading-tight">{subLabel}</span>
+                          )}
+                          <span className="text-[13px] text-gray-800 font-medium leading-snug line-clamp-2">{mat.title}</span>
+                        </div>
+                      </button>
+                      {userRole === 'ADMIN' && (
+                        <button
+                          className="flex-shrink-0 px-3 py-3 text-gray-300 hover:text-red-500 transition-colors"
+                          onClick={async () => {
+                            if (!confirm('이 자료를 삭제하겠습니까?')) return;
+                            await supabase.from('materials').delete().eq('id', mat.id);
+                            setUpdateNewsMats(prev => prev.filter(m => m.id !== mat.id));
+                            setMaterials(prev => prev.filter(m => m.id !== mat.id));
+                          }}
+                        >🗑️</button>
+                      )}
+                    </div>
                   );
                 })
               )}
