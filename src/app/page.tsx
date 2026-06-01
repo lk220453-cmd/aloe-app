@@ -1650,11 +1650,9 @@ export default function Home() {
                       {userRole === 'ADMIN' && (
                         <button
                           className="flex-shrink-0 px-3 py-3 text-gray-300 hover:text-red-500 transition-colors"
-                          onClick={() => {
-                            if (!confirm('업뎃소식에서 이 항목을 숨기겠습니까?\n(자료 목록에서는 그대로 유지됩니다)')) return;
-                            const dismissed = JSON.parse(localStorage.getItem('updateNews_dismissed') || '[]');
-                            dismissed.push(mat.id);
-                            localStorage.setItem('updateNews_dismissed', JSON.stringify(dismissed));
+                          onClick={async () => {
+                            if (!confirm('업뎃소식에서 삭제하겠습니까?\n(카테고리 자료는 그대로 유지됩니다)')) return;
+                            await supabase.from('materials').update({ news_hidden: true }).eq('id', mat.id);
                             setUpdateNewsMats(prev => prev.filter(m => m.id !== mat.id));
                             setNewsSelectedIds(prev => { const next = new Set(prev); next.delete(mat.id); return next; });
                           }}
@@ -1670,11 +1668,10 @@ export default function Home() {
               <div className="flex-shrink-0 px-5 py-3 border-t bg-red-50 rounded-b-2xl flex items-center justify-between">
                 <span className="text-[13px] text-red-600 font-bold">{newsSelectedIds.size}개 선택됨 · 파일 원본은 유지됩니다</span>
                 <button
-                  onClick={() => {
-                    if (!confirm(`업뎃소식에서 ${newsSelectedIds.size}개를 숨기겠습니까?\n(자료 목록에서는 그대로 유지됩니다)`)) return;
-                    const dismissed = JSON.parse(localStorage.getItem('updateNews_dismissed') || '[]');
-                    newsSelectedIds.forEach(id => dismissed.push(id));
-                    localStorage.setItem('updateNews_dismissed', JSON.stringify(dismissed));
+                  onClick={async () => {
+                    if (!confirm(`업뎃소식에서 ${newsSelectedIds.size}개를 삭제하겠습니까?\n(카테고리 자료는 그대로 유지됩니다)`)) return;
+                    const ids = Array.from(newsSelectedIds);
+                    await Promise.all(ids.map(id => supabase.from('materials').update({ news_hidden: true }).eq('id', id)));
                     setUpdateNewsMats(prev => prev.filter(m => !newsSelectedIds.has(m.id)));
                     setNewsSelectedIds(new Set());
                   }}
@@ -2061,8 +2058,7 @@ export default function Home() {
                     content: m.content, youtubeUrl: m.youtube_url, isPinned: m.is_pinned || false,
                     uploadedBy: m.uploaded_by,
                   }));
-                  const dismissed = new Set(JSON.parse(localStorage.getItem('updateNews_dismissed') || '[]'));
-                  setUpdateNewsMats(mapped.filter((m: Material) => !dismissed.has(m.id)));
+                  setUpdateNewsMats(mapped.filter((m: any) => !m.news_hidden));
                   // 마지막으로 본 자료 ID 저장
                   localStorage.setItem('updateNews_lastSeenId', data[0].id);
                 }
