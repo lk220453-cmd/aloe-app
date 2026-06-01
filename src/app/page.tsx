@@ -402,7 +402,6 @@ export default function Home() {
   const [writeContent, setWriteContent] = useState('');
   const [writeType, setWriteType] = useState<string>('FREE');
   const [writeCustomerName, setWriteCustomerName] = useState('');
-  const writeFileRef = useRef<HTMLInputElement>(null);
   const [writeFiles, setWriteFiles] = useState<File[]>([]);
 
   // 업로드 모달 상태 관리
@@ -1925,8 +1924,12 @@ export default function Home() {
                     ))}
                   </div>
                 )}
+                <label htmlFor="write-file-input" className="w-full flex items-center gap-2 border-2 border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-[#00b050] hover:bg-green-50/30 transition-colors">
+                  <span className="text-gray-400 text-lg">📎</span>
+                  <span className="text-[13px] text-gray-500">파일 선택...</span>
+                </label>
                 <input
-                  ref={writeFileRef}
+                  id="write-file-input"
                   type="file"
                   multiple
                   className="hidden"
@@ -1937,14 +1940,6 @@ export default function Home() {
                     e.target.value = '';
                   }}
                 />
-                <button
-                  type="button"
-                  onClick={() => writeFileRef.current?.click()}
-                  className="w-full flex items-center gap-2 border-2 border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-[#00b050] hover:bg-green-50/30 transition-colors"
-                >
-                  <span className="text-gray-400 text-lg">📎</span>
-                  <span className="text-[13px] text-gray-500">파일 선택...</span>
-                </button>
               </div>
             </div>
 
