@@ -394,6 +394,7 @@ export default function Home() {
   const [updateNewsMats, setUpdateNewsMats] = useState<Material[]>([]);
   const [updateNewsLoading, setUpdateNewsLoading] = useState(false);
   const [hasNewUpdate, setHasNewUpdate] = useState(false);
+  const [newsSelectedIds, setNewsSelectedIds] = useState<Set<string>>(new Set());
 
   // 글쓰기 모달 상태
   const [showWriteModal, setShowWriteModal] = useState(false);
@@ -1564,12 +1565,27 @@ export default function Home() {
 
       {/* 🔔 업뎃소식 모달 */}
       {showUpdateNews && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setShowUpdateNews(false)}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => { setShowUpdateNews(false); setNewsSelectedIds(new Set()); }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col" style={{maxHeight: 'calc(100vh - 80px)'}} onClick={e => e.stopPropagation()}>
+            {/* 헤더 */}
             <div className="flex-shrink-0 flex justify-between items-center px-5 py-4 border-b bg-[#f5f8f0] rounded-t-2xl">
-              <h3 className="font-extrabold text-[16px] text-[#1a3010]">🔔 업뎃소식</h3>
-              <button onClick={() => setShowUpdateNews(false)} className="text-gray-400 hover:text-gray-700 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">✕</button>
+              <div className="flex items-center gap-3">
+                <h3 className="font-extrabold text-[16px] text-[#1a3010]">🔔 업뎃소식</h3>
+                {userRole === 'ADMIN' && updateNewsMats.length > 0 && (
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newsSelectedIds.size === updateNewsMats.length}
+                      onChange={e => setNewsSelectedIds(e.target.checked ? new Set(updateNewsMats.map(m => m.id)) : new Set())}
+                      className="w-4 h-4 accent-red-500"
+                    />
+                    <span className="text-[12px] text-gray-500">전체선택</span>
+                  </label>
+                )}
+              </div>
+              <button onClick={() => { setShowUpdateNews(false); setNewsSelectedIds(new Set()); }} className="text-gray-400 hover:text-gray-700 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">✕</button>
             </div>
+            {/* 목록 */}
             <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
               {updateNewsLoading ? (
                 <p className="text-center text-gray-400 py-10 text-[13px]">불러오는 중...</p>
@@ -1587,11 +1603,24 @@ export default function Home() {
                     return mat.productName || '';
                   })();
                   return (
-                    <div key={mat.id} className="flex items-start hover:bg-[#f5f8f0] transition-colors">
+                    <div key={mat.id} className={`flex items-center hover:bg-[#f5f8f0] transition-colors ${newsSelectedIds.has(mat.id) ? 'bg-red-50' : ''}`}>
+                      {userRole === 'ADMIN' && (
+                        <input
+                          type="checkbox"
+                          checked={newsSelectedIds.has(mat.id)}
+                          onChange={e => setNewsSelectedIds(prev => {
+                            const next = new Set(prev);
+                            e.target.checked ? next.add(mat.id) : next.delete(mat.id);
+                            return next;
+                          })}
+                          className="flex-shrink-0 ml-4 w-4 h-4 accent-red-500"
+                        />
+                      )}
                       <button
-                        className="flex-1 text-left px-5 py-3 flex items-start gap-3 min-w-0"
+                        className="flex-1 text-left px-4 py-3 flex items-start gap-3 min-w-0"
                         onClick={() => {
                           setShowUpdateNews(false);
+                          setNewsSelectedIds(new Set());
                           isPinnedRef.current = true;
                           pinnedCatRef.current = mat.category;
                           setMegaMenuOpen(mat.category);
@@ -1614,9 +1643,7 @@ export default function Home() {
                           </span>
                         </div>
                         <div className="min-w-0">
-                          {subLabel && (
-                            <span className="text-[11px] text-[#7a9a52] font-semibold block leading-tight">{subLabel}</span>
-                          )}
+                          {subLabel && <span className="text-[11px] text-[#7a9a52] font-semibold block leading-tight">{subLabel}</span>}
                           <span className="text-[13px] text-gray-800 font-medium leading-snug line-clamp-2">{mat.title}</span>
                         </div>
                       </button>
@@ -1624,11 +1651,12 @@ export default function Home() {
                         <button
                           className="flex-shrink-0 px-3 py-3 text-gray-300 hover:text-red-500 transition-colors"
                           onClick={() => {
-                            if (!confirm('업뎃소식에서 이 항목을 숨기겠습니까?\n(자료 자체는 삭제되지 않습니다)')) return;
+                            if (!confirm('업뎃소식에서 숨깁니다.\n✅ 자료 원본은 삭제되지 않습니다.')) return;
                             const dismissed = JSON.parse(localStorage.getItem('updateNews_dismissed') || '[]');
                             dismissed.push(mat.id);
                             localStorage.setItem('updateNews_dismissed', JSON.stringify(dismissed));
                             setUpdateNewsMats(prev => prev.filter(m => m.id !== mat.id));
+                            setNewsSelectedIds(prev => { const next = new Set(prev); next.delete(mat.id); return next; });
                           }}
                         >🗑️</button>
                       )}
@@ -1637,6 +1665,23 @@ export default function Home() {
                 })
               )}
             </div>
+            {/* 일괄 삭제 푸터 */}
+            {userRole === 'ADMIN' && newsSelectedIds.size > 0 && (
+              <div className="flex-shrink-0 px-5 py-3 border-t bg-red-50 rounded-b-2xl flex items-center justify-between">
+                <span className="text-[13px] text-red-600 font-bold">{newsSelectedIds.size}개 선택됨 · 자료 원본은 유지됩니다</span>
+                <button
+                  onClick={() => {
+                    if (!confirm(`선택한 ${newsSelectedIds.size}개를 업뎃소식에서 숨기겠습니까?\n✅ 자료 원본은 삭제되지 않습니다.`)) return;
+                    const dismissed = JSON.parse(localStorage.getItem('updateNews_dismissed') || '[]');
+                    newsSelectedIds.forEach(id => dismissed.push(id));
+                    localStorage.setItem('updateNews_dismissed', JSON.stringify(dismissed));
+                    setUpdateNewsMats(prev => prev.filter(m => !newsSelectedIds.has(m.id)));
+                    setNewsSelectedIds(new Set());
+                  }}
+                  className="px-4 py-2 bg-red-500 text-white text-[13px] font-bold rounded-xl hover:bg-red-600 transition-colors"
+                >선택 숨기기</button>
+              </div>
+            )}
           </div>
         </div>
       )}
