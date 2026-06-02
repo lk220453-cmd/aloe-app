@@ -905,13 +905,10 @@ export default function Home() {
       }
     }
 
-    // 폴더 필터링:
-    // - 폴더 선택 시: 해당 폴더 자료만 표시
-    // - 전체보기(ALL) 시: 폴더 자료 숨김 (메인/전체보기 요청)
-    // - 카테고리 내 전체 탭: 폴더 자료도 함께 표시
+    // 폴더 필터링: 폴더 선택 시 해당 폴더 자료만, 미선택 시 폴더 미지정 자료만 표시
     const matchFolder = selectedFolder
       ? (mat.folderName || '') === selectedFolder
-      : effCat === 'ALL' ? !mat.folderName : true;
+      : !mat.folderName;
 
     return matchSearch && matchCategory && matchType && matchFolder;
   });
