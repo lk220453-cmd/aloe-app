@@ -2878,16 +2878,16 @@ export default function Home() {
       ) : (
         /* ============== 번호 목록 UI ============== */
         (() => {
-          // 폴더 탭 표시 (서브메뉴/타입 선택 + 해당 폴더 존재 시)
+          // 현재 컨텍스트에 맞는 폴더 목록
           const currentFolders = (() => {
-            // 게시판: selectedSubBoard → 한글 이름 매핑
+            if (selectedCategory === 'ALL' || selectedCategory === 'NONE') return [];
+            // 서브메뉴 선택 시: 해당 서브메뉴 폴더만
             if (selectedCategory === '게시판' && selectedSubBoard !== 'ALL') {
               const boardName = selectedSubBoard === 'NOTICE' ? '공지사항'
                 : selectedSubBoard === 'FREE' ? '자유게시판'
                 : selectedSubBoard;
               return subFolders.filter(f => f.category === '게시판' && f.product_name === boardName);
             }
-            // 회사소식/홍보, 영업자료집: selectedType → 한글 이름 매핑
             if ((selectedCategory === '회사소식/홍보' || selectedCategory === '영업자료집') && selectedType !== 'ALL') {
               const typeName = selectedType === 'DOCUMENT' ? '문서'
                 : selectedType === 'VIDEO' ? '영상'
@@ -2895,11 +2895,11 @@ export default function Home() {
               if (!typeName) return [];
               return subFolders.filter(f => f.category === selectedCategory && f.product_name === typeName);
             }
-            // 제품군 기반 (건식/화장품/기기/영업자료집 커스텀)
             if (selectedProduct && selectedProduct !== '전체' && selectedProduct !== '기타') {
               return subFolders.filter(f => f.category === selectedCategory && f.product_name === selectedProduct);
             }
-            return [];
+            // 전체 보기: 해당 카테고리의 모든 폴더 표시
+            return subFolders.filter(f => f.category === selectedCategory);
           })();
 
           const totalPages = Math.max(1, Math.ceil(filteredMaterials.length / PAGE_SIZE));
