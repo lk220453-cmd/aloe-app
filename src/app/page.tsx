@@ -2963,17 +2963,17 @@ export default function Home() {
                   {!selectedFolder && currentFolders.map((f, idx) => (
                     <div key={f.id}
                       onClick={() => { setSelectedFolder(f.name); setCurrentPage(1); }}
-                      className="group flex items-center px-4 py-3.5 hover:bg-[#f0f7eb] transition-colors cursor-pointer bg-[#f8fbf5]"
+                      className="group flex items-center px-4 py-4 hover:bg-green-50/40 transition-colors cursor-pointer"
                     >
-                      <span className="w-10 text-center text-[12px] font-bold text-[#7a9a52] flex-shrink-0">{idx + 1}</span>
-                      <div className="flex-1 flex items-center gap-2.5 ml-4 min-w-0">
-                        <span className="text-[18px] flex-shrink-0">📁</span>
-                        <span className="text-[14px] font-bold text-[#3d6b1e] group-hover:text-[#2a4d12] transition-colors truncate">{f.name}</span>
-                        <span className="flex-shrink-0 text-[10px] font-bold text-[#7a9a52] bg-[#e8f2de] px-1.5 py-0.5 rounded">하위폴더</span>
+                      <span className="w-10 text-center text-[13px] font-bold text-gray-300 group-hover:text-[#00b050] transition-colors flex-shrink-0">{idx + 1}</span>
+                      <div className="flex-1 flex items-center gap-3 ml-4 min-w-0">
+                        <span className="text-lg flex-shrink-0">📁</span>
+                        <span className="text-[14px] font-medium text-gray-800 group-hover:text-[#00723a] transition-colors truncate">{f.name}</span>
+                        <span className="flex-shrink-0 text-[10px] font-bold text-[#7a9a52] bg-[#e8f2de] px-1.5 py-0.5 rounded">폴더</span>
                       </div>
-                      <span className="w-24 text-center hidden sm:block text-[11px] text-[#7a9a52] font-bold flex-shrink-0">폴더</span>
-                      <span className="w-16 text-center hidden sm:block text-[12px] text-gray-300 flex-shrink-0">—</span>
-                      <span className="w-16 text-center text-[12px] text-[#7a9a52] font-bold flex-shrink-0">▶ 열기</span>
+                      <span className="w-24 text-center hidden sm:block text-[12px] text-gray-400 flex-shrink-0">—</span>
+                      <span className="w-16 text-center hidden sm:block text-[12px] text-gray-400 flex-shrink-0">—</span>
+                      <span className="w-16 text-center text-[12px] text-[#00b050] flex-shrink-0">▶ 열기</span>
                     </div>
                   ))}
                   {/* 폴더 선택: 뒤로가기 행 */}
