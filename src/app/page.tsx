@@ -1003,13 +1003,64 @@ export default function Home() {
             </div>
             {/* 서브메뉴 목록 */}
             <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-white">
-              {(submenuMgmtCategory === '건식' ? healthProducts 
-                : submenuMgmtCategory === '화장품' ? cosmeticsProducts 
+              {/* 기본 서브메뉴 (삭제 불가) */}
+              {(() => {
+                const builtIns: Record<string, string[]> = {
+                  '회사소식/홍보': ['문서', '영상', '링크(웹링크)'],
+                  '영업자료집': ['문서', '영상', '링크(웹링크)'],
+                  '게시판': ['공지사항', '자유게시판', '기타'],
+                };
+                const defaults = builtIns[submenuMgmtCategory] || [];
+                if (defaults.length === 0) return null;
+                return (
+                  <>
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">기본 서브메뉴</p>
+                    {defaults.map(name => (
+                      <div key={name} className="border border-blue-100 rounded-xl overflow-hidden">
+                        <div className="flex items-center justify-between p-3 bg-blue-50">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[14px] font-medium text-gray-700">{name}</span>
+                            <span className="text-[10px] bg-blue-100 text-blue-500 px-1.5 py-0.5 rounded font-bold">기본</span>
+                          </div>
+                          <button onClick={() => setFolderMgmtProduct(folderMgmtProduct === name ? '' : name)}
+                            className={`text-[11px] px-2.5 py-1 rounded-lg font-bold transition-colors ${folderMgmtProduct === name ? 'bg-[#00b050] text-white' : 'bg-white border border-gray-200 text-gray-500 hover:border-[#00b050]'}`}>📁 폴더</button>
+                        </div>
+                        {folderMgmtProduct === name && (
+                          <div className="p-3 bg-white border-t border-blue-100 space-y-2">
+                            {subFolders.filter(f => f.category === submenuMgmtCategory && f.product_name === name).length > 0 ? (
+                              subFolders.filter(f => f.category === submenuMgmtCategory && f.product_name === name).map(sf => (
+                                <div key={sf.id} className="flex items-center gap-2 px-3 py-1.5 bg-[#f5f8f0] rounded-lg">
+                                  <span className="text-[12px]">📁</span>
+                                  <span className="flex-1 text-[12px] text-gray-700">{sf.name}</span>
+                                  <button onClick={() => deleteSubFolder(sf.id)} className="text-[11px] text-red-400 hover:text-red-600 font-bold">✕</button>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="text-[11px] text-gray-400 text-center py-1">폴더 없음</p>
+                            )}
+                            <div className="flex gap-1.5">
+                              <input type="text" value={newFolderName} onChange={e => setNewFolderName(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && addSubFolder()}
+                                placeholder="새 폴더명 입력"
+                                className="flex-1 p-2 border border-gray-200 rounded-lg text-[12px] focus:outline-none focus:ring-1 focus:ring-[#7a9a52]/50" />
+                              <button onClick={addSubFolder} className="px-3 py-2 bg-[#00b050] text-white rounded-lg font-bold text-[12px] hover:bg-[#009030]">추가</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mt-3 mb-1">커스텀 서브메뉴</p>
+                  </>
+                );
+              })()}
+              {/* 커스텀 서브메뉴 (삭제 가능) */}
+              {(submenuMgmtCategory === '건식' ? healthProducts
+                : submenuMgmtCategory === '화장품' ? cosmeticsProducts
                 : submenuMgmtCategory === '기기' ? deviceProducts
                 : submenuMgmtCategory === '회사소식/홍보' ? newsSubmenus
                 : submenuMgmtCategory === '영업자료집' ? salesSubmenus
                 : boardSubmenus)
-                .filter(p => !['전체', '기타', '공지사항', '자유게시판'].includes(p))
+                .filter(p => !['전체', '기타', '공지사항', '자유게시판', '문서', '영상', '링크(웹링크)'].includes(p))
                 .map(name => (
                   <div key={name} className="border border-gray-100 rounded-xl overflow-hidden">
                     <div className="flex items-center justify-between p-3 bg-gray-50">
