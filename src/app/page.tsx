@@ -2948,29 +2948,6 @@ export default function Home() {
 
           return (
             <div className="mt-4">
-              {/* 폴더 서브메뉴 탭 네비게이션 */}
-              {currentFolders.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 px-2 pb-4 mb-4 border-b border-gray-100">
-                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1">📁 폴더</span>
-                  <button
-                    onClick={() => { setSelectedFolder(null); setCurrentPage(1); }}
-                    className={`px-3 py-1.5 rounded-lg text-[13px] font-bold transition-all ${!selectedFolder ? 'bg-[#00b050]/10 text-[#00b050]' : 'text-gray-500 hover:bg-gray-100'}`}
-                  >
-                    전체
-                  </button>
-                  {currentFolders.map(f => (
-                    <button
-                      key={f.id}
-                      onClick={() => { setSelectedFolder(f.name); setCurrentPage(1); }}
-                      className={`px-3 py-1.5 rounded-lg text-[13px] font-bold transition-all flex items-center gap-1.5 ${selectedFolder === f.name ? 'bg-[#00b050]/10 text-[#00b050]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'}`}
-                    >
-                      <span>📁</span>
-                      <span>{f.name}</span>
-                      {selectedFolder === f.name && <span className="text-[10px]">➔</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
               {/* 목록 헤더 */}
               <div className="flex items-center px-4 py-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 mb-1">
                 <span className="w-10 text-center">No.</span>
@@ -2979,17 +2956,38 @@ export default function Home() {
                 <span className="w-16 text-center hidden sm:block">형식</span>
                 <span className="w-16 text-center">열람</span>
               </div>
-              {/* 선택된 폴더 안내 */}
-              {selectedFolder && (
-                <div className="flex items-center gap-2 px-4 py-2 mb-2 bg-amber-50 rounded-lg border border-amber-100">
-                  <span className="text-[13px]">📂</span>
-                  <span className="text-[13px] font-bold text-amber-700">{selectedFolder}</span>
-                  <span className="text-[12px] text-amber-500">폴더 내 자료</span>
-                </div>
-              )}
               {/* 목록 행 */}
-              {pagedMaterials.length > 0 ? (
+              {(currentFolders.length > 0 || pagedMaterials.length > 0) ? (
                 <div className="divide-y divide-gray-100">
+                  {/* 폴더 미선택: 하위폴더 행 맨 위 표시 */}
+                  {!selectedFolder && currentFolders.map((f, idx) => (
+                    <div key={f.id}
+                      onClick={() => { setSelectedFolder(f.name); setCurrentPage(1); }}
+                      className="group flex items-center px-4 py-3.5 hover:bg-[#f0f7eb] transition-colors cursor-pointer bg-[#f8fbf5]"
+                    >
+                      <span className="w-10 text-center text-[12px] font-bold text-[#7a9a52] flex-shrink-0">{idx + 1}</span>
+                      <div className="flex-1 flex items-center gap-2.5 ml-4 min-w-0">
+                        <span className="text-[18px] flex-shrink-0">📁</span>
+                        <span className="text-[14px] font-bold text-[#3d6b1e] group-hover:text-[#2a4d12] transition-colors truncate">{f.name}</span>
+                        <span className="flex-shrink-0 text-[10px] font-bold text-[#7a9a52] bg-[#e8f2de] px-1.5 py-0.5 rounded">하위폴더</span>
+                      </div>
+                      <span className="w-24 text-center hidden sm:block text-[11px] text-[#7a9a52] font-bold flex-shrink-0">폴더</span>
+                      <span className="w-16 text-center hidden sm:block text-[12px] text-gray-300 flex-shrink-0">—</span>
+                      <span className="w-16 text-center text-[12px] text-[#7a9a52] font-bold flex-shrink-0">▶ 열기</span>
+                    </div>
+                  ))}
+                  {/* 폴더 선택: 뒤로가기 행 */}
+                  {selectedFolder && (
+                    <div onClick={() => { setSelectedFolder(null); setCurrentPage(1); }}
+                      className="group flex items-center px-4 py-3 hover:bg-gray-100 transition-colors cursor-pointer bg-gray-50/80"
+                    >
+                      <span className="w-10 text-center text-[14px] text-gray-400 flex-shrink-0">↩</span>
+                      <div className="flex-1 flex items-center gap-2 ml-4 min-w-0">
+                        <span className="text-[13px] font-bold text-gray-500">📂 상위 목록으로</span>
+                        <span className="text-[11px] text-gray-400">({selectedFolder})</span>
+                      </div>
+                    </div>
+                  )}
                   {pagedMaterials.map((mat, idx) => (
                     <div
                       key={mat.id}
@@ -3006,7 +3004,7 @@ export default function Home() {
                     >
                       {/* 번호 */}
                       <span className="w-10 text-center text-[13px] font-bold text-gray-300 group-hover:text-[#00b050] transition-colors flex-shrink-0">
-                        {globalOffset + idx + 1}
+                        {(!selectedFolder ? currentFolders.length : 0) + globalOffset + idx + 1}
                       </span>
 
                       {/* 아이콘 + 제목 */}
