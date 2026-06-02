@@ -2917,25 +2917,36 @@ export default function Home() {
                 <span className="w-16 text-center hidden sm:block">형식</span>
                 <span className="w-16 text-center">열람</span>
               </div>
-              {/* 폴더 탭 (헤더 아래) */}
-              {currentFolders.length > 0 && (
-                <div className="flex flex-wrap gap-2 px-2 py-2 border-b border-gray-100 bg-gray-50/50">
-                  <button
-                    onClick={() => { setSelectedFolder(null); setCurrentPage(1); }}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[12px] font-bold border transition-colors ${!selectedFolder ? 'bg-[#1a3010] text-white border-[#1a3010]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#1a3010]'}`}
-                  >📂 전체</button>
-                  {currentFolders.map(f => (
-                    <button key={f.id}
-                      onClick={() => { setSelectedFolder(f.name); setCurrentPage(1); }}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[12px] font-bold border transition-colors ${selectedFolder === f.name ? 'bg-[#1a3010] text-white border-[#1a3010]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#1a3010]'}`}
-                    >📁 {f.name}</button>
-                  ))}
-                </div>
-              )}
-
               {/* 목록 행 */}
-              {pagedMaterials.length > 0 ? (
+              {(currentFolders.length > 0 || pagedMaterials.length > 0) ? (
                 <div className="divide-y divide-gray-100">
+                  {/* 폴더 행 (폴더 미선택 시에만 표시) */}
+                  {!selectedFolder && currentFolders.map((f, idx) => (
+                    <div key={f.id}
+                      onClick={() => { setSelectedFolder(f.name); setCurrentPage(1); }}
+                      className="group flex items-center px-4 py-4 hover:bg-amber-50/60 transition-colors cursor-pointer bg-amber-50/20"
+                    >
+                      <span className="w-10 text-center text-[13px] font-bold text-amber-400 flex-shrink-0">{idx + 1}</span>
+                      <div className="flex-1 flex items-center gap-3 ml-4 min-w-0">
+                        <span className="text-lg flex-shrink-0">📁</span>
+                        <span className="text-[14px] font-semibold text-amber-700 group-hover:text-amber-900 transition-colors truncate">{f.name}</span>
+                      </div>
+                      <span className="w-24 text-center hidden sm:block text-[12px] text-amber-500 font-bold flex-shrink-0">폴더</span>
+                      <span className="w-16 text-center hidden sm:block text-[12px] text-gray-400 flex-shrink-0">—</span>
+                      <span className="w-16 text-center text-[12px] text-amber-500 flex-shrink-0">▶ 열기</span>
+                    </div>
+                  ))}
+                  {/* 폴더 선택 시 뒤로가기 행 */}
+                  {selectedFolder && (
+                    <div onClick={() => { setSelectedFolder(null); setCurrentPage(1); }}
+                      className="group flex items-center px-4 py-3 hover:bg-gray-100 transition-colors cursor-pointer bg-gray-50"
+                    >
+                      <span className="w-10 text-center text-[13px] text-gray-400 flex-shrink-0">↩</span>
+                      <div className="flex-1 flex items-center gap-3 ml-4 min-w-0">
+                        <span className="text-[13px] text-gray-500 font-bold">📂 상위 목록으로</span>
+                      </div>
+                    </div>
+                  )}
                   {pagedMaterials.map((mat, idx) => (
                     <div
                       key={mat.id}
@@ -2952,7 +2963,7 @@ export default function Home() {
                     >
                       {/* 번호 */}
                       <span className="w-10 text-center text-[13px] font-bold text-gray-300 group-hover:text-[#00b050] transition-colors flex-shrink-0">
-                        {globalOffset + idx + 1}
+                        {(!selectedFolder ? currentFolders.length : 0) + globalOffset + idx + 1}
                       </span>
 
                       {/* 아이콘 + 제목 */}
