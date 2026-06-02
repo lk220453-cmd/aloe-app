@@ -388,6 +388,9 @@ export default function Home() {
   const [editAttachments, setEditAttachments] = useState<{url: string; name: string}[]>([]);
   const [newAttachmentFiles, setNewAttachmentFiles] = useState<File[]>([]);
   const popupAddFileRef = useRef<HTMLInputElement>(null);
+  const [popupAttachMode, setPopupAttachMode] = useState<'file' | 'link' | 'youtube'>('file');
+  const [popupLinkUrl, setPopupLinkUrl] = useState('');
+  const [popupYoutubeUrl, setPopupYoutubeUrl] = useState('');
 
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null);
   const [showUpdateNews, setShowUpdateNews] = useState(false);
@@ -1367,6 +1370,7 @@ export default function Home() {
                     setEditingPopup({ id: 0, title: '', content: '', imageUrl: null, attachments: [], isActive: true, version: 1 });
                     setIsNewPopup(true); setPopupEditTitle(''); setPopupEditContent('');
                     setPopupEditIsActive(true); setEditAttachments([]); setNewAttachmentFiles([]);
+                    setPopupAttachMode('file'); setPopupLinkUrl(''); setPopupYoutubeUrl('');
                   }} className="w-full py-3 rounded-xl bg-[#00b050] text-white font-extrabold hover:bg-[#009030] text-[13px]">➕ 새 팝업 만들기</button>
                   <button onClick={() => setShowPopupMgmt(false)}
                     className="w-full py-2.5 rounded-xl border border-gray-200 text-gray-500 font-bold hover:bg-gray-50 text-[13px]">닫기</button>
@@ -1389,25 +1393,23 @@ export default function Home() {
                       placeholder="공지 내용을 입력하세요..." />
                   </div>
                   <div>
-                    <label className="text-[12px] font-bold text-gray-500 mb-2 block">첨부파일</label>
-                    {editAttachments.length > 0 && (
+                    <label className="text-[12px] font-bold text-gray-500 mb-2 block">첨부</label>
+                    {/* 등록된 첨부 목록 */}
+                    {(editAttachments.length > 0 || newAttachmentFiles.length > 0) && (
                       <div className="space-y-1.5 mb-2">
                         {editAttachments.map((att, i) => {
                           const ext = att.url.split('?')[0].split('.').pop()?.toLowerCase() || '';
                           const isImg = ['jpg','jpeg','png','gif','webp','svg'].includes(ext);
+                          const isYt = att.url.includes('youtube.com') || att.url.includes('youtu.be');
                           return (
                             <div key={i} className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
-                              <span className="text-[15px]">{isImg ? '🖼️' : '📎'}</span>
+                              <span className="text-[15px]">{isYt ? '▶' : isImg ? '🖼️' : att.url.startsWith('http') && !att.url.includes('supabase') ? '🔗' : '📎'}</span>
                               <span className="flex-1 text-[12px] text-gray-600 truncate">{att.name}</span>
                               <button type="button" onClick={() => setEditAttachments(prev => prev.filter((_, j) => j !== i))}
                                 className="text-red-400 hover:text-red-600 font-bold text-[16px] flex-shrink-0 leading-none">✕</button>
                             </div>
                           );
                         })}
-                      </div>
-                    )}
-                    {newAttachmentFiles.length > 0 && (
-                      <div className="space-y-1.5 mb-2">
                         {newAttachmentFiles.map((f, i) => (
                           <div key={i} className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl px-3 py-2">
                             <span className="text-[15px]">{f.type.startsWith('image/') ? '🖼️' : '📎'}</span>
@@ -1418,15 +1420,59 @@ export default function Home() {
                         ))}
                       </div>
                     )}
-                    <label className="flex items-center gap-2 border border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-[#00b050] hover:bg-green-50/30 transition-colors">
-                      <span className="text-gray-400 text-[16px]">➕</span>
-                      <span className="text-[13px] text-gray-500">파일 추가...</span>
-                      <input ref={popupAddFileRef} type="file" className="hidden" onChange={e => {
-                        const f = e.target.files?.[0] || null;
-                        if (f) setNewAttachmentFiles(prev => [...prev, f]);
-                        if (popupAddFileRef.current) popupAddFileRef.current.value = '';
-                      }} />
-                    </label>
+                    {/* 탭 선택 */}
+                    <div className="flex rounded-xl border border-gray-200 overflow-hidden mb-2">
+                      {([['file','📁 파일'],['link','🔗 링크'],['youtube','▶ YouTube']] as const).map(([mode, label]) => (
+                        <button key={mode} type="button" onClick={() => setPopupAttachMode(mode)}
+                          className={`flex-1 py-2 text-[12px] font-bold transition-colors ${popupAttachMode === mode ? (mode === 'youtube' ? 'bg-red-500 text-white' : mode === 'link' ? 'bg-blue-500 text-white' : 'bg-[#00b050] text-white') : 'bg-white text-gray-500 hover:bg-gray-50'}`}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    {/* 파일 업로드 */}
+                    {popupAttachMode === 'file' && (
+                      <label className="flex items-center gap-2 border border-dashed border-gray-300 rounded-xl px-4 py-3 cursor-pointer hover:border-[#00b050] hover:bg-green-50/30 transition-colors">
+                        <span className="text-gray-400 text-[16px]">➕</span>
+                        <span className="text-[13px] text-gray-500">파일 추가...</span>
+                        <input ref={popupAddFileRef} type="file" className="hidden" onChange={e => {
+                          const f = e.target.files?.[0] || null;
+                          if (f) setNewAttachmentFiles(prev => [...prev, f]);
+                          if (popupAddFileRef.current) popupAddFileRef.current.value = '';
+                        }} />
+                      </label>
+                    )}
+                    {/* 링크 */}
+                    {popupAttachMode === 'link' && (
+                      <div className="flex gap-2">
+                        <input type="url" value={popupLinkUrl} onChange={e => setPopupLinkUrl(e.target.value)}
+                          placeholder="https://drive.google.com/..." className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-400/40" />
+                        <button type="button" onClick={() => {
+                          if (!popupLinkUrl.trim()) return;
+                          const name = decodeURIComponent(popupLinkUrl.split('/').pop()?.split('?')[0] || '링크');
+                          setEditAttachments(prev => [...prev, { url: popupLinkUrl.trim(), name }]);
+                          setPopupLinkUrl('');
+                        }} className="px-4 py-2.5 bg-blue-500 text-white text-[13px] font-bold rounded-xl hover:bg-blue-600">추가</button>
+                      </div>
+                    )}
+                    {/* YouTube */}
+                    {popupAttachMode === 'youtube' && (
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <input type="text" value={popupYoutubeUrl} onChange={e => setPopupYoutubeUrl(e.target.value)}
+                            placeholder="https://youtu.be/... 또는 youtube.com/watch?v=..." className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-red-400/40" />
+                          <button type="button" onClick={() => {
+                            const ytId = getYouTubeId(popupYoutubeUrl.trim());
+                            if (!ytId) return alert('올바른 YouTube 주소가 아닙니다.');
+                            const embedUrl = `https://www.youtube.com/embed/${ytId}`;
+                            setEditAttachments(prev => [...prev, { url: embedUrl, name: `YouTube: ${popupYoutubeUrl.trim()}` }]);
+                            setPopupYoutubeUrl('');
+                          }} className="px-4 py-2.5 bg-red-500 text-white text-[13px] font-bold rounded-xl hover:bg-red-600">추가</button>
+                        </div>
+                        {popupYoutubeUrl && getYouTubeId(popupYoutubeUrl) && (
+                          <img src={`https://img.youtube.com/vi/${getYouTubeId(popupYoutubeUrl)}/mqdefault.jpg`} alt="미리보기" className="rounded-xl w-full object-cover max-h-28" />
+                        )}
+                      </div>
+                    )}
                     {newAttachmentFiles.filter(f => f.type.startsWith('image/')).map((f, i) => (
                       <img key={i} src={URL.createObjectURL(f)} alt="미리보기" className="mt-2 rounded-xl w-full object-cover max-h-40" />
                     ))}
