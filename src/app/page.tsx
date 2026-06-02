@@ -37,6 +37,15 @@ interface Material {
   youtubeUrl?: string;
   isPinned?: boolean;
   uploadedBy?: string;
+  folderName?: string;
+}
+
+interface SubFolder {
+  id: string;
+  category: string;
+  product_name: string;
+  name: string;
+  sort_order: number;
 }
 
 const getYouTubeId = (url: string): string | null => {
@@ -170,6 +179,12 @@ export default function Home() {
   const [submenuMgmtCategory, setSubmenuMgmtCategory] = useState<'건식'|'화장품'|'기기'|'회사소식/홍보'|'영업자료집'|'게시판'>('건식');
   const [newSubmenuName, setNewSubmenuName] = useState('');
 
+  const [subFolders, setSubFolders] = useState<SubFolder[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [uploadFolder, setUploadFolder] = useState<string>('');
+  const [folderMgmtProduct, setFolderMgmtProduct] = useState<string>('');
+  const [newFolderName, setNewFolderName] = useState('');
+
   useEffect(() => {
     const session = localStorage.getItem('aloeSession');
     if (!session) {
@@ -281,7 +296,7 @@ export default function Home() {
         category: m.category, year: m.year, month: m.month,
         fileName: m.file_name, fileUrl: m.file_url, productName: m.product_name,
         content: m.content, youtubeUrl: m.youtube_url, isPinned: m.is_pinned || false,
-        uploadedBy: m.uploaded_by,
+        uploadedBy: m.uploaded_by, folderName: m.folder_name || undefined,
       })));
       // 새 자료 감지: localStorage에 저장한 마지막 열람 ID와 비교
       const lastSeenId = typeof window !== 'undefined' ? localStorage.getItem('updateNews_lastSeenId') : null;
@@ -290,12 +305,35 @@ export default function Home() {
     }
   };
 
+  const loadSubFolders = async () => {
+    const { data } = await supabase.from('sub_folders').select('*').order('sort_order', { ascending: true });
+    if (data) setSubFolders(data as SubFolder[]);
+  };
+
+  const addSubFolder = async () => {
+    if (!newFolderName.trim() || !folderMgmtProduct) return;
+    const newSf: SubFolder = {
+      id: 'sf' + Date.now(), category: submenuMgmtCategory,
+      product_name: folderMgmtProduct, name: newFolderName.trim(), sort_order: 99,
+    };
+    await supabase.from('sub_folders').insert(newSf);
+    setNewFolderName('');
+    loadSubFolders();
+  };
+
+  const deleteSubFolder = async (id: string) => {
+    if (!confirm('이 폴더를 삭제하겠습니까?')) return;
+    await supabase.from('sub_folders').delete().eq('id', id);
+    loadSubFolders();
+  };
+
   useEffect(() => {
     const loadData = async () => {
       await loadMaterials();
       const { data: foldersData } = await supabase.from('promo_folders').select('*');
       if (foldersData && foldersData.length > 0) setPromoFolders(foldersData);
       await loadSubmenus();
+      await loadSubFolders();
     };
     loadData();
   }, []);
@@ -696,7 +734,7 @@ export default function Home() {
           thumbnail_url: newMaterial.thumbnailUrl, category: newMaterial.category,
           year: newMaterial.year, month: newMaterial.month, file_url: url, file_name: url,
           product_name: newMaterial.productName, content: uploadContent || null,
-          uploaded_by: currentUser?.username,
+          folder_name: uploadFolder || null, uploaded_by: currentUser?.username,
         });
         if (ok) inserted.push(newMaterial);
       }
@@ -720,7 +758,7 @@ export default function Home() {
         thumbnail_url: newThumbnail, category: newMaterial.category,
         year: newMaterial.year, month: newMaterial.month,
         youtube_url: newMaterial.youtubeUrl, product_name: newMaterial.productName,
-        content: uploadContent || null, uploaded_by: currentUser?.username,
+        content: uploadContent || null, folder_name: uploadFolder || null, uploaded_by: currentUser?.username,
       });
       if (!ok) { setUploadLoading(false); return; }
       setMaterials([newMaterial, ...materials]);
@@ -745,7 +783,7 @@ export default function Home() {
           year: newMaterial.year, month: newMaterial.month,
           file_name: newMaterial.fileName, file_url: newMaterial.fileUrl,
           product_name: newMaterial.productName, content: uploadContent || null,
-          uploaded_by: currentUser?.username,
+          folder_name: uploadFolder || null, uploaded_by: currentUser?.username,
         });
         if (ok) inserted.push(newMaterial);
       }
@@ -806,6 +844,7 @@ export default function Home() {
     setSelectedType('ALL');
     setSelectedSubBoard('ALL');
     setSelectedProduct('전체');
+    setSelectedFolder(null);
     setCurrentPage(1);
     if (cat === '브랜드판촉') {
       const now = new Date();
@@ -861,7 +900,10 @@ export default function Home() {
       }
     }
 
-    return matchSearch && matchCategory && matchType;
+    // 폴더 필터링
+    const matchFolder = !selectedFolder || (mat.folderName || '') === selectedFolder;
+
+    return matchSearch && matchCategory && matchType && matchFolder;
   });
 
   const promoMaterials = filteredMaterials;
@@ -969,10 +1011,41 @@ export default function Home() {
                 : boardSubmenus)
                 .filter(p => !['전체', '기타', '공지사항', '자유게시판'].includes(p))
                 .map(name => (
-                  <div key={name} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
-                    <span className="text-[14px] font-medium text-gray-700">{name}</span>
-                    <button onClick={() => deleteSubmenu(submenuMgmtCategory, name)}
-                      className="text-[12px] bg-red-500 text-white px-3 py-1 rounded-lg font-bold hover:bg-red-600 shadow-sm">삭제</button>
+                  <div key={name} className="border border-gray-100 rounded-xl overflow-hidden">
+                    <div className="flex items-center justify-between p-3 bg-gray-50">
+                      <span className="text-[14px] font-medium text-gray-700">{name}</span>
+                      <div className="flex gap-1.5">
+                        <button onClick={() => setFolderMgmtProduct(folderMgmtProduct === name ? '' : name)}
+                          className={`text-[11px] px-2.5 py-1 rounded-lg font-bold transition-colors ${folderMgmtProduct === name ? 'bg-[#00b050] text-white' : 'bg-white border border-gray-200 text-gray-500 hover:border-[#00b050]'}`}>📁 폴더</button>
+                        <button onClick={() => deleteSubmenu(submenuMgmtCategory, name)}
+                          className="text-[12px] bg-red-500 text-white px-3 py-1 rounded-lg font-bold hover:bg-red-600">삭제</button>
+                      </div>
+                    </div>
+                    {/* 폴더 관리 패널 */}
+                    {folderMgmtProduct === name && (
+                      <div className="p-3 bg-white border-t border-gray-100 space-y-2">
+                        {subFolders.filter(f => f.category === submenuMgmtCategory && f.product_name === name).length > 0 ? (
+                          subFolders.filter(f => f.category === submenuMgmtCategory && f.product_name === name).map(sf => (
+                            <div key={sf.id} className="flex items-center gap-2 px-3 py-1.5 bg-[#f5f8f0] rounded-lg">
+                              <span className="text-[12px]">📁</span>
+                              <span className="flex-1 text-[12px] text-gray-700">{sf.name}</span>
+                              <button onClick={() => deleteSubFolder(sf.id)}
+                                className="text-[11px] text-red-400 hover:text-red-600 font-bold">✕</button>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-[11px] text-gray-400 text-center py-1">폴더 없음</p>
+                        )}
+                        <div className="flex gap-1.5">
+                          <input type="text" value={newFolderName} onChange={e => setNewFolderName(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && addSubFolder()}
+                            placeholder="새 폴더명 입력"
+                            className="flex-1 p-2 border border-gray-200 rounded-lg text-[12px] focus:outline-none focus:ring-1 focus:ring-[#7a9a52]/50" />
+                          <button onClick={addSubFolder}
+                            className="px-3 py-2 bg-[#00b050] text-white rounded-lg font-bold text-[12px] hover:bg-[#009030]">추가</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {((submenuMgmtCategory === '건식' ? healthProducts 
@@ -1248,6 +1321,22 @@ export default function Home() {
                   </select>
                 </div>
               )}
+
+              {/* 폴더 선택 (서브폴더가 있는 경우) */}
+              {uploadProduct && uploadProduct !== '전체' && uploadProduct !== '기타' && (() => {
+                const folders = subFolders.filter(f => f.category === selectedCategory && f.product_name === uploadProduct);
+                if (folders.length === 0) return null;
+                return (
+                  <div>
+                    <label className="block text-[13px] font-bold text-gray-700 mb-2">📁 폴더 선택 <span className="text-gray-400 font-normal">(선택)</span></label>
+                    <select value={uploadFolder} onChange={e => setUploadFolder(e.target.value)}
+                      className="w-full p-3.5 text-[14px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00b050]/50 transition-all bg-white">
+                      <option value="">폴더 없음</option>
+                      {folders.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
+                    </select>
+                  </div>
+                );
+              })()}
 
               {/* 종류 속성 선택 (건식, 화장품, 기기, 회사소식/홍보 등의 카테고리일 경우에만) */}
               {(selectedCategory === '건식' || selectedCategory === '화장품' || selectedCategory === '기기' || selectedCategory === '회사소식/홍보' || selectedCategory === '영업자료집') && (
@@ -2737,6 +2826,11 @@ export default function Home() {
       ) : (
         /* ============== 번호 목록 UI ============== */
         (() => {
+          // 폴더 탭 표시 (서브메뉴 선택 + 해당 폴더 존재 시)
+          const currentFolders = selectedProduct && selectedProduct !== '전체' && selectedProduct !== '기타'
+            ? subFolders.filter(f => f.category === selectedCategory && f.product_name === selectedProduct)
+            : [];
+
           const totalPages = Math.max(1, Math.ceil(filteredMaterials.length / PAGE_SIZE));
           const safePage = Math.min(currentPage, totalPages);
           const pagedMaterials = filteredMaterials.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
@@ -2744,6 +2838,21 @@ export default function Home() {
 
           return (
             <div className="mt-4">
+              {/* 폴더 탭 */}
+              {currentFolders.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4 px-1">
+                  <button
+                    onClick={() => { setSelectedFolder(null); setCurrentPage(1); }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold border transition-colors ${!selectedFolder ? 'bg-[#1a3010] text-white border-[#1a3010]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#1a3010]'}`}
+                  >📂 전체</button>
+                  {currentFolders.map(f => (
+                    <button key={f.id}
+                      onClick={() => { setSelectedFolder(f.name); setCurrentPage(1); }}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold border transition-colors ${selectedFolder === f.name ? 'bg-[#1a3010] text-white border-[#1a3010]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#1a3010]'}`}
+                    >📁 {f.name}</button>
+                  ))}
+                </div>
+              )}
               {/* 목록 헤더 */}
               <div className="flex items-center px-4 py-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 mb-1">
                 <span className="w-10 text-center">No.</span>
