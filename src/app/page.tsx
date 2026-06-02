@@ -939,7 +939,7 @@ export default function Home() {
     if (userRole === 'ADMIN') {
       uploadVisible = true;
     } else if (userRole === 'BUSINESS') {
-      if (selectedCategory === '영업자료집' || (selectedCategory === '게시판' && selectedSubBoard === 'FREE')) {
+      if (selectedCategory === '영업자료집' || (selectedCategory === '게시판' && selectedSubBoard === 'FREE') || !!selectedFolder) {
         uploadVisible = true;
       }
     } else if (userRole === 'COUNSELOR') {
