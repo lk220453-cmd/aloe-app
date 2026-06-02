@@ -2988,6 +2988,21 @@ export default function Home() {
                       </div>
                     </div>
                   )}
+                  {/* 폴더 안 자료 없을 때: 업로드 버튼 표시 */}
+                  {selectedFolder && pagedMaterials.length === 0 && (
+                    <div className="py-12 flex flex-col items-center gap-4 text-gray-400">
+                      <span className="text-4xl opacity-30">📂</span>
+                      <p className="text-[14px]">이 폴더에 등록된 자료가 없습니다.</p>
+                      {uploadVisible && (
+                        <button
+                          onClick={openUploadModal}
+                          className="px-6 py-2.5 bg-[#00b050] text-white rounded-xl text-[13px] font-bold hover:bg-[#009030] transition-colors shadow-sm"
+                        >
+                          + 이 폴더에 자료 올리기
+                        </button>
+                      )}
+                    </div>
+                  )}
                   {pagedMaterials.map((mat, idx) => (
                     <div
                       key={mat.id}
