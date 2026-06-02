@@ -310,13 +310,14 @@ export default function Home() {
     if (data) setSubFolders(data as SubFolder[]);
   };
 
-  const addSubFolder = async () => {
-    if (!newFolderName.trim() || !folderMgmtProduct) return;
+  const addSubFolder = async (cat: string, prodName: string) => {
+    if (!newFolderName.trim() || !prodName) return;
     const newSf: SubFolder = {
-      id: 'sf' + Date.now(), category: submenuMgmtCategory,
-      product_name: folderMgmtProduct, name: newFolderName.trim(), sort_order: 99,
+      id: 'sf' + Date.now(), category: cat,
+      product_name: prodName, name: newFolderName.trim(), sort_order: 99,
     };
-    await supabase.from('sub_folders').insert(newSf);
+    const { error } = await supabase.from('sub_folders').insert(newSf);
+    if (error) { alert(`저장 오류: ${error.message}`); return; }
     setSubFolders(prev => [...prev, newSf]);
     setNewFolderName('');
   };
@@ -1040,10 +1041,10 @@ export default function Home() {
                             )}
                             <div className="flex gap-1.5">
                               <input type="text" value={newFolderName} onChange={e => setNewFolderName(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && addSubFolder()}
+                                onKeyDown={e => e.key === 'Enter' && addSubFolder(submenuMgmtCategory, name)}
                                 placeholder="새 폴더명 입력"
                                 className="flex-1 p-2 border border-gray-200 rounded-lg text-[12px] focus:outline-none focus:ring-1 focus:ring-[#7a9a52]/50" />
-                              <button onClick={addSubFolder} className="px-3 py-2 bg-[#00b050] text-white rounded-lg font-bold text-[12px] hover:bg-[#009030]">추가</button>
+                              <button onClick={() => addSubFolder(submenuMgmtCategory, name)} className="px-3 py-2 bg-[#00b050] text-white rounded-lg font-bold text-[12px] hover:bg-[#009030]">추가</button>
                             </div>
                           </div>
                         )}
@@ -1089,10 +1090,10 @@ export default function Home() {
                         )}
                         <div className="flex gap-1.5">
                           <input type="text" value={newFolderName} onChange={e => setNewFolderName(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && addSubFolder()}
+                            onKeyDown={e => e.key === 'Enter' && addSubFolder(submenuMgmtCategory, name)}
                             placeholder="새 폴더명 입력"
                             className="flex-1 p-2 border border-gray-200 rounded-lg text-[12px] focus:outline-none focus:ring-1 focus:ring-[#7a9a52]/50" />
-                          <button onClick={addSubFolder}
+                          <button onClick={() => addSubFolder(submenuMgmtCategory, name)}
                             className="px-3 py-2 bg-[#00b050] text-white rounded-lg font-bold text-[12px] hover:bg-[#009030]">추가</button>
                         </div>
                       </div>
