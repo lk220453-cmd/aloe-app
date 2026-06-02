@@ -383,6 +383,7 @@ export default function Home() {
   const [editMat, setEditMat] = useState<Material | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
+  const [editFolder, setEditFolder] = useState('');
   const [editFile, setEditFile] = useState<File | null>(null);
   const [editFileDeleted, setEditFileDeleted] = useState(false);
   const editFileRef = useRef<HTMLInputElement>(null);
@@ -586,6 +587,7 @@ export default function Home() {
     setEditMat(mat);
     setEditTitle(mat.title);
     setEditContent(mat.content || '');
+    setEditFolder(mat.folderName || '');
     setEditFile(null);
     setEditFileDeleted(false);
     setShowEditModal(true);
@@ -616,10 +618,11 @@ export default function Home() {
     await supabase.from('materials').update({
       title: editTitle.trim(),
       content: editContent,
+      folder_name: editFolder || null,
       file_name: fileUpdates.fileName ?? (editFileDeleted ? null : editMat.fileName),
       file_url: fileUpdates.fileUrl ?? (editFileDeleted ? null : editMat.fileUrl),
     }).eq('id', editMat.id);
-    setMaterials(prev => prev.map(m => m.id === editMat.id ? { ...m, title: editTitle.trim(), content: editContent, ...fileUpdates } : m));
+    setMaterials(prev => prev.map(m => m.id === editMat.id ? { ...m, title: editTitle.trim(), content: editContent, folderName: editFolder || undefined, ...fileUpdates } : m));
     setShowEditModal(false);
     setEditMat(null);
     setEditFile(null);
@@ -1917,6 +1920,25 @@ export default function Home() {
                   placeholder="내용을 입력하세요..."
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#00b050]/40 focus:border-[#00b050] resize-none" />
               </div>
+              {/* 폴더 지정 */}
+              {(() => {
+                const editCat = editMat?.category || '';
+                const editBoardProduct = editMat?.type === 'NOTICE' ? '공지사항' : editMat?.type === 'FREE' ? '자유게시판' : (editMat?.productName || '');
+                const foldersForEdit = editCat === '게시판'
+                  ? subFolders.filter(f => f.category === '게시판' && (editBoardProduct ? f.product_name === editBoardProduct : true))
+                  : subFolders.filter(f => f.category === editCat && (editMat?.productName ? f.product_name === editMat.productName : true));
+                if (foldersForEdit.length === 0) return null;
+                return (
+                  <div>
+                    <label className="text-[12px] font-bold text-gray-500 mb-1 block">📁 폴더 지정</label>
+                    <select value={editFolder} onChange={e => setEditFolder(e.target.value)}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#00b050]/40 focus:border-[#00b050] bg-white">
+                      <option value="">폴더 없음</option>
+                      {foldersForEdit.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
+                    </select>
+                  </div>
+                );
+              })()}
               {/* 첨부파일 관리 */}
               <div>
                 <label className="text-[12px] font-bold text-gray-500 mb-2 block">첨부파일</label>
