@@ -2368,7 +2368,7 @@ export default function Home() {
             {/* 처음으로 버튼 */}
             <div className="relative flex items-center flex-shrink-0">
               <button
-                onClick={() => { window.scrollTo(0, 0); setShowLanding(true); setSlideIndex(0); isPinnedRef.current = false; setMegaMenuOpen(null); setSelectedMenuCat(null); setSelectedCategory('ALL'); setHoveredCat(null); setSearch(''); }}
+                onClick={() => { window.scrollTo(0, 0); setShowLanding(true); setSlideIndex(0); isPinnedRef.current = false; setMegaMenuOpen(null); setSelectedMenuCat(null); setSelectedCategory('ALL'); setSelectedFolder(null); setHoveredCat(null); setSearch(''); }}
                 className="relative px-3 py-[11px] md:px-5 md:py-[15px] text-[12px] md:text-[13px] whitespace-nowrap transition-colors duration-150 text-[#4a6a30] font-normal hover:text-[#1a3010]"
               >
                 🏠 처음으로
@@ -2442,7 +2442,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-4">건강기능식품 제품군</p>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-x-1 gap-y-0">
                     {healthProducts.map(prod => (
-                      <button key={prod} onClick={() => { handleCategoryChange('건식'); setSelectedProduct(prod); isPinnedRef.current = false; setMegaMenuOpen(null); }}
+                      <button key={prod} onClick={() => { handleCategoryChange('건식'); setSelectedProduct(prod); setSelectedFolder(null); isPinnedRef.current = false; setMegaMenuOpen(null); }}
                         className={`text-left py-1.5 px-2 md:py-2 md:px-3 rounded-lg text-[12px] md:text-[13px] transition-all flex items-center gap-1 ${selectedCategory === '건식' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '건식' && selectedProduct === prod && <span className="text-[11px]">➔</span>}
                         {prod}
@@ -2478,7 +2478,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-4">코스메틱 제품군</p>
                   <div className="grid grid-cols-2 md:flex md:flex-col gap-0.5">
                     {cosmeticsProducts.map(prod => (
-                      <button key={prod} onClick={() => { handleCategoryChange('화장품'); setSelectedProduct(prod); isPinnedRef.current = false; setMegaMenuOpen(null); }}
+                      <button key={prod} onClick={() => { handleCategoryChange('화장품'); setSelectedProduct(prod); setSelectedFolder(null); isPinnedRef.current = false; setMegaMenuOpen(null); }}
                         className={`text-left py-1.5 px-2 md:py-2 md:px-3 rounded-lg text-[12px] md:text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '화장품' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '화장품' && selectedProduct === prod && <span className="text-[11px]">➔</span>}
                         {prod}
@@ -2514,7 +2514,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-4">디바이스 제품군</p>
                   <div className="grid grid-cols-2 md:flex md:flex-col gap-0.5">
                     {deviceProducts.map(prod => (
-                      <button key={prod} onClick={() => { handleCategoryChange('기기'); setSelectedProduct(prod); isPinnedRef.current = false; setMegaMenuOpen(null); }}
+                      <button key={prod} onClick={() => { handleCategoryChange('기기'); setSelectedProduct(prod); setSelectedFolder(null); isPinnedRef.current = false; setMegaMenuOpen(null); }}
                         className={`text-left py-1.5 px-2 md:py-2 md:px-3 rounded-lg text-[12px] md:text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '기기' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '기기' && selectedProduct === prod && <span className="text-[11px]">➔</span>}
                         {prod}
@@ -2551,7 +2551,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-4">세부 분류 (서브메뉴)</p>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
                     {newsSubmenus.map(prod => (
-                      <button key={prod} onClick={() => { handleCategoryChange('회사소식/홍보'); setSelectedProduct(prod); isPinnedRef.current = false; setMegaMenuOpen(null); }}
+                      <button key={prod} onClick={() => { handleCategoryChange('회사소식/홍보'); setSelectedProduct(prod); setSelectedFolder(null); isPinnedRef.current = false; setMegaMenuOpen(null); }}
                         className={`text-left py-1.5 px-2 md:py-2 md:px-3 rounded-lg text-[12px] md:text-[13px] transition-all flex items-center gap-1 ${selectedCategory === '회사소식/홍보' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '회사소식/홍보' && selectedProduct === prod && <span className="text-[11px]">➔</span>}
                         {prod}
@@ -2586,7 +2586,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 md:mb-4">세부 분류 (서브메뉴)</p>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
                     {salesSubmenus.map(prod => (
-                      <button key={prod} onClick={() => { handleCategoryChange('영업자료집'); setSelectedProduct(prod); isPinnedRef.current = false; setMegaMenuOpen(null); }}
+                      <button key={prod} onClick={() => { handleCategoryChange('영업자료집'); setSelectedProduct(prod); setSelectedFolder(null); isPinnedRef.current = false; setMegaMenuOpen(null); }}
                         className={`text-left py-1.5 px-2 md:py-2 md:px-3 rounded-lg text-[12px] md:text-[13px] transition-all flex items-center gap-1 ${selectedCategory === '영업자료집' && selectedProduct === prod ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '영업자료집' && selectedProduct === prod && <span className="text-[11px]">➔</span>}
                         {prod}
