@@ -317,8 +317,8 @@ export default function Home() {
       product_name: folderMgmtProduct, name: newFolderName.trim(), sort_order: 99,
     };
     await supabase.from('sub_folders').insert(newSf);
+    setSubFolders(prev => [...prev, newSf]);
     setNewFolderName('');
-    loadSubFolders();
   };
 
   const deleteSubFolder = async (id: string) => {
