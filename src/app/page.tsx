@@ -554,6 +554,7 @@ export default function Home() {
     setUploadMode('file');
     setUploadYoutubeUrl('');
     setUploadWebLinks([{title: '', url: ''}]);
+    setUploadFolder(selectedFolder || '');
     if (selectedCategory !== '브랜드판촉' && selectedCategory !== 'ALL' && selectedCategory !== 'NONE') {
       if (selectedCategory === '게시판') {
          setUploadProduct(selectedSubBoard !== 'ALL' ? selectedSubBoard : '기타');
@@ -1374,13 +1375,20 @@ export default function Home() {
                 </div>
               )}
 
-              {/* 폴더 선택 (서브폴더가 있는 경우) */}
-              {uploadProduct && uploadProduct !== '전체' && uploadProduct !== '기타' && (() => {
-                const folders = subFolders.filter(f => f.category === selectedCategory && f.product_name === uploadProduct);
+              {/* 폴더 선택 */}
+              {(() => {
+                // 현재 컨텍스트의 폴더 목록
+                const folders = selectedFolder
+                  ? subFolders.filter(f => f.category === selectedCategory)
+                  : uploadProduct && uploadProduct !== '전체' && uploadProduct !== '기타'
+                    ? subFolders.filter(f => f.category === selectedCategory && f.product_name === uploadProduct)
+                    : subFolders.filter(f => f.category === selectedCategory);
                 if (folders.length === 0) return null;
                 return (
                   <div>
-                    <label className="block text-[13px] font-bold text-gray-700 mb-2">📁 폴더 선택 <span className="text-gray-400 font-normal">(선택)</span></label>
+                    <label className="block text-[13px] font-bold text-gray-700 mb-2">
+                      📁 폴더 선택 <span className="text-gray-400 font-normal">(선택)</span>
+                    </label>
                     <select value={uploadFolder} onChange={e => setUploadFolder(e.target.value)}
                       className="w-full p-3.5 text-[14px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00b050]/50 transition-all bg-white">
                       <option value="">폴더 없음</option>
