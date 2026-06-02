@@ -2909,21 +2909,6 @@ export default function Home() {
 
           return (
             <div className="mt-4">
-              {/* 폴더 탭 */}
-              {currentFolders.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4 px-1">
-                  <button
-                    onClick={() => { setSelectedFolder(null); setCurrentPage(1); }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold border transition-colors ${!selectedFolder ? 'bg-[#1a3010] text-white border-[#1a3010]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#1a3010]'}`}
-                  >📂 전체</button>
-                  {currentFolders.map(f => (
-                    <button key={f.id}
-                      onClick={() => { setSelectedFolder(f.name); setCurrentPage(1); }}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold border transition-colors ${selectedFolder === f.name ? 'bg-[#1a3010] text-white border-[#1a3010]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#1a3010]'}`}
-                    >📁 {f.name}</button>
-                  ))}
-                </div>
-              )}
               {/* 목록 헤더 */}
               <div className="flex items-center px-4 py-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 mb-1">
                 <span className="w-10 text-center">No.</span>
@@ -2932,6 +2917,21 @@ export default function Home() {
                 <span className="w-16 text-center hidden sm:block">형식</span>
                 <span className="w-16 text-center">열람</span>
               </div>
+              {/* 폴더 탭 (헤더 아래) */}
+              {currentFolders.length > 0 && (
+                <div className="flex flex-wrap gap-2 px-2 py-2 border-b border-gray-100 bg-gray-50/50">
+                  <button
+                    onClick={() => { setSelectedFolder(null); setCurrentPage(1); }}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[12px] font-bold border transition-colors ${!selectedFolder ? 'bg-[#1a3010] text-white border-[#1a3010]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#1a3010]'}`}
+                  >📂 전체</button>
+                  {currentFolders.map(f => (
+                    <button key={f.id}
+                      onClick={() => { setSelectedFolder(f.name); setCurrentPage(1); }}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[12px] font-bold border transition-colors ${selectedFolder === f.name ? 'bg-[#1a3010] text-white border-[#1a3010]' : 'bg-white text-gray-500 border-gray-200 hover:border-[#1a3010]'}`}
+                    >📁 {f.name}</button>
+                  ))}
+                </div>
+              )}
 
               {/* 목록 행 */}
               {pagedMaterials.length > 0 ? (
