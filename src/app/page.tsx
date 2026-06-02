@@ -2541,7 +2541,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">자료 형식</p>
                   <div className="flex gap-4 mb-3 md:mb-5 pb-3 md:pb-4 border-b border-gray-100">
                     {[{ id: 'ALL', label: '📋 전체' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '🎬 영상' }, { id: 'WEBLINK', label: '🔗 링크' }].map(t => (
-                      <button key={t.id} onClick={() => { handleCategoryChange('회사소식/홍보'); setSelectedType(t.id); isPinnedRef.current = false; setMegaMenuOpen(null); }}
+                      <button key={t.id} onClick={() => { handleCategoryChange('회사소식/홍보'); setSelectedType(t.id); setSelectedFolder(null); isPinnedRef.current = false; setMegaMenuOpen(null); }}
                         className={`text-[12px] md:text-[13px] transition-colors relative pb-1 ${selectedCategory === '회사소식/홍보' && selectedType === t.id ? 'text-[#00b050] font-bold' : 'text-gray-500 hover:text-[#00723a]'}`}>
                         {t.label}
                         {selectedCategory === '회사소식/홍보' && selectedType === t.id && <span className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#00b050] rounded-full block" />}
@@ -2576,7 +2576,7 @@ export default function Home() {
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">자료 형식</p>
                   <div className="flex gap-4 mb-3 md:mb-5 pb-3 md:pb-4 border-b border-gray-100">
                     {[{ id: 'ALL', label: '📋 전체' }, { id: 'DOCUMENT', label: '📄 문서' }, { id: 'VIDEO', label: '🎬 영상' }, { id: 'WEBLINK', label: '🔗 링크' }].map(t => (
-                      <button key={t.id} onClick={() => { handleCategoryChange('영업자료집'); setSelectedType(t.id); isPinnedRef.current = false; setMegaMenuOpen(null); }}
+                      <button key={t.id} onClick={() => { handleCategoryChange('영업자료집'); setSelectedType(t.id); setSelectedFolder(null); isPinnedRef.current = false; setMegaMenuOpen(null); }}
                         className={`text-[12px] md:text-[13px] transition-colors relative pb-1 ${selectedCategory === '영업자료집' && selectedType === t.id ? 'text-[#00b050] font-bold' : 'text-gray-500 hover:text-[#00723a]'}`}>
                         {t.label}
                         {selectedCategory === '영업자료집' && selectedType === t.id && <span className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#00b050] rounded-full block" />}
@@ -2614,7 +2614,7 @@ export default function Home() {
                       .concat(boardSubmenus.filter(m => !['전체', '공지사항', '자유게시판', '기타'].includes(m)).map(m => ({ id: m, label: `📝 ${m}` })))
                       .concat({ id: '기타', label: '📂 기타' })
                       .map(t => (
-                      <button key={t.id} onClick={() => { handleCategoryChange('게시판'); setSelectedSubBoard(t.id); isPinnedRef.current = false; setMegaMenuOpen(null); }}
+                      <button key={t.id} onClick={() => { handleCategoryChange('게시판'); setSelectedSubBoard(t.id); setSelectedFolder(null); isPinnedRef.current = false; setMegaMenuOpen(null); }}
                         className={`text-left py-2 px-3 rounded-lg text-[13px] transition-all flex items-center gap-2 ${selectedCategory === '게시판' && selectedSubBoard === t.id ? 'bg-[#00b050]/10 text-[#00b050] font-bold' : 'text-gray-600 hover:bg-[#00b050]/6 hover:text-[#00723a]'}`}>
                         {selectedCategory === '게시판' && selectedSubBoard === t.id && <span className="text-[11px]">➔</span>}
                         {t.label}
@@ -2878,10 +2878,29 @@ export default function Home() {
       ) : (
         /* ============== 번호 목록 UI ============== */
         (() => {
-          // 폴더 탭 표시 (서브메뉴 선택 + 해당 폴더 존재 시)
-          const currentFolders = selectedProduct && selectedProduct !== '전체' && selectedProduct !== '기타'
-            ? subFolders.filter(f => f.category === selectedCategory && f.product_name === selectedProduct)
-            : [];
+          // 폴더 탭 표시 (서브메뉴/타입 선택 + 해당 폴더 존재 시)
+          const currentFolders = (() => {
+            // 게시판: selectedSubBoard → 한글 이름 매핑
+            if (selectedCategory === '게시판' && selectedSubBoard !== 'ALL') {
+              const boardName = selectedSubBoard === 'NOTICE' ? '공지사항'
+                : selectedSubBoard === 'FREE' ? '자유게시판'
+                : selectedSubBoard;
+              return subFolders.filter(f => f.category === '게시판' && f.product_name === boardName);
+            }
+            // 회사소식/홍보, 영업자료집: selectedType → 한글 이름 매핑
+            if ((selectedCategory === '회사소식/홍보' || selectedCategory === '영업자료집') && selectedType !== 'ALL') {
+              const typeName = selectedType === 'DOCUMENT' ? '문서'
+                : selectedType === 'VIDEO' ? '영상'
+                : selectedType === 'WEBLINK' ? '링크(웹링크)' : null;
+              if (!typeName) return [];
+              return subFolders.filter(f => f.category === selectedCategory && f.product_name === typeName);
+            }
+            // 제품군 기반 (건식/화장품/기기/영업자료집 커스텀)
+            if (selectedProduct && selectedProduct !== '전체' && selectedProduct !== '기타') {
+              return subFolders.filter(f => f.category === selectedCategory && f.product_name === selectedProduct);
+            }
+            return [];
+          })();
 
           const totalPages = Math.max(1, Math.ceil(filteredMaterials.length / PAGE_SIZE));
           const safePage = Math.min(currentPage, totalPages);
