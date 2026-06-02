@@ -902,8 +902,8 @@ export default function Home() {
       }
     }
 
-    // 폴더 필터링
-    const matchFolder = !selectedFolder || (mat.folderName || '') === selectedFolder;
+    // 폴더 필터링: 폴더 선택 시 해당 폴더 자료만, 미선택 시 폴더 미지정 자료만 표시
+    const matchFolder = selectedFolder ? (mat.folderName || '') === selectedFolder : !mat.folderName;
 
     return matchSearch && matchCategory && matchType && matchFolder;
   });
@@ -1377,11 +1377,15 @@ export default function Home() {
 
               {/* 폴더 선택 */}
               {(() => {
+                // 게시판의 경우 NOTICE/FREE ID를 한글 product_name으로 변환
+                const resolvedProduct = selectedCategory === '게시판'
+                  ? (uploadProduct === 'NOTICE' ? '공지사항' : uploadProduct === 'FREE' ? '자유게시판' : uploadProduct)
+                  : uploadProduct;
                 // 현재 컨텍스트의 폴더 목록
                 const folders = selectedFolder
                   ? subFolders.filter(f => f.category === selectedCategory)
-                  : uploadProduct && uploadProduct !== '전체' && uploadProduct !== '기타'
-                    ? subFolders.filter(f => f.category === selectedCategory && f.product_name === uploadProduct)
+                  : resolvedProduct && resolvedProduct !== '전체' && resolvedProduct !== '기타'
+                    ? subFolders.filter(f => f.category === selectedCategory && f.product_name === resolvedProduct)
                     : subFolders.filter(f => f.category === selectedCategory);
                 if (folders.length === 0) return null;
                 return (
@@ -2917,6 +2921,29 @@ export default function Home() {
 
           return (
             <div className="mt-4">
+              {/* 폴더 서브메뉴 탭 네비게이션 */}
+              {currentFolders.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 px-2 pb-4 mb-4 border-b border-gray-100">
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1">📁 폴더</span>
+                  <button
+                    onClick={() => { setSelectedFolder(null); setCurrentPage(1); }}
+                    className={`px-3 py-1.5 rounded-lg text-[13px] font-bold transition-all ${!selectedFolder ? 'bg-[#00b050]/10 text-[#00b050]' : 'text-gray-500 hover:bg-gray-100'}`}
+                  >
+                    전체
+                  </button>
+                  {currentFolders.map(f => (
+                    <button
+                      key={f.id}
+                      onClick={() => { setSelectedFolder(f.name); setCurrentPage(1); }}
+                      className={`px-3 py-1.5 rounded-lg text-[13px] font-bold transition-all flex items-center gap-1.5 ${selectedFolder === f.name ? 'bg-[#00b050]/10 text-[#00b050]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'}`}
+                    >
+                      <span>📁</span>
+                      <span>{f.name}</span>
+                      {selectedFolder === f.name && <span className="text-[10px]">➔</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
               {/* 목록 헤더 */}
               <div className="flex items-center px-4 py-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 mb-1">
                 <span className="w-10 text-center">No.</span>
@@ -2925,36 +2952,17 @@ export default function Home() {
                 <span className="w-16 text-center hidden sm:block">형식</span>
                 <span className="w-16 text-center">열람</span>
               </div>
+              {/* 선택된 폴더 안내 */}
+              {selectedFolder && (
+                <div className="flex items-center gap-2 px-4 py-2 mb-2 bg-amber-50 rounded-lg border border-amber-100">
+                  <span className="text-[13px]">📂</span>
+                  <span className="text-[13px] font-bold text-amber-700">{selectedFolder}</span>
+                  <span className="text-[12px] text-amber-500">폴더 내 자료</span>
+                </div>
+              )}
               {/* 목록 행 */}
-              {(currentFolders.length > 0 || pagedMaterials.length > 0) ? (
+              {pagedMaterials.length > 0 ? (
                 <div className="divide-y divide-gray-100">
-                  {/* 폴더 행 (폴더 미선택 시에만 표시) */}
-                  {!selectedFolder && currentFolders.map((f, idx) => (
-                    <div key={f.id}
-                      onClick={() => { setSelectedFolder(f.name); setCurrentPage(1); }}
-                      className="group flex items-center px-4 py-4 hover:bg-amber-50/60 transition-colors cursor-pointer bg-amber-50/20"
-                    >
-                      <span className="w-10 text-center text-[13px] font-bold text-amber-400 flex-shrink-0">{idx + 1}</span>
-                      <div className="flex-1 flex items-center gap-3 ml-4 min-w-0">
-                        <span className="text-lg flex-shrink-0">📁</span>
-                        <span className="text-[14px] font-semibold text-amber-700 group-hover:text-amber-900 transition-colors truncate">{f.name}</span>
-                      </div>
-                      <span className="w-24 text-center hidden sm:block text-[12px] text-amber-500 font-bold flex-shrink-0">폴더</span>
-                      <span className="w-16 text-center hidden sm:block text-[12px] text-gray-400 flex-shrink-0">—</span>
-                      <span className="w-16 text-center text-[12px] text-amber-500 flex-shrink-0">▶ 열기</span>
-                    </div>
-                  ))}
-                  {/* 폴더 선택 시 뒤로가기 행 */}
-                  {selectedFolder && (
-                    <div onClick={() => { setSelectedFolder(null); setCurrentPage(1); }}
-                      className="group flex items-center px-4 py-3 hover:bg-gray-100 transition-colors cursor-pointer bg-gray-50"
-                    >
-                      <span className="w-10 text-center text-[13px] text-gray-400 flex-shrink-0">↩</span>
-                      <div className="flex-1 flex items-center gap-3 ml-4 min-w-0">
-                        <span className="text-[13px] text-gray-500 font-bold">📂 상위 목록으로</span>
-                      </div>
-                    </div>
-                  )}
                   {pagedMaterials.map((mat, idx) => (
                     <div
                       key={mat.id}
@@ -2971,7 +2979,7 @@ export default function Home() {
                     >
                       {/* 번호 */}
                       <span className="w-10 text-center text-[13px] font-bold text-gray-300 group-hover:text-[#00b050] transition-colors flex-shrink-0">
-                        {(!selectedFolder ? currentFolders.length : 0) + globalOffset + idx + 1}
+                        {globalOffset + idx + 1}
                       </span>
 
                       {/* 아이콘 + 제목 */}
@@ -3018,7 +3026,22 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-              ) : null}
+              ) : (
+                <div className="py-16 text-center text-gray-400">
+                  <div className="text-4xl mb-3 opacity-30">{selectedFolder ? '📂' : '📋'}</div>
+                  <p className="text-[14px] font-medium">
+                    {selectedFolder ? `"${selectedFolder}" 폴더에 등록된 자료가 없습니다.` : '등록된 자료가 없습니다.'}
+                  </p>
+                  {selectedFolder && uploadVisible && (
+                    <button
+                      onClick={openUploadModal}
+                      className="mt-4 px-5 py-2 bg-[#00b050] text-white rounded-xl text-[13px] font-bold hover:bg-[#009030] transition-colors"
+                    >
+                      + 이 폴더에 자료 올리기
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* 페이지네이션 */}
               {totalPages > 1 && (
