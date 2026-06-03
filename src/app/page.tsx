@@ -53,6 +53,14 @@ const getYouTubeId = (url: string): string | null => {
   return match ? match[1] : null;
 };
 
+const isMultiFiles = (content?: string | null): boolean => {
+  if (!content) return false;
+  try { const p = JSON.parse(content); return Array.isArray(p.__files__); } catch { return false; }
+};
+const parseMultiFiles = (content: string): { text: string; files: { url: string; name: string }[] } => {
+  try { const p = JSON.parse(content); return { text: p.text || '', files: p.__files__ || [] }; } catch { return { text: content, files: [] }; }
+};
+
 interface PromoFolder {
   id: string;
   year: string;
@@ -768,32 +776,62 @@ export default function Home() {
       if (!ok) { setUploadLoading(false); return; }
       setMaterials([newMaterial, ...materials]);
     } else {
-      const inserted: Material[] = [];
-      for (const file of uploadFiles) {
-        const title = uploadFiles.length === 1 ? uploadTitle : file.name.replace(/\.[^/.]+$/, "");
-        const fileType: MaterialType = (file.type.startsWith('video/') || file.name.match(/\.(mp4|avi|mov)$/i)) ? 'VIDEO' : finalType;
-        const uploaded = await uploadFileToStorage(file);
-        if (!uploaded) { setUploadError('일부 파일 업로드에 실패했습니다.'); continue; }
-        const newThumbnail = file.type.startsWith('image/') ? uploaded.fileUrl : 'https://picsum.photos/seed/' + Math.floor(Math.random() * 100) + '/400/225';
+      const isGroupCategory = ['영업자료집', '게시판'].includes(selectedCategory);
+      if (uploadFiles.length > 1 && isGroupCategory) {
+        // 다중 파일 → 단일 게시물로 묶기
+        const allUploaded: { url: string; name: string }[] = [];
+        for (const file of uploadFiles) {
+          const uploaded = await uploadFileToStorage(file);
+          if (uploaded) allUploaded.push({ url: uploaded.fileUrl, name: uploaded.fileName });
+          else setUploadError('일부 파일 업로드에 실패했습니다.');
+        }
+        if (allUploaded.length === 0) { setUploadLoading(false); return; }
+        const multiContent = JSON.stringify({ __files__: allUploaded, text: uploadContent || '' });
         const newMaterial: Material = {
-          id: 'm' + Date.now().toString() + Math.random(), title, type: fileType,
-          thumbnailUrl: newThumbnail, category: selectedCategory, year: promoYear, month: promoMonth,
-          fileName: uploaded.fileName, fileUrl: uploaded.fileUrl,
-          productName: (selectedCategory !== '브랜드판촉') ? uploadProduct : undefined,
+          id: 'm' + Date.now().toString(), title: uploadTitle, type: finalType,
+          thumbnailUrl: '', category: selectedCategory, year: promoYear, month: promoMonth,
+          fileName: allUploaded[0].name, fileUrl: allUploaded[0].url,
+          productName: uploadProduct || undefined, content: multiContent,
           uploadedBy: currentUser?.username,
         };
         const ok = await doInsert({
           id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
-          thumbnail_url: newThumbnail, category: newMaterial.category,
+          thumbnail_url: '', category: newMaterial.category,
           year: newMaterial.year, month: newMaterial.month,
           file_name: newMaterial.fileName, file_url: newMaterial.fileUrl,
-          product_name: newMaterial.productName, content: uploadContent || null,
+          product_name: newMaterial.productName, content: multiContent,
           folder_name: uploadFolder || null, uploaded_by: currentUser?.username,
         });
-        if (ok) inserted.push(newMaterial);
+        if (!ok) { setUploadLoading(false); return; }
+        setMaterials([newMaterial, ...materials]);
+      } else {
+        const inserted: Material[] = [];
+        for (const file of uploadFiles) {
+          const title = uploadFiles.length === 1 ? uploadTitle : file.name.replace(/\.[^/.]+$/, "");
+          const fileType: MaterialType = (file.type.startsWith('video/') || file.name.match(/\.(mp4|avi|mov)$/i)) ? 'VIDEO' : finalType;
+          const uploaded = await uploadFileToStorage(file);
+          if (!uploaded) { setUploadError('일부 파일 업로드에 실패했습니다.'); continue; }
+          const newThumbnail = file.type.startsWith('image/') ? uploaded.fileUrl : 'https://picsum.photos/seed/' + Math.floor(Math.random() * 100) + '/400/225';
+          const newMaterial: Material = {
+            id: 'm' + Date.now().toString() + Math.random(), title, type: fileType,
+            thumbnailUrl: newThumbnail, category: selectedCategory, year: promoYear, month: promoMonth,
+            fileName: uploaded.fileName, fileUrl: uploaded.fileUrl,
+            productName: (selectedCategory !== '브랜드판촉') ? uploadProduct : undefined,
+            uploadedBy: currentUser?.username,
+          };
+          const ok = await doInsert({
+            id: newMaterial.id, title: newMaterial.title, type: newMaterial.type,
+            thumbnail_url: newThumbnail, category: newMaterial.category,
+            year: newMaterial.year, month: newMaterial.month,
+            file_name: newMaterial.fileName, file_url: newMaterial.fileUrl,
+            product_name: newMaterial.productName, content: uploadContent || null,
+            folder_name: uploadFolder || null, uploaded_by: currentUser?.username,
+          });
+          if (ok) inserted.push(newMaterial);
+        }
+        if (inserted.length === 0) { setUploadLoading(false); return; }
+        setMaterials([...inserted.reverse(), ...materials]);
       }
-      if (inserted.length === 0) { setUploadLoading(false); return; }
-      setMaterials([...inserted.reverse(), ...materials]);
     }
     setUploadLoading(false);
     setShowUploadModal(false);
@@ -2000,59 +2038,77 @@ export default function Home() {
                 <span>📅 {detailMat.year}.{(detailMat.month || '').padStart(2, '0')}.01</span>
                 <span>📂 {detailMat.type === 'VIDEO' ? '영상' : '문서'}</span>
               </div>
-              {/* 내용 */}
-              {detailMat.content ? (
-                <div>
-                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">내용</p>
-                  <div className="bg-gray-50 rounded-xl p-4 text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap border border-gray-100">
-                    {detailMat.content}
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-gray-50 rounded-xl p-4 text-[13px] text-gray-400 text-center border border-dashed border-gray-200">
-                  등록된 내용이 없습니다.
-                </div>
-              )}
-              {/* YouTube 영상 */}
-              {detailMat.youtubeUrl && (
-                <div>
-                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">YouTube 영상</p>
-                  <div className="rounded-xl overflow-hidden border border-gray-200" style={{ aspectRatio: '16/9' }}>
-                    <iframe
-                      src={detailMat.youtubeUrl}
-                      className="w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  </div>
-                </div>
-              )}
-              {/* 첨부파일 */}
-              {detailMat.fileUrl && detailMat.fileName && (() => {
-                const isWebLink = detailMat.fileUrl === detailMat.fileName && !detailMat.youtubeUrl;
+              {/* 다중 첨부파일 */}
+              {isMultiFiles(detailMat.content) ? (() => {
+                const { text, files } = parseMultiFiles(detailMat.content!);
                 return (
-                  <div>
-                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">{isWebLink ? '링크' : '첨부파일'}</p>
-                    <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
-                      <span className="text-2xl">{isWebLink ? '🔗' : '📎'}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[14px] font-bold text-[#1a3010] truncate">
-                          {isWebLink ? detailMat.title : detailMat.fileName}
-                        </p>
-                        {isWebLink && (
-                          <p className="text-[11px] text-gray-400 truncate mt-0.5">{detailMat.fileUrl}</p>
-                        )}
+                  <>
+                    {text && (
+                      <div>
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">내용</p>
+                        <div className="bg-gray-50 rounded-xl p-4 text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap border border-gray-100">{text}</div>
                       </div>
-                      <button onClick={() => openFile(detailMat.fileUrl!)}
-                        className="text-[12px] font-bold text-[#00b050] hover:underline px-2 py-1 rounded-lg hover:bg-green-100">🔍 열람</button>
-                      {!isWebLink && (
-                        <button onClick={() => downloadFile(detailMat.fileUrl!, detailMat.fileName!)}
-                          className="text-[12px] font-bold text-blue-600 hover:underline px-2 py-1 rounded-lg hover:bg-blue-50">⬇ 다운</button>
-                      )}
+                    )}
+                    <div>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">첨부파일 ({files.length}개)</p>
+                      <div className="space-y-2">
+                        {files.map((f, i) => (
+                          <div key={i} className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                            <span className="text-xl flex-shrink-0">📎</span>
+                            <span className="flex-1 text-[13px] font-medium text-gray-700 truncate">{f.name}</span>
+                            <button onClick={() => openFile(f.url)} className="text-[12px] font-bold text-[#00b050] hover:underline px-2 py-1 rounded-lg hover:bg-green-100 flex-shrink-0">🔍 열람</button>
+                            <button onClick={() => downloadFile(f.url, f.name)} className="text-[12px] font-bold text-blue-600 hover:underline px-2 py-1 rounded-lg hover:bg-blue-100 flex-shrink-0">⬇ 다운</button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  </>
                 );
-              })()}
+              })() : (
+                <>
+                  {/* 내용 */}
+                  {detailMat.content ? (
+                    <div>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">내용</p>
+                      <div className="bg-gray-50 rounded-xl p-4 text-[14px] text-gray-700 leading-relaxed whitespace-pre-wrap border border-gray-100">
+                        {detailMat.content}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 rounded-xl p-4 text-[13px] text-gray-400 text-center border border-dashed border-gray-200">
+                      등록된 내용이 없습니다.
+                    </div>
+                  )}
+                  {/* YouTube 영상 */}
+                  {detailMat.youtubeUrl && (
+                    <div>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">YouTube 영상</p>
+                      <div className="rounded-xl overflow-hidden border border-gray-200" style={{ aspectRatio: '16/9' }}>
+                        <iframe src={detailMat.youtubeUrl} className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                      </div>
+                    </div>
+                  )}
+                  {/* 단일 첨부파일 */}
+                  {detailMat.fileUrl && detailMat.fileName && (() => {
+                    const isWebLink = detailMat.fileUrl === detailMat.fileName && !detailMat.youtubeUrl;
+                    return (
+                      <div>
+                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">{isWebLink ? '링크' : '첨부파일'}</p>
+                        <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+                          <span className="text-2xl">{isWebLink ? '🔗' : '📎'}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[14px] font-bold text-[#1a3010] truncate">{isWebLink ? detailMat.title : detailMat.fileName}</p>
+                            {isWebLink && <p className="text-[11px] text-gray-400 truncate mt-0.5">{detailMat.fileUrl}</p>}
+                          </div>
+                          <button onClick={() => openFile(detailMat.fileUrl!)} className="text-[12px] font-bold text-[#00b050] hover:underline px-2 py-1 rounded-lg hover:bg-green-100">🔍 열람</button>
+                          {!isWebLink && <button onClick={() => downloadFile(detailMat.fileUrl!, detailMat.fileName!)} className="text-[12px] font-bold text-blue-600 hover:underline px-2 py-1 rounded-lg hover:bg-blue-50">⬇ 다운</button>}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </>
+              )}
             </div>
             <div className="px-6 pb-6 flex-shrink-0">
               <button onClick={() => setShowDetailModal(false)}
@@ -3021,11 +3077,16 @@ export default function Home() {
 
                       {/* 아이콘 + 제목 */}
                       <div className="flex-1 flex items-center gap-3 ml-4 min-w-0">
-                        <span className="text-lg flex-shrink-0">{mat.youtubeUrl ? '▶' : mat.type === 'VIDEO' ? '🎬' : '📄'}</span>
+                        <span className="text-lg flex-shrink-0">{mat.youtubeUrl ? '▶' : isMultiFiles(mat.content) ? '📎' : mat.type === 'VIDEO' ? '🎬' : '📄'}</span>
                         <span className="text-[14px] font-medium text-gray-800 group-hover:text-[#00723a] transition-colors truncate">
                           {mat.title}
                         </span>
                         {mat.youtubeUrl && <span className="flex-shrink-0 text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded">YouTube</span>}
+                        {isMultiFiles(mat.content) && (
+                          <span className="flex-shrink-0 text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded">
+                            📎 {parseMultiFiles(mat.content!).files.length}개 첨부
+                          </span>
+                        )}
                         {mat.category === '게시판' && mat.type === 'NOTICE' && (
                           <span className="flex-shrink-0 text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded">공지</span>
                         )}
