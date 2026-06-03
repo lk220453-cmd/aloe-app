@@ -655,34 +655,60 @@ export default function Home() {
       }
     };
 
-    const filesToUpload = writeFiles.length > 0 ? writeFiles : [null];
     const inserted: Material[] = [];
 
-    for (let i = 0; i < filesToUpload.length; i++) {
-      const file = filesToUpload[i];
-      let fileName: string | undefined;
-      let fileUrl: string | undefined;
-      if (file) {
+    if (writeFiles.length > 1) {
+      // 다중 파일 → 첨부파일 묶음 게시물 하나로 저장
+      const allUploaded: { url: string; name: string }[] = [];
+      for (const file of writeFiles) {
         const uploaded = await uploadFileToStorage(file);
-        if (uploaded) { fileName = uploaded.fileName; fileUrl = uploaded.fileUrl; }
+        if (uploaded) allUploaded.push({ url: uploaded.fileUrl, name: uploaded.fileName });
       }
-      const title = writeFiles.length > 1 ? `${writeTitle.trim()} (${i + 1}/${writeFiles.length})` : writeTitle.trim();
+      if (allUploaded.length === 0) return;
+      const multiContent = JSON.stringify({ __files__: allUploaded, text: writeContent || '' });
       const newPost: Material = {
         id: 'm' + Date.now() + Math.random(),
-        title, type: postType, thumbnailUrl: '',
+        title: writeTitle.trim(), type: postType, thumbnailUrl: '',
         category: selectedCategory,
         year: promoYear || String(now.getFullYear()),
         month: promoMonth || String(now.getMonth() + 1),
-        content: i === 0 ? writeContent : '',
-        fileName, fileUrl, productName,
+        content: multiContent,
+        fileName: allUploaded[0].name, fileUrl: allUploaded[0].url, productName,
       };
       await doInsert({
         id: newPost.id, title: newPost.title, type: newPost.type, thumbnail_url: '',
         category: newPost.category, year: newPost.year, month: newPost.month,
-        content: newPost.content, file_name: fileName, file_url: fileUrl,
+        content: multiContent, file_name: newPost.fileName, file_url: newPost.fileUrl,
         product_name: productName, uploaded_by: currentUser?.username,
       });
       inserted.push(newPost);
+    } else {
+      // 파일 없거나 1개
+      const filesToUpload = writeFiles.length > 0 ? writeFiles : [null];
+      for (const file of filesToUpload) {
+        let fileName: string | undefined;
+        let fileUrl: string | undefined;
+        if (file) {
+          const uploaded = await uploadFileToStorage(file);
+          if (uploaded) { fileName = uploaded.fileName; fileUrl = uploaded.fileUrl; }
+        }
+        const newPost: Material = {
+          id: 'm' + Date.now() + Math.random(),
+          title: writeTitle.trim(), type: postType, thumbnailUrl: '',
+          category: selectedCategory,
+          year: promoYear || String(now.getFullYear()),
+          month: promoMonth || String(now.getMonth() + 1),
+          content: writeContent,
+          fileName, fileUrl, productName,
+        };
+        await doInsert({
+          id: newPost.id, title: newPost.title, type: newPost.type, thumbnail_url: '',
+          category: newPost.category, year: newPost.year, month: newPost.month,
+          content: writeContent || null, file_name: fileName, file_url: fileUrl,
+          product_name: productName, uploaded_by: currentUser?.username,
+        });
+        inserted.push(newPost);
+      }
     }
 
     setMaterials(prev => [...inserted.reverse(), ...prev]);
