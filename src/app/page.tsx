@@ -1211,6 +1211,7 @@ export default function Home() {
                 <table className="w-full text-[13px]">
                   <thead>
                     <tr className="border-b text-gray-500 text-left">
+                      <th className="pb-2 pr-3 font-bold text-center">번호</th>
                       <th className="pb-2 font-bold">이름</th>
                       <th className="pb-2 font-bold">거래처명</th>
                       <th className="pb-2 font-bold">아이디</th>
@@ -1219,8 +1220,9 @@ export default function Home() {
                     </tr>
                   </thead>
                   <tbody>
-                    {pendingUsers.map(u => (
+                    {pendingUsers.map((u, index) => (
                       <tr key={u.id} className="border-b py-2">
+                        <td className="py-2 pr-3 text-center font-semibold text-gray-500">{index + 1}</td>
                         <td className="py-2">{u.name}</td>
                         <td className="py-2 text-gray-600">{u.company || '-'}</td>
                         <td className="py-2">{u.username}</td>
